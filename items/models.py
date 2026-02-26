@@ -1,6 +1,11 @@
 from django.db import models
 from django.conf import settings
 
+class Category(models.Model):
+    name = models.CharField(max_length=100)
+
+    def str(self):
+        return self.name
 class Item(models.Model):
 
     STATUS_CHOICES = (
@@ -27,5 +32,12 @@ class Item(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    category = models.ForeignKey(
+    Category,
+    on_delete=models.SET_NULL,
+    null=True,
+    blank=True,
+    related_name='items'
+    )
     def str(self):
         return self.title
