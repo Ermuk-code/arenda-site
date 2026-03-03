@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from .models import Booking
-from .serializers import BookingSerializer
+from .serializers import BookingSerializer, ReviewSerializer 
 from rest_framework.exceptions import ValidationError
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -40,3 +40,18 @@ class BookingViewSet(viewsets.ModelViewSet):
             raise ValidationError("Complete your profile before booking")
 
         serializer.save(renter=self.request.user)
+    @action(detail=True, methods=['post'])
+    def review(self, request, pk=None):
+
+        booking = self.get_object()
+
+        if booking.renter != request.user:
+            return Response({"error": "Only renter can leave review"}, status=403)
+
+        serializer = ReviewSerializer(data=request.data)
+
+        if serializer.is_valid():
+            serializer.save(booking=booking)
+            return Response(serializer.data)
+
+        return Response(serializer.errors, status=400)

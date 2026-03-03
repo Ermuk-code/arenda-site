@@ -3,6 +3,7 @@ from django.conf import settings
 from items.models import Item
 from django.core.exceptions import ValidationError
 from django.db.models import Q
+from django.db.models import Avg
 
 
 class Booking(models.Model):
@@ -92,3 +93,41 @@ class Booking(models.Model):
         self.save()
     def __str__(self):
         return f"{self.item.title} - {self.renter.username}"
+class Review(models.Model):
+
+    booking = models.OneToOneField(
+        Booking,
+        on_delete=models.CASCADE,
+        related_name='review'
+    )
+
+    rating = models.IntegerField()
+    comment = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def clean(self):
+
+        if self.booking.status != 'completed':
+            raise ValidationError("You can review only completed bookings")
+
+        if not (1 <= self.rating <= 5):
+            raise ValidationError("Rating must be between 1 and 5")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+        owner = self.booking.item.owner
+
+        reviews = Review.objects.filter(
+            booking__item__owner=owner
+        )
+
+        owner.average_rating = reviews.aggregate(
+            Avg('rating')
+        )['rating__avg'] or 0
+
+        owner.reviews_count = reviews.count()
+
+        owner.save()

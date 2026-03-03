@@ -18,6 +18,12 @@ class User(AbstractUser):
     phone = models.CharField(max_length=20, blank=True, null=True)
 
     profile_completed = models.BooleanField(default=False)
+    average_rating = models.DecimalField(
+    max_digits=3,
+    decimal_places=2,
+    default=0
+    )
 
+    reviews_count = models.IntegerField(default=0)
     def __str__(self):
         return self.username
