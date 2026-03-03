@@ -44,9 +44,15 @@ class Booking(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     def clean(self):
 
+        # Нельзя бронировать свой товар
+        if self.item.owner == self.renter:
+            raise ValidationError("You cannot book your own item")
+
+        # Дата окончания должна быть позже начала
         if self.start_date >= self.end_date:
             raise ValidationError("End date must be after start date")
 
+        # Проверка пересечения дат
         overlapping = Booking.objects.filter(
             item=self.item,
             status__in=['pending', 'confirmed']
@@ -68,5 +74,21 @@ class Booking(models.Model):
         self.total_price = days * self.item.price_per_day
 
         super().save(*args, **kwargs)
+    def change_status(self, new_status):
+
+        allowed_transitions = {
+            'pending': ['confirmed', 'cancelled'],
+            'confirmed': ['completed', 'cancelled'],
+            'cancelled': [],
+            'completed': [],
+        }
+
+        if new_status not in allowed_transitions[self.status]:
+            raise ValidationError(
+                f"Cannot change status from {self.status} to {new_status}"
+            )
+
+        self.status = new_status
+        self.save()
     def __str__(self):
         return f"{self.item.title} - {self.renter.username}"

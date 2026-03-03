@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'users',
     'items',
     'bookings',
+    'drf_spectacular',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -140,6 +141,7 @@ REST_FRAMEWORK = {
     'rest_framework.filters.SearchFilter',
     'rest_framework.filters.OrderingFilter',
     ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 SIMPLE_JWT = {
@@ -149,3 +151,9 @@ SIMPLE_JWT = {
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Mokitoki API',
+    'DESCRIPTION': 'API для онлайн площадки Mokitoki',
+    'VERSION': '1.0.0',
+}
