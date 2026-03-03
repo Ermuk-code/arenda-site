@@ -1,10 +1,13 @@
 from rest_framework import serializers
-from .models import Item
+from .models import Item, ItemImage
 
+class ItemImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ItemImage
+        fields = ['id', 'image']
 class ItemSerializer(serializers.ModelSerializer):
-
-    owner = serializers.ReadOnlyField(source='owner.username')
+    images = ItemImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Item
-        fields = 'all'
+        fields = '__all__'

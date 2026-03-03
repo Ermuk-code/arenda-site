@@ -7,6 +7,11 @@ from .serializers import ItemSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from django.db import models
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework import generics
+from .models import ItemImage
+from .serializers import ItemImageSerializer
+from .permissions import IsOwner
 
 class ItemViewSet(viewsets.ModelViewSet):
 
@@ -42,3 +47,15 @@ class ItemViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             return [IsAuthenticatedOrReadOnly(), IsProfileCompleted()]
         return []
+class ItemImageUploadView(generics.CreateAPIView):
+    serializer_class = ItemImageSerializer
+    parser_classes = (MultiPartParser, FormParser)
+
+    def perform_create(self, serializer):
+        item_id = self.request.data.get('item')
+        item = Item.objects.get(id=item_id)
+
+        if item.owner != self.request.user:
+            raise PermissionError("You are not the owner of this item")
+
+        serializer.save(item=item)
