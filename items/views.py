@@ -17,18 +17,27 @@ class ItemViewSet(viewsets.ModelViewSet):
 
     serializer_class = ItemSerializer
     def get_queryset(self):
+
         user = self.request.user
 
         if user.is_authenticated:
-            return Item.objects.filter(
+            queryset = Item.objects.filter(
                 models.Q(status='available') | models.Q(owner=user)
             )
-        return Item.objects.filter(status='available')
+        else:
+            queryset = Item.objects.filter(status='available')
+
+        min_rating = self.request.query_params.get('min_rating')
+
+        if min_rating:
+            queryset = queryset.filter(average_rating__gte=min_rating)
+
+        return queryset
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
 
     filterset_fields = ['status']
     search_fields = ['title', 'description']
-    ordering_fields = ['price_per_day', 'created_at']
+    ordering_fields = ['price_per_day', 'created_at', 'average_rating']
     ordering = ['-created_at']
 
     def get_permissions(self):

@@ -115,19 +115,34 @@ class Review(models.Model):
             raise ValidationError("Rating must be between 1 and 5")
 
     def save(self, *args, **kwargs):
+        from chats.models import Conversation
         self.clean()
         super().save(*args, **kwargs)
 
-        owner = self.booking.item.owner
-
-        reviews = Review.objects.filter(
-            booking__item__owner=owner
+        item = self.booking.item
+        owner = item.owner
+        if self.status == 'confirmed':
+            Conversation.objects.get_or_create(booking=self)
+        # ---- рейтинг товара ----
+        item_reviews = Review.objects.filter(
+            booking__item=item
         )
 
-        owner.average_rating = reviews.aggregate(
+        item.average_rating = item_reviews.aggregate(
             Avg('rating')
         )['rating__avg'] or 0
 
-        owner.reviews_count = reviews.count()
+        item.reviews_count = item_reviews.count()
+        item.save()
 
+        # ---- рейтинг владельца ----
+        owner_reviews = Review.objects.filter(
+            booking__item__owner=owner
+        )
+
+        owner.average_rating = owner_reviews.aggregate(
+            Avg('rating')
+        )['rating__avg'] or 0
+
+        owner.reviews_count = owner_reviews.count()
         owner.save()

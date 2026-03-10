@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'users',
     'items',
     'bookings',
+    'chats',
     'drf_spectacular',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -157,3 +158,6 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'API для онлайн площадки Mokitoki',
     'VERSION': '1.0.0',
 }
+INSTALLED_APPS += ['channels']
+
+ASGI_APPLICATION = 'config.asgi.application'
