@@ -4,6 +4,7 @@ from datetime import date
 
 from items.models import Item
 from .models import Booking
+from .models import Review
 
 User = get_user_model()
 
@@ -65,3 +66,20 @@ class BookingModelTest(TestCase):
                 start_date=date(2025, 6, 3),
                 end_date=date(2025, 6, 7)
             )
+    def test_create_review(self):
+
+        booking = Booking.objects.create(
+            item=self.item,
+            renter=self.renter,
+            start_date=date(2026,1,1),
+            end_date=date(2026,1,3),
+            status="completed"
+        )
+
+        review = Review.objects.create(
+            booking=booking,
+            rating=5,
+            comment="Great!"
+        )
+
+        self.assertEqual(review.rating, 5)

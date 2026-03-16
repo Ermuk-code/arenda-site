@@ -121,7 +121,7 @@ class Review(models.Model):
 
         item = self.booking.item
         owner = item.owner
-        if self.status == 'confirmed':
+        if self.booking.status == 'confirmed':
             Conversation.objects.get_or_create(booking=self)
         # ---- рейтинг товара ----
         item_reviews = Review.objects.filter(
