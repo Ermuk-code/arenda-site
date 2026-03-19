@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'items',
     'bookings',
     'chats',
+    'notifications',
     'drf_spectacular',
     'django.contrib.admin',
     'django.contrib.auth',

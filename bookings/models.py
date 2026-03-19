@@ -4,6 +4,7 @@ from items.models import Item
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.db.models import Avg
+from notifications.models import Notification
 
 
 class Booking(models.Model):
@@ -73,7 +74,16 @@ class Booking(models.Model):
 
         # Умножаем на цену товара
         self.total_price = days * self.item.price_per_day
-
+        Notification.objects.create(
+            user=self.item.owner,
+            type='booking_created',
+            message=f"New booking request for {self.item.title}"
+        )
+        Notification.objects.create(
+            user=self.renter,
+            type='booking_confirmed',
+            message=f"Your booking for {self.item.title} was confirmed"
+        )
         super().save(*args, **kwargs)
     def change_status(self, new_status):
 
@@ -127,7 +137,11 @@ class Review(models.Model):
         item_reviews = Review.objects.filter(
             booking__item=item
         )
-
+        Notification.objects.create(
+            user=self.booking.item.owner,
+            type='new_review',
+            message="You received a new review"
+        )
         item.average_rating = item_reviews.aggregate(
             Avg('rating')
         )['rating__avg'] or 0
