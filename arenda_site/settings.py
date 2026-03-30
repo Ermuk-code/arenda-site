@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-cd(cz1l$96958q81&5tbqhg==f0un^9(tx5&-c-4vbp@unzqee
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -85,11 +85,11 @@ WSGI_APPLICATION = 'arenda_site.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'arendadb',
+        'NAME': 'arenda',
         'USER': 'postgres',
-        'PASSWORD': 'postgresql',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'PASSWORD': 'postgres',
+        'HOST': 'db',
+        'PORT': 5432,
     }
 }
 
@@ -167,7 +167,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
+            "hosts": [("redis", 6379)],
         },
     },
 }
