@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 
 from bookings.models import Booking
 from items.models import Item
-from .models import Conversation, Message
+from .models import Chat, Message
 
 from datetime import date
 
@@ -39,14 +39,14 @@ class ChatTest(TestCase):
             end_date=date(2026,1,3)
         )
 
-        self.conversation = Conversation.objects.create(
+        self.Chat = Chat.objects.create(
             booking=self.booking
         )
 
     def test_create_message(self):
 
         message = Message.objects.create(
-            conversation=self.conversation,
+            Chat=self.Chat,
             sender=self.renter,
             text="Hello"
         )

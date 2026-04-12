@@ -4,7 +4,7 @@ services:
 
   web:
     build: .
-    command: gunicorn arenda_site.wsgi:application --bind 0.0.0.0:8000
+    command: daphne -b 0.0.0.0 -p 8000 arenda_site.asgi:application
     volumes:
       - .:/app
     ports:
@@ -12,6 +12,10 @@ services:
     depends_on:
       - db
       - redis
+    environment:
+      - DJANGO_SETTINGS_MODULE=arenda_site.settings
+      - DEBUG=1
+      - PYTHONUNBUFFERED=1
 
   db:
     image: postgres:15
@@ -24,6 +28,8 @@ services:
 
   redis:
     image: redis:7
+    ports:
+      - "6379:6379"
 
   nginx:
     image: nginx:latest
@@ -33,3 +39,5 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf
     depends_on:
       - web
+volumes:
+  postgres_data:

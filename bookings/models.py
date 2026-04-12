@@ -125,14 +125,14 @@ class Review(models.Model):
             raise ValidationError("Rating must be between 1 and 5")
 
     def save(self, *args, **kwargs):
-        from chats.models import Conversation
+        from chats.models import Chat
         self.clean()
         super().save(*args, **kwargs)
 
         item = self.booking.item
         owner = item.owner
         if self.booking.status == 'confirmed':
-            Conversation.objects.get_or_create(booking=self)
+            Chat.objects.get_or_create(booking=self)
         # ---- рейтинг товара ----
         item_reviews = Review.objects.filter(
             booking__item=item
