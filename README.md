@@ -101,13 +101,13 @@ POST   /api/bookings/{id}/cancel/
 ### 💬 Chats
 
 ```
-GET    /api/chats/conversations/
+GET    /api/chats/s/
 ```
 
 WebSocket:
 
 ```
-ws://localhost/ws/chat/{conversation_id}/
+ws://localhost/ws/chat/{Chat_id}/
 ```
 
 ### 🔔 Notifications
