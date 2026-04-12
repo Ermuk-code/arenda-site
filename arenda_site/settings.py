@@ -33,9 +33,11 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'users',
     'items',
     'bookings',
+    'channels',
     'chats',
     'notifications',
     'drf_spectacular',
@@ -46,7 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_filters',
-    'rest_framework',   
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -170,9 +172,8 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'API для онлайн площадки Mokitoki',
     'VERSION': '1.0.0',
 }
-INSTALLED_APPS += ['channels']
 
-ASGI_APPLICATION = 'config.asgi.application'
+ASGI_APPLICATION = 'arenda_site.asgi.application'
 
 CHANNEL_LAYERS = {
     "default": {
@@ -182,3 +183,9 @@ CHANNEL_LAYERS = {
         },
     },
 }
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'mokitoki.notifications@gmail.com'
+EMAIL_HOST_PASSWORD = '2ZLg6j>HK^toqA_'

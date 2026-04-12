@@ -1,37 +1,19 @@
 from django.db import models
 from django.conf import settings
 from bookings.models import Booking
+from django.contrib.auth import get_user_model
 
-class Conversation(models.Model):
+User = get_user_model()
 
-    booking = models.OneToOneField(
-        Booking,
-        on_delete=models.CASCADE,
-        related_name='conversation'
-    )
-
+class Chat(models.Model):
+    users = models.ManyToManyField(User)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"Chat for booking {self.booking.id}"
 class Message(models.Model):
-
-    conversation = models.ForeignKey(
-        Conversation,
-        on_delete=models.CASCADE,
-        related_name='messages'
-    )
-
-    sender = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE
-    )
-
-    text = models.TextField()
-
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField(blank=True)
+    image = models.ImageField(upload_to='chat_images/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
     is_read = models.BooleanField(default=False)
 
-    def __str__(self):
-        return f"Message from {self.sender.username}"
