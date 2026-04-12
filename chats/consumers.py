@@ -1,48 +1,36 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
-from channels.db import database_sync_to_async
-from .models import Conversation
-from .models import Message
+from django.contrib.auth import get_user_model
+from .models import Chat, Message
+from asgiref.sync import sync_to_async
 
-@database_sync_to_async
-def create_message(user, conversation_id, text):
+User = get_user_model()
 
-    conversation = Conversation.objects.get(id=conversation_id)
-
-    return Message.objects.create(
-        conversation=conversation,
-        sender=user,
-        text=text
-    )
 
 class ChatConsumer(AsyncWebsocketConsumer):
-    @database_sync_to_async
-    def is_user_in_conversation(user, conversation_id):
 
-        try:
-            conversation = Conversation.objects.get(id=conversation_id)
-
-            return (
-                conversation.booking.renter == user
-                or conversation.booking.item.owner == user
-            )
-
-        except Conversation.DoesNotExist:
-            return False
     async def connect(self):
+        print(f"🔍 WebSocket connect attempt")
+        print(f"🔍 User: {self.scope['user']}")
+        print(f"🔍 User is anonymous: {self.scope['user'].is_anonymous}")
 
-        self.conversation_id = self.scope['url_route']['kwargs']['conversation_id']
-        self.room_group_name = f'chat_{self.conversation_id}'
-
-        user = self.scope["user"]
-
-        if not user.is_authenticated:
+        if self.scope["user"].is_anonymous:
+            print("❌ Rejecting anonymous user")
             await self.close()
             return
 
-        allowed = await is_user_in_conversation(user, self.conversation_id)
+        self.chat_id = self.scope['url_route']['kwargs']['chat_id']
+        self.room_group_name = f'chat_{self.chat_id}'
 
-        if not allowed:
+        chat_exists = await self.chat_exists()
+        if not chat_exists:
+            print(f"❌ Chat {self.chat_id} does not exist")
+            await self.close()
+            return
+
+        is_member = await self.is_chat_member()
+        if not is_member:
+            print(f"❌ User is not a member of chat {self.chat_id}")
             await self.close()
             return
 
@@ -52,36 +40,54 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
         await self.accept()
+        print(f"✅ WebSocket connected to chat {self.chat_id}")
 
     async def disconnect(self, close_code):
+        print(f"🔌 WebSocket disconnected: {close_code}")
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
         )
 
     async def receive(self, text_data):
-
+        print(f"📨 Received: {text_data}")
         data = json.loads(text_data)
-        message = data['message']
-
+        message_text = data.get('message', '')
         user = self.scope["user"]
 
-        msg = await create_message(user, self.conversation_id, message)
+        message = await self.save_message(user, message_text)
 
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 'type': 'chat_message',
-                'message': message,
-                'sender': user.username,
-                'message_id': msg.id
+                'message': message.text,
+                'user': user.username,
+                'user_id': user.id,
+                'timestamp': str(message.created_at),
             }
         )
 
     async def chat_message(self, event):
+        await self.send(text_data=json.dumps(event))
 
-        await self.send(text_data=json.dumps({
-            'message': event['message'],
-            'sender': event['sender'],
-            'message_id': event['message_id']
-        }))
+    @sync_to_async
+    def save_message(self, user, text):
+        chat = Chat.objects.get(id=self.chat_id)
+        return Message.objects.create(
+            chat=chat,
+            sender=user,
+            text=text
+        )
+
+    @sync_to_async
+    def chat_exists(self):
+        return Chat.objects.filter(id=self.chat_id).exists()
+
+    @sync_to_async
+    def is_chat_member(self):
+        try:
+            chat = Chat.objects.get(id=self.chat_id)
+            return chat.users.filter(id=self.scope["user"].id).exists()
+        except Chat.DoesNotExist:
+            return False
