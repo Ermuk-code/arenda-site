@@ -42,15 +42,25 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'password', 'user_type']
+        fields = ['username', 'email', 'password', 'user_type']
 
     def validate(self, data):
         if len(data['password']) < 6:
             raise serializers.ValidationError("Password too short")
+
+        if User.objects.filter(email=data['email']).exists():
+            raise serializers.ValidationError("Email already exists")
+
         return data
 
     def create(self, validated_data):
-        return User.objects.create_user(**validated_data)
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'], 
+            password=validated_data['password'],
+            user_type=validated_data.get('user_type')
+        )
+        return user
 
 
 # ===== PROFILE =====
