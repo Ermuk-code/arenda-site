@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'chats',
     'notifications',
     'drf_spectacular',
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -61,6 +62,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+CORS_ALLOW_ALL_ORIGINS = True
 ROOT_URLCONF = 'arenda_site.urls'
 
 TEMPLATES = [
