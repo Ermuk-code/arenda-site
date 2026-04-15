@@ -16,6 +16,7 @@ class User(AbstractUser):
     )
 
     phone = models.CharField(max_length=20, blank=True, null=True)
+    email = models.EmailField(unique=True)
     # физ лицо
     passport_series = models.CharField(max_length=4, blank=True)
     passport_number = models.CharField(max_length=6, blank=True)
