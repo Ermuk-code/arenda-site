@@ -17,8 +17,6 @@
         .btn-outline:hover { background: #2b6a7c10; }
         .btn-primary { background: #2b6a7c; border: none; padding: 8px 24px; border-radius: 40px; font-weight: 600; color: white; cursor: pointer; text-decoration: none; display: inline-block; transition: 0.2s; }
         .btn-primary:hover { background: #1e5668; transform: translateY(-1px); }
-        .btn-danger { background: #c0392b; border: none; padding: 8px 24px; border-radius: 40px; font-weight: 600; color: white; cursor: pointer; }
-        .btn-danger:hover { background: #a93226; }
         .categories { background: white; border-bottom: 1px solid #eef2f6; padding: 14px 0; }
         .cats-list { display: flex; gap: 28px; flex-wrap: wrap; justify-content: center; list-style: none; }
         .cats-list li { font-weight: 500; color: #2f4f5f; cursor: pointer; transition: 0.2s; padding: 5px 0; }
@@ -35,6 +33,8 @@
         .card-price small { font-size: 0.9rem; font-weight: 500; color: #6f8f9c; }
         .card-btn { background: #f0f4f9; border: none; padding: 12px; width: 100%; border-radius: 60px; font-weight: 600; cursor: pointer; transition: 0.2s; margin-top: 8px; }
         .card-btn:hover { background: #e2e9f0; }
+        .card-chat-btn { background: #2b6a7c; color: white; }
+        .card-chat-btn:hover { background: #1e5668; }
         .card-delete-btn { background: #fee2e2; color: #c0392b; }
         .card-delete-btn:hover { background: #fccaca; }
         .loading, .empty-message, .error-message { text-align: center; padding: 60px; font-size: 1.1rem; }
@@ -45,68 +45,22 @@
         .pagination button.active { background: #2b6a7c; color: white; border-color: #2b6a7c; }
         footer { text-align: center; padding: 32px 0; border-top: 1px solid #e2e8f0; color: #6c8b9b; background: white; }
         
-        /* Страницы */
-        .create-page, .profile-page { min-height: 80vh; padding: 48px 24px; background: #f5f9fe; }
-        .create-card, .profile-card { max-width: 600px; margin: 0 auto; background: white; border-radius: 48px; padding: 40px 32px; box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1); }
-        .create-title, .profile-title { font-size: 2rem; font-weight: 700; margin-bottom: 8px; color: #1a3e4c; }
-        .create-sub, .profile-sub { color: #6b8b9c; margin-bottom: 32px; }
+        .create-page, .profile-page, .chats-page, .chat-page { min-height: 80vh; padding: 48px 24px; background: #f5f9fe; }
+        .create-card, .profile-card, .chats-card, .chat-card { max-width: 800px; margin: 0 auto; background: white; border-radius: 48px; padding: 40px 32px; box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1); }
+        .create-title, .profile-title, .chats-title, .chat-title { font-size: 2rem; font-weight: 700; margin-bottom: 8px; color: #1a3e4c; }
+        .create-sub, .profile-sub, .chats-sub, .chat-sub { color: #6b8b9c; margin-bottom: 32px; }
         .form-group { margin-bottom: 24px; }
         .form-group label { display: block; font-weight: 500; margin-bottom: 8px; color: #2c6072; }
         .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 14px 18px; border-radius: 16px; border: 1.5px solid #e2e9ef; font-size: 1rem; transition: 0.2s; }
         .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: #2b6a7c; }
         .form-actions { display: flex; gap: 12px; margin-top: 32px; }
         
-        /* Стили для загрузки изображения */
-        .image-preview {
-            margin-top: 16px;
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-        .preview-item {
-            position: relative;
-            width: 100px;
-            height: 100px;
-            border-radius: 16px;
-            overflow: hidden;
-            border: 2px solid #e2e9ef;
-        }
-        .preview-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .remove-image {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            background: rgba(0,0,0,0.6);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            cursor: pointer;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .file-input-label {
-            display: inline-block;
-            padding: 12px 20px;
-            background: #f0f4f9;
-            border-radius: 40px;
-            cursor: pointer;
-            font-weight: 500;
-            margin-top: 8px;
-        }
-        .file-input-label:hover {
-            background: #e2e9f0;
-        }
-        input[type="file"] {
-            display: none;
-        }
+        .image-preview { margin-top: 16px; display: flex; gap: 16px; flex-wrap: wrap; }
+        .preview-item { position: relative; width: 100px; height: 100px; border-radius: 16px; overflow: hidden; border: 2px solid #e2e9ef; }
+        .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+        .remove-image { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; }
+        .file-input-label { display: inline-block; padding: 12px 20px; background: #f0f4f9; border-radius: 40px; cursor: pointer; font-weight: 500; margin-top: 8px; }
+        input[type="file"] { display: none; }
         
         .auth-page { min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 48px 24px; background: #f5f9fe; }
         .auth-card { max-width: 480px; width: 100%; background: white; border-radius: 48px; padding: 40px 32px; box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1); }
@@ -114,7 +68,7 @@
         .auth-sub { color: #6b8b9c; margin-bottom: 32px; }
         .input-group { margin-bottom: 24px; }
         .input-group label { display: block; font-weight: 500; margin-bottom: 8px; color: #2c6072; }
-        .input-group input { width: 100%; padding: 14px 18px; border-radius: 60px; border: 1.5px solid #e2e9ef; font-size: 1rem; }
+        .input-group input, .input-group select { width: 100%; padding: 14px 18px; border-radius: 60px; border: 1.5px solid #e2e9ef; font-size: 1rem; }
         .auth-btn { width: 100%; background: #2b6a7c; color: white; border: none; padding: 14px; border-radius: 60px; font-weight: 700; font-size: 1.1rem; cursor: pointer; }
         .auth-footer { margin-top: 28px; text-align: center; }
         .auth-footer a { color: #2b6a7c; text-decoration: none; font-weight: 600; }
@@ -124,6 +78,9 @@
         
         hr { margin: 32px 0; border: none; border-top: 1px solid #e2e9ef; }
         
+        .user-type-info { background: #eef2f7; padding: 16px; border-radius: 16px; margin-top: 16px; }
+        .user-type-info h4 { margin-bottom: 12px; color: #1a3e4c; }
+        
         @media (max-width: 720px) { .header-inner { flex-direction: column; } .cats-list { gap: 18px; } .user-info { justify-content: center; } }
     </style>
 </head>
@@ -131,8 +88,8 @@
     <div id="app"></div>
 
     <script>
-        // КОНФИГУРАЦИЯ
-        const API_BASE = 'http://localhost/api';
+        const API_BASE = '/api';
+        const WS_BASE = 'ws://localhost/ws';
         
         const CATEGORIES = [
             { id: 'all', name: 'Все' },
@@ -143,18 +100,19 @@
             { id: 'home', name: 'Дом и сад' }
         ];
         
-        // Хранилище для выбранных файлов
         let selectedFiles = [];
+        let wsConnection = null;
         
         function getAccessToken() { return localStorage.getItem('access_token'); }
         function getRefreshToken() { return localStorage.getItem('refresh_token'); }
         
-        function setTokens(access, refresh, userId, username, email) {
+        function setTokens(access, refresh, userId, username, email, userType) {
             localStorage.setItem('access_token', access);
             if (refresh) localStorage.setItem('refresh_token', refresh);
             if (userId) localStorage.setItem('user_id', userId);
             if (username) localStorage.setItem('username', username);
             if (email) localStorage.setItem('user_email', email);
+            if (userType) localStorage.setItem('user_type', userType);
         }
         
         function clearTokens() {
@@ -163,6 +121,7 @@
             localStorage.removeItem('username');
             localStorage.removeItem('user_id');
             localStorage.removeItem('user_email');
+            localStorage.removeItem('user_type');
         }
         
         function isAuthenticated() { return !!getAccessToken(); }
@@ -207,83 +166,90 @@
             return response;
         }
         
-        // ПОЛУЧЕНИЕ ДАННЫХ ПОЛЬЗОВАТЕЛЯ
+        // ========== ЧАТЫ ==========
+        async function getConversations() {
+            try {
+                const response = await apiRequest('/chats/conversations/');
+                if (response.ok) return await response.json();
+                return [];
+            } catch (error) { return []; }
+        }
+        
+        async function createConversation(otherUserId, itemId = null) {
+            try {
+                const body = { participant_id: otherUserId };
+                if (itemId) body.item_id = itemId;
+                const response = await apiRequest('/chats/conversations/', {
+                    method: 'POST',
+                    body: JSON.stringify(body)
+                });
+                if (response.ok) return await response.json();
+                return null;
+            } catch (error) { return null; }
+        }
+        
+        async function getMessages(conversationId) {
+            try {
+                const response = await apiRequest(`/chats/conversations/${conversationId}/`);
+                if (response.ok) return await response.json();
+                return null;
+            } catch (error) { return null; }
+        }
+        
+        async function markConversationRead(conversationId) {
+            try {
+                await apiRequest(`/chats/conversations/${conversationId}/mark_read/`, { method: 'POST' });
+            } catch (error) {}
+        }
+        
+        // ========== ПРОФИЛЬ ==========
         async function getUserProfile() {
             try {
                 const response = await apiRequest('/users/me/');
-                if (response.ok) {
-                    const data = await response.json();
-                    return data;
-                }
+                if (response.ok) return await response.json();
             } catch (e) {}
-            
-            return {
-                username: localStorage.getItem('username'),
+            return { 
+                username: localStorage.getItem('username'), 
                 email: localStorage.getItem('user_email') || '',
-                first_name: '',
-                last_name: ''
+                user_type: localStorage.getItem('user_type') || 'individual'
             };
         }
         
-        // ОБНОВЛЕНИЕ ПРОФИЛЯ
         async function updateProfile(profileData) {
             try {
                 const response = await apiRequest('/users/me/', {
                     method: 'PATCH',
                     body: JSON.stringify(profileData)
                 });
-                
                 if (response.ok) {
                     const data = await response.json();
                     if (data.username) localStorage.setItem('username', data.username);
                     if (data.email) localStorage.setItem('user_email', data.email);
                     return { success: true, data };
-                } else if (response.status === 404) {
-                    if (profileData.username) localStorage.setItem('username', profileData.username);
-                    if (profileData.email) localStorage.setItem('user_email', profileData.email);
-                    return { success: true, data: profileData };
                 } else {
                     const error = await response.json();
                     return { success: false, error };
                 }
             } catch (error) {
-                if (profileData.username) localStorage.setItem('username', profileData.username);
-                if (profileData.email) localStorage.setItem('user_email', profileData.email);
-                return { success: true, data: profileData };
+                return { success: false, error: { detail: 'Ошибка подключения' } };
             }
         }
         
-        // ИЗМЕНЕНИЕ ПАРОЛЯ
         async function changePassword(oldPassword, newPassword) {
             try {
                 const response = await apiRequest('/users/change-password/', {
                     method: 'POST',
                     body: JSON.stringify({ old_password: oldPassword, new_password: newPassword })
                 });
-                
-                if (response.ok) {
-                    return { success: true };
-                } else if (response.status === 404) {
-                    const demoOldPassword = 'alex12345';
-                    if (oldPassword !== demoOldPassword) {
-                        return { success: false, error: { detail: 'Неверный текущий пароль' } };
-                    }
-                    localStorage.setItem('demo_password', newPassword);
-                    return { success: true };
-                } else {
-                    const error = await response.json();
-                    return { success: false, error };
-                }
+                if (response.ok) return { success: true };
+                const error = await response.json();
+                return { success: false, error };
             } catch (error) {
-                const demoOldPassword = 'alex12345';
-                if (oldPassword !== demoOldPassword) {
-                    return { success: false, error: { detail: 'Неверный текущий пароль' } };
-                }
-                localStorage.setItem('demo_password', newPassword);
-                return { success: true };
+                return { success: false, error: { detail: 'Ошибка подключения' } };
             }
         }
         
+        // ========== ТОВАРЫ ==========
         let currentPage = 1;
         let totalPages = 1;
         let currentCategory = 'all';
@@ -326,13 +292,12 @@
                 return `
                 <div class="card">
                     ${isOwner ? '<div class="card-owner-badge">Ваше объявление</div>' : ''}
-                    <div class="card-image">
-                        <img src="${imageUrl}" alt="${product.name}">
-                    </div>
+                    <div class="card-image"><img src="${imageUrl}" alt="${product.name}"></div>
                     <div class="card-title">${product.name || 'Без названия'}</div>
                     ${product.description ? `<div class="card-description">${product.description.substring(0, 80)}${product.description.length > 80 ? '...' : ''}</div>` : ''}
                     <div class="card-price">${product.price_per_day || product.price || 0} ₽/<small>день</small></div>
-                    ${!isOwner ? `<button class="card-btn" data-id="${product.id}">Арендовать</button>` : ''}
+                    ${!isOwner ? `<button class="card-btn card-chat-btn" data-id="${product.id}" data-owner="${product.owner}" data-action="chat">💬 Написать продавцу</button>` : ''}
+                    ${!isOwner ? `<button class="card-btn" data-id="${product.id}" data-action="rent">Арендовать</button>` : ''}
                     ${isOwner ? `<button class="card-btn card-delete-btn" data-id="${product.id}" data-action="delete">🗑 Удалить</button>` : ''}
                 </div>
             `}).join('');
@@ -341,6 +306,7 @@
                 btn.onclick = async () => {
                     const productId = btn.dataset.id;
                     const action = btn.dataset.action;
+                    const ownerId = btn.dataset.owner;
                     
                     if (action === 'delete') {
                         if (confirm('Вы уверены, что хотите удалить это объявление?')) {
@@ -348,153 +314,145 @@
                         }
                         return;
                     }
-                    
-                    if (!isAuthenticated()) {
-                        alert('Пожалуйста, войдите в систему');
-                        showLoginPage();
+                    if (action === 'chat') {
+                        if (!isAuthenticated()) { alert('Пожалуйста, войдите в систему'); showLoginPage(); return; }
+                        await startChat(ownerId, productId);
                         return;
                     }
-                    alert('🚀 Запрос на аренду отправлен владельцу!');
+                    if (action === 'rent') {
+                        if (!isAuthenticated()) { alert('Пожалуйста, войдите в систему'); showLoginPage(); return; }
+                        alert('🚀 Запрос на аренду отправлен владельцу!');
+                    }
                 };
             });
         }
         
+        async function startChat(otherUserId, itemId) {
+            const currentUserId = localStorage.getItem('user_id');
+            if (currentUserId == otherUserId) { alert('Вы не можете начать чат с самим собой'); return; }
+            const conversation = await createConversation(otherUserId, itemId);
+            if (conversation) showChatPage(conversation.id);
+            else alert('Не удалось создать чат');
+        }
+        
         async function deleteItem(productId) {
             try {
-                const response = await apiRequest(`/items/${productId}/`, {
-                    method: 'DELETE'
-                });
-                if (response.ok) {
-                    alert('✅ Объявление удалено');
-                    loadProducts(1);
-                } else {
-                    alert('❌ Ошибка при удалении');
-                }
-            } catch (error) {
-                alert('❌ Ошибка подключения');
-            }
+                const response = await apiRequest(`/items/${productId}/`, { method: 'DELETE' });
+                if (response.ok) { alert('✅ Объявление удалено'); loadProducts(1); }
+                else alert('❌ Ошибка при удалении');
+            } catch (error) { alert('❌ Ошибка подключения'); }
         }
         
         function renderPagination() {
             const container = document.getElementById('pagination');
             if (!container || totalPages <= 1) { if(container) container.innerHTML = ''; return; }
             let html = '';
-            for (let i = 1; i <= totalPages; i++) {
-                html += `<button class="${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
-            }
+            for (let i = 1; i <= totalPages; i++) html += `<button class="${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
             container.innerHTML = html;
-            container.querySelectorAll('button').forEach(btn => {
-                btn.addEventListener('click', () => loadProducts(parseInt(btn.dataset.page)));
-            });
+            container.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => loadProducts(parseInt(btn.dataset.page))));
         }
         
-        // СОЗДАНИЕ ОБЪЯВЛЕНИЯ С ЗАГРУЗКОЙ ФАЙЛОВ
+        // ========== СОЗДАНИЕ ОБЪЯВЛЕНИЯ ==========
         async function createItemWithImages(formData, images) {
             try {
-                const response = await apiRequest('/items/', {
-                    method: 'POST',
-                    body: JSON.stringify(formData)
-                });
-                
+                const response = await apiRequest('/items/', { method: 'POST', body: JSON.stringify(formData) });
                 if (!response.ok) {
                     const error = await response.json();
                     alert('❌ Ошибка: ' + JSON.stringify(error));
                     return false;
                 }
-                
                 const item = await response.json();
-                const itemId = item.id;
-                
                 if (images && images.length > 0) {
                     for (const imageFile of images) {
                         const imageFormData = new FormData();
                         imageFormData.append('image', imageFile);
-                        
-                        const imageResponse = await apiRequest(`/items/${itemId}/upload-image/`, {
-                            method: 'POST',
-                            body: imageFormData
-                        });
-                        
-                        if (!imageResponse.ok) {
-                            console.warn('Не удалось загрузить изображение');
-                        }
+                        await apiRequest(`/items/${item.id}/upload-image/`, { method: 'POST', body: imageFormData });
                     }
                 }
-                
                 alert('✅ Объявление опубликовано!');
                 showMainPage();
                 loadProducts(1);
                 return true;
-                
-            } catch (error) {
-                alert('❌ Ошибка подключения');
-                return false;
-            }
+            } catch (error) { alert('❌ Ошибка подключения'); return false; }
         }
         
-        function setupImagePreview() {
-            const fileInput = document.getElementById('itemImages');
-            const previewContainer = document.getElementById('imagePreview');
-            
-            if (!fileInput) return;
-            
-            fileInput.addEventListener('change', (e) => {
-                selectedFiles = Array.from(e.target.files);
-                updateImagePreview();
-            });
-        }
-        
-        function updateImagePreview() {
-            const previewContainer = document.getElementById('imagePreview');
-            if (!previewContainer) return;
-            
-            previewContainer.innerHTML = '';
-            
-            selectedFiles.forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const previewDiv = document.createElement('div');
-                    previewDiv.className = 'preview-item';
-                    previewDiv.innerHTML = `
-                        <img src="${e.target.result}" alt="Предпросмотр">
-                        <button class="remove-image" data-index="${index}">×</button>
-                    `;
-                    previewContainer.appendChild(previewDiv);
-                    
-                    previewDiv.querySelector('.remove-image').addEventListener('click', () => {
-                        selectedFiles.splice(index, 1);
-                        updateImagePreview();
-                        const fileInput = document.getElementById('itemImages');
-                        if (fileInput) fileInput.value = '';
-                    });
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-        
-        // РЕГИСТРАЦИЯ
-        async function register(username, email, password) {
+        // ========== РЕГИСТРАЦИЯ (исправленная) ==========
+        async function register(username, email, password, userType) {
             try {
+                console.log('📤 Отправка регистрации:', { username, email, user_type: userType });
+                
                 const response = await fetch(`${API_BASE}/users/register/`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, email, password })
+                    body: JSON.stringify({ username, email, password, user_type: userType })
                 });
                 
+                console.log('📥 Статус ответа:', response.status);
+                
+                let responseData;
+                const responseText = await response.text();
+                console.log('📄 Текст ответа:', responseText);
+                
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch (e) {
+                    responseData = { detail: responseText || 'Неизвестная ошибка' };
+                }
+                
                 if (response.ok) {
-                    alert('✅ Регистрация успешна! Теперь войдите.');
-                    return true;
+                    console.log('✅ Успех:', responseData);
+                    
+                    const loginResponse = await fetch(`${API_BASE}/token/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    
+                    if (loginResponse.ok) {
+                        const loginData = await loginResponse.json();
+                        setTokens(loginData.access, loginData.refresh, null, username, email, userType);
+                        alert('✅ Регистрация успешна! Вы вошли в аккаунт.');
+                        showMainPage();
+                        loadProducts(1);
+                        return true;
+                    } else {
+                        alert('✅ Регистрация успешна! Теперь войдите с помощью кнопки "Войти".');
+                        showLoginPage();
+                        return true;
+                    }
                 } else {
-                    alert('❌ Ошибка регистрации');
+                    let errorMessage = 'Ошибка регистрации:\n';
+                    
+                    if (responseData.username) {
+                        errorMessage += `• Имя пользователя: ${Array.isArray(responseData.username) ? responseData.username.join(', ') : responseData.username}\n`;
+                    }
+                    if (responseData.email) {
+                        errorMessage += `• Email: ${Array.isArray(responseData.email) ? responseData.email.join(', ') : responseData.email}\n`;
+                    }
+                    if (responseData.password) {
+                        errorMessage += `• Пароль: ${Array.isArray(responseData.password) ? responseData.password.join(', ') : responseData.password}\n`;
+                    }
+                    if (responseData.user_type) {
+                        errorMessage += `• Тип пользователя: ${Array.isArray(responseData.user_type) ? responseData.user_type.join(', ') : responseData.user_type}\n`;
+                    }
+                    if (responseData.detail) {
+                        errorMessage += `• ${responseData.detail}\n`;
+                    }
+                    if (errorMessage === 'Ошибка регистрации:\n') {
+                        errorMessage += `• ${JSON.stringify(responseData)}`;
+                    }
+                    
+                    alert(errorMessage);
                     return false;
                 }
             } catch (error) {
-                alert('❌ Ошибка подключения');
+                console.error('❌ Ошибка подключения:', error);
+                alert('❌ Ошибка подключения к серверу. Проверьте, запущен ли сервер.\n\n' + error.message);
                 return false;
             }
         }
         
-        // ВХОД
+        // ========== ВХОД ==========
         async function login(username, password) {
             try {
                 const response = await fetch(`${API_BASE}/token/`, {
@@ -502,23 +460,25 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
-                
                 if (response.ok) {
                     const data = await response.json();
-                    setTokens(data.access, data.refresh, null, username);
+                    setTokens(data.access, data.refresh, null, username, '', '');
                     alert('✅ Вход выполнен успешно!');
+                    showMainPage();
+                    loadProducts(1);
                     return true;
                 } else {
                     alert('❌ Неверный логин или пароль');
                     return false;
                 }
             } catch (error) {
-                alert('❌ Ошибка подключения');
+                alert('❌ Ошибка подключения к серверу');
                 return false;
             }
         }
         
         function logout() {
+            if (wsConnection) { wsConnection.close(); wsConnection = null; }
             clearTokens();
             updateNavBar();
             showMainPage();
@@ -533,258 +493,364 @@
                 authSection.innerHTML = `
                     <div class="user-info">
                         <span>👤 ${localStorage.getItem('username') || 'Пользователь'}</span>
+                        <button class="btn-outline" id="chatsNavBtn">💬 Чаты</button>
                         <button class="btn-outline" id="profileNavBtn">👤 Профиль</button>
                         <button class="btn-outline" id="createItemNavBtn">+ Объявление</button>
                         <button class="btn-outline" id="logoutNavBtn">Выйти</button>
                     </div>
                 `;
+                document.getElementById('chatsNavBtn')?.addEventListener('click', () => showChatsPage());
                 document.getElementById('profileNavBtn')?.addEventListener('click', () => showProfilePage());
                 document.getElementById('createItemNavBtn')?.addEventListener('click', () => showCreatePage());
                 document.getElementById('logoutNavBtn')?.addEventListener('click', logout);
             } else {
-                authSection.innerHTML = `
-                    <a href="#" class="btn-outline" id="loginNavBtn">Войти</a>
-                    <a href="#" class="btn-primary" id="registerNavBtn">Регистрация</a>
-                `;
+                authSection.innerHTML = `<a href="#" class="btn-outline" id="loginNavBtn">Войти</a><a href="#" class="btn-primary" id="registerNavBtn">Регистрация</a>`;
                 document.getElementById('loginNavBtn')?.addEventListener('click', (e) => { e.preventDefault(); showLoginPage(); });
                 document.getElementById('registerNavBtn')?.addEventListener('click', (e) => { e.preventDefault(); showRegisterPage(); });
             }
         }
         
-        // СТРАНИЦА ПРОФИЛЯ
-        async function showProfilePage() {
-            if (!isAuthenticated()) {
-                alert('Пожалуйста, войдите в систему');
-                showLoginPage();
-                return;
-            }
-            
-            const profile = await getUserProfile();
+        // ========== СТРАНИЦА ЧАТОВ ==========
+        async function showChatsPage() {
+            if (!isAuthenticated()) { alert('Пожалуйста, войдите в систему'); showLoginPage(); return; }
+            const conversations = await getConversations();
+            document.getElementById('app').innerHTML = `
+                <div class="chats-page"><div class="chats-card">
+                    <div class="chats-title">💬 Мои чаты</div>
+                    <div class="chats-sub">Общение с продавцами и покупателями</div>
+                    ${conversations.length === 0 ? '<div class="empty-message">📭 У вас пока нет чатов. Напишите продавцу на карточке товара!</div>' : `
+                        <ul class="conversation-list">
+                            ${conversations.map(conv => `
+                                <li class="conversation-item" data-id="${conv.id}">
+                                    <div class="conversation-info">
+                                        <h4>${conv.other_user?.username || 'Пользователь'}</h4>
+                                        <p>${conv.last_message?.text || 'Нет сообщений'}</p>
+                                    </div>
+                                    <div class="conversation-date">
+                                        ${conv.last_message?.created_at ? new Date(conv.last_message.created_at).toLocaleDateString() : ''}
+                                        ${conv.unread_count > 0 ? `<span class="unread-badge">${conv.unread_count}</span>` : ''}
+                                    </div>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    `}
+                    <div class="form-actions"><button type="button" class="btn-outline" id="backToMainBtn">← На главную</button></div>
+                </div></div>
+            `;
+            document.querySelectorAll('.conversation-item').forEach(item => item.addEventListener('click', () => showChatPage(item.dataset.id)));
+            document.getElementById('backToMainBtn')?.addEventListener('click', () => showMainPage());
+        }
+        
+        // ========== СТРАНИЦА ЧАТА ==========
+        async function showChatPage(conversationId) {
+            if (!isAuthenticated()) { showLoginPage(); return; }
+            const conversationData = await getMessages(conversationId);
+            if (!conversationData) { alert('Не удалось загрузить чат'); showChatsPage(); return; }
+            await markConversationRead(conversationId);
             
             document.getElementById('app').innerHTML = `
-                <div class="profile-page">
-                    <div class="profile-card">
-                        <div class="profile-title">👤 Мой профиль</div>
-                        <div class="profile-sub">Управление аккаунтом</div>
-                        
-                        <div id="profileMessage"></div>
-                        
-                        <form id="profileForm">
-                            <div class="form-group">
-                                <label>Имя пользователя</label>
-                                <input type="text" id="profileUsername" value="${profile.username || ''}" placeholder="username">
-                            </div>
-                            <div class="form-group">
-                                <label>Email</label>
-                                <input type="email" id="profileEmail" value="${profile.email || ''}" placeholder="email@example.com">
-                            </div>
-                            <div class="form-group">
-                                <label>Имя</label>
-                                <input type="text" id="profileFirstName" value="${profile.first_name || ''}" placeholder="Ваше имя">
-                            </div>
-                            <div class="form-group">
-                                <label>Фамилия</label>
-                                <input type="text" id="profileLastName" value="${profile.last_name || ''}" placeholder="Ваша фамилия">
-                            </div>
-                            <div class="form-actions">
-                                <button type="submit" class="btn-primary">💾 Сохранить изменения</button>
-                                <button type="button" class="btn-outline" id="cancelProfileBtn">Отмена</button>
-                            </div>
-                        </form>
-                        
-                        <hr>
-                        
-                        <div class="profile-title" style="font-size: 1.5rem;">🔐 Смена пароля</div>
-                        <div class="profile-sub">Измените свой пароль</div>
-                        
-                        <form id="passwordForm">
-                            <div class="form-group">
-                                <label>Текущий пароль</label>
-                                <input type="password" id="oldPassword" placeholder="Введите текущий пароль">
-                            </div>
-                            <div class="form-group">
-                                <label>Новый пароль</label>
-                                <input type="password" id="newPassword" placeholder="Введите новый пароль">
-                            </div>
-                            <div class="form-group">
-                                <label>Подтверждение пароля</label>
-                                <input type="password" id="confirmPassword" placeholder="Подтвердите новый пароль">
-                            </div>
-                            <div class="form-actions">
-                                <button type="submit" class="btn-primary">🔄 Сменить пароль</button>
-                            </div>
-                        </form>
+                <div class="chat-page"><div class="chat-card">
+                    <div class="chat-title">💬 Чат с ${conversationData.other_user?.username || 'пользователем'}</div>
+                    <div class="chat-messages" id="chatMessages">${renderMessages(conversationData.messages || [])}</div>
+                    <div class="chat-input-area">
+                        <input type="text" id="messageInput" placeholder="Введите сообщение..." onkeypress="if(event.key==='Enter') sendMessage()">
+                        <button class="btn-primary" onclick="sendMessage()">📤 Отправить</button>
                     </div>
-                </div>
+                    <div class="form-actions" style="margin-top: 16px;"><button type="button" class="btn-outline" id="backToChatsBtn">← Назад к чатам</button></div>
+                </div></div>
+            `;
+            
+            window.sendMessage = () => {
+                const input = document.getElementById('messageInput');
+                const text = input.value.trim();
+                if (!text) return;
+                if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+                    wsConnection.send(JSON.stringify({ message: text }));
+                    input.value = '';
+                } else { alert('Нет соединения с сервером'); }
+            };
+            
+            const token = getAccessToken();
+            const wsUrl = `${WS_BASE}/chat/${conversationId}/?token=${token}`;
+            if (wsConnection) wsConnection.close();
+            wsConnection = new WebSocket(wsUrl);
+            wsConnection.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                const messagesContainer = document.getElementById('chatMessages');
+                messagesContainer.insertAdjacentHTML('beforeend', renderSingleMessage(data, data.sender_id == localStorage.getItem('user_id')));
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            };
+            document.getElementById('backToChatsBtn').addEventListener('click', () => { if (wsConnection) wsConnection.close(); showChatsPage(); });
+            const messagesContainer = document.getElementById('chatMessages');
+            if (messagesContainer) messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        function renderMessages(messages) {
+            const currentUser = localStorage.getItem('user_id');
+            return messages.map(msg => renderSingleMessage(msg, msg.sender_id == currentUser)).join('');
+        }
+        
+        function renderSingleMessage(message, isMyMessage) {
+            const time = new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return `<div class="message ${isMyMessage ? 'my-message' : 'their-message'}"><div class="message-bubble">${escapeHtml(message.text)}</div><div class="message-time">${time}</div></div>`;
+        }
+        
+        function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+        
+        // ========== СТРАНИЦА ПРОФИЛЯ ==========
+        async function showProfilePage() {
+            if (!isAuthenticated()) { alert('Пожалуйста, войдите в систему'); showLoginPage(); return; }
+            
+            let profile = { user_type: localStorage.getItem('user_type') || 'individual' };
+            try {
+                const response = await apiRequest('/users/me/');
+                if (response.ok) profile = await response.json();
+            } catch (e) {}
+            
+            const userType = profile.user_type || 'individual';
+            localStorage.setItem('user_type', userType);
+            
+            let additionalFields = '';
+            if (userType === 'individual') {
+                additionalFields = `
+                    <div class="user-type-info">
+                        <h4>📄 Данные физического лица</h4>
+                        <div class="form-group"><label>Серия паспорта</label><input type="text" id="passportSeries" value="${profile.passport_series || ''}" placeholder="Серия паспорта"></div>
+                        <div class="form-group"><label>Номер паспорта</label><input type="text" id="passportNumber" value="${profile.passport_number || ''}" placeholder="Номер паспорта"></div>
+                        <div class="form-group"><label>ИНН</label><input type="text" id="inn" value="${profile.inn || ''}" placeholder="ИНН"></div>
+                    </div>
+                `;
+            } else if (userType === 'entrepreneur') {
+                additionalFields = `
+                    <div class="user-type-info">
+                        <h4>🏢 Данные ИП</h4>
+                        <div class="form-group"><label>ИНН</label><input type="text" id="inn" value="${profile.inn || ''}" placeholder="ИНН"></div>
+                        <div class="form-group"><label>ОГРНИП</label><input type="text" id="ogrnip" value="${profile.ogrnip || ''}" placeholder="ОГРНИП"></div>
+                    </div>
+                `;
+            } else if (userType === 'legal') {
+                additionalFields = `
+                    <div class="user-type-info">
+                        <h4>🏛️ Данные юридического лица</h4>
+                        <div class="form-group"><label>ИНН</label><input type="text" id="inn" value="${profile.inn || ''}" placeholder="ИНН"></div>
+                        <div class="form-group"><label>КПП</label><input type="text" id="kpp" value="${profile.kpp || ''}" placeholder="КПП"></div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('app').innerHTML = `
+                <div class="profile-page"><div class="profile-card">
+                    <div class="profile-title">👤 Мой профиль</div>
+                    <div class="profile-sub">Управление аккаунтом</div>
+                    <div id="profileMessage"></div>
+                    <form id="profileForm">
+                        <div class="form-group"><label>Тип пользователя</label>
+                            <select id="profileUserType" disabled>
+                                <option value="individual" ${userType === 'individual' ? 'selected' : ''}>🏠 Физическое лицо</option>
+                                <option value="entrepreneur" ${userType === 'entrepreneur' ? 'selected' : ''}>🏢 ИП</option>
+                                <option value="legal" ${userType === 'legal' ? 'selected' : ''}>🏛️ Юридическое лицо</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Имя пользователя</label><input type="text" id="profileUsername" value="${profile.username || localStorage.getItem('username') || ''}" placeholder="username"></div>
+                        <div class="form-group"><label>Email</label><input type="email" id="profileEmail" value="${profile.email || localStorage.getItem('user_email') || ''}" placeholder="email@example.com"></div>
+                        ${additionalFields}
+                        <div class="form-actions"><button type="submit" class="btn-primary">💾 Сохранить изменения</button><button type="button" class="btn-outline" id="cancelProfileBtn">Отмена</button></div>
+                    </form>
+                    <hr>
+                    <div class="profile-title" style="font-size: 1.5rem;">🔐 Смена пароля</div>
+                    <form id="passwordForm">
+                        <div class="form-group"><label>Текущий пароль</label><input type="password" id="oldPassword" placeholder="Введите текущий пароль"></div>
+                        <div class="form-group"><label>Новый пароль</label><input type="password" id="newPassword" placeholder="Введите новый пароль"></div>
+                        <div class="form-group"><label>Подтверждение пароля</label><input type="password" id="confirmPassword" placeholder="Подтвердите новый пароль"></div>
+                        <div class="form-actions"><button type="submit" class="btn-primary">🔄 Сменить пароль</button></div>
+                    </form>
+                </div></div>
             `;
             
             document.getElementById('profileForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const profileData = {
-                    username: document.getElementById('profileUsername').value,
-                    email: document.getElementById('profileEmail').value,
-                    first_name: document.getElementById('profileFirstName').value,
-                    last_name: document.getElementById('profileLastName').value
+                const updateData = { 
+                    username: document.getElementById('profileUsername').value, 
+                    email: document.getElementById('profileEmail').value 
                 };
                 
-                const result = await updateProfile(profileData);
-                const messageDiv = document.getElementById('profileMessage');
+                // Собираем дополнительные данные
+                if (userType === 'individual') {
+                    updateData.passport_series = document.getElementById('passportSeries')?.value || '';
+                    updateData.passport_number = document.getElementById('passportNumber')?.value || '';
+                    updateData.inn = document.getElementById('inn')?.value || '';
+                } else if (userType === 'entrepreneur') {
+                    updateData.inn = document.getElementById('inn')?.value || '';
+                    updateData.ogrnip = document.getElementById('ogrnip')?.value || '';
+                } else if (userType === 'legal') {
+                    updateData.inn = document.getElementById('inn')?.value || '';
+                    updateData.kpp = document.getElementById('kpp')?.value || '';
+                }
                 
+                const result = await updateProfile(updateData);
+                const msgDiv = document.getElementById('profileMessage');
                 if (result.success) {
-                    messageDiv.innerHTML = '<div class="success-message">✅ Профиль успешно обновлён!</div>';
-                    localStorage.setItem('username', profileData.username);
-                    setTimeout(() => {
-                        messageDiv.innerHTML = '';
-                        updateNavBar();
-                    }, 2000);
-                } else {
-                    messageDiv.innerHTML = '<div class="error-message-box">❌ Ошибка: ' + JSON.stringify(result.error) + '</div>';
+                    msgDiv.innerHTML = '<div class="success-message">✅ Профиль успешно обновлён!</div>';
+                    localStorage.setItem('username', updateData.username);
+                    localStorage.setItem('user_email', updateData.email);
+                    setTimeout(() => msgDiv.innerHTML = '', 2000);
+                    updateNavBar();
+                } else { 
+                    msgDiv.innerHTML = '<div class="error-message-box">❌ Ошибка: ' + JSON.stringify(result.error) + '</div>'; 
                 }
             });
             
             document.getElementById('passwordForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const oldPassword = document.getElementById('oldPassword').value;
+                const msgDiv = document.getElementById('profileMessage');
                 const newPassword = document.getElementById('newPassword').value;
                 const confirmPassword = document.getElementById('confirmPassword').value;
-                const messageDiv = document.getElementById('profileMessage');
                 
                 if (newPassword !== confirmPassword) {
-                    messageDiv.innerHTML = '<div class="error-message-box">❌ Новый пароль и подтверждение не совпадают</div>';
+                    msgDiv.innerHTML = '<div class="error-message-box">❌ Пароли не совпадают</div>';
                     return;
                 }
                 
                 if (newPassword.length < 4) {
-                    messageDiv.innerHTML = '<div class="error-message-box">❌ Пароль должен содержать минимум 4 символа</div>';
+                    msgDiv.innerHTML = '<div class="error-message-box">❌ Пароль должен быть не менее 4 символов</div>';
                     return;
                 }
                 
-                const result = await changePassword(oldPassword, newPassword);
-                
+                const result = await changePassword(document.getElementById('oldPassword').value, newPassword);
                 if (result.success) {
-                    messageDiv.innerHTML = '<div class="success-message">✅ Пароль успешно изменён!</div>';
+                    msgDiv.innerHTML = '<div class="success-message">✅ Пароль успешно изменён!</div>';
                     document.getElementById('oldPassword').value = '';
                     document.getElementById('newPassword').value = '';
                     document.getElementById('confirmPassword').value = '';
-                    setTimeout(() => {
-                        messageDiv.innerHTML = '';
-                    }, 2000);
-                } else {
-                    messageDiv.innerHTML = '<div class="error-message-box">❌ ' + (result.error?.detail || 'Ошибка смены пароля') + '</div>';
+                    setTimeout(() => msgDiv.innerHTML = '', 2000);
+                } else { 
+                    msgDiv.innerHTML = '<div class="error-message-box">❌ ' + (result.error?.detail || 'Ошибка смены пароля') + '</div>'; 
                 }
             });
             
-            document.getElementById('cancelProfileBtn').addEventListener('click', () => {
-                showMainPage();
-            });
+            document.getElementById('cancelProfileBtn').addEventListener('click', () => showMainPage());
         }
         
-        // СТРАНИЦА СОЗДАНИЯ ОБЪЯВЛЕНИЯ
+        // ========== СТРАНИЦА СОЗДАНИЯ ОБЪЯВЛЕНИЯ ==========
         function showCreatePage() {
-            if (!isAuthenticated()) {
-                alert('Пожалуйста, войдите в систему');
-                showLoginPage();
-                return;
-            }
-            
+            if (!isAuthenticated()) { alert('Пожалуйста, войдите в систему'); showLoginPage(); return; }
             selectedFiles = [];
-            
             document.getElementById('app').innerHTML = `
-                <div class="create-page">
-                    <div class="create-card">
-                        <div class="create-title">➕ Новое объявление</div>
-                        <div class="create-sub">Расскажите о вещи, которую хотите сдать в аренду</div>
-                        <form id="createItemForm">
-                            <div class="form-group">
-                                <label>Название товара *</label>
-                                <input type="text" id="itemName" placeholder="Например: Дрель Makita" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Описание</label>
-                                <textarea id="itemDesc" rows="4" placeholder="Опишите состояние, характеристики, условия аренды..."></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Цена за день (₽) *</label>
-                                <input type="number" id="itemPrice" placeholder="500" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Категория</label>
-                                <select id="itemCategory">
-                                    <option value="">Выберите категорию</option>
-                                    <option value="electronics">📱 Электроника</option>
-                                    <option value="tools">🔧 Инструменты</option>
-                                    <option value="sport">⚽ Спорт</option>
-                                    <option value="clothing">👕 Одежда</option>
-                                    <option value="home">🏠 Дом и сад</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Фотографии товара</label>
-                                <label class="file-input-label">
-                                    📷 Выбрать изображения
-                                    <input type="file" id="itemImages" accept="image/*" multiple>
-                                </label>
-                                <div id="imagePreview" class="image-preview"></div>
-                                <small style="color: #6c8b9b;">Можно выбрать несколько изображений</small>
-                            </div>
-                            <div class="form-actions">
-                                <button type="submit" class="btn-primary">📤 Опубликовать</button>
-                                <button type="button" class="btn-outline" id="cancelCreateBtn">Отмена</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+                <div class="create-page"><div class="create-card">
+                    <div class="create-title">➕ Новое объявление</div>
+                    <div class="create-sub">Расскажите о вещи, которую хотите сдать в аренду</div>
+                    <form id="createItemForm">
+                        <div class="form-group"><label>Название товара *</label><input type="text" id="itemName" placeholder="Например: Дрель Makita" required></div>
+                        <div class="form-group"><label>Описание</label><textarea id="itemDesc" rows="4" placeholder="Опишите состояние, характеристики..."></textarea></div>
+                        <div class="form-group"><label>Цена за день (₽) *</label><input type="number" id="itemPrice" placeholder="500" required></div>
+                        <div class="form-group"><label>Категория</label><select id="itemCategory"><option value="">Выберите категорию</option><option value="electronics">📱 Электроника</option><option value="tools">🔧 Инструменты</option><option value="sport">⚽ Спорт</option><option value="clothing">👕 Одежда</option><option value="home">🏠 Дом и сад</option></select></div>
+                        <div class="form-group"><label>Фотографии</label><label class="file-input-label">📷 Выбрать изображения<input type="file" id="itemImages" accept="image/*" multiple></label><div id="imagePreview" class="image-preview"></div></div>
+                        <div class="form-actions"><button type="submit" class="btn-primary">📤 Опубликовать</button><button type="button" class="btn-outline" id="cancelCreateBtn">Отмена</button></div>
+                    </form>
+                </div></div>
             `;
-            
-            setupImagePreview();
-            
+            const fileInput = document.getElementById('itemImages');
+            fileInput.addEventListener('change', (e) => { selectedFiles = Array.from(e.target.files); updateImagePreview(); });
             document.getElementById('createItemForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const formData = {
-                    name: document.getElementById('itemName').value,
-                    description: document.getElementById('itemDesc').value,
-                    price_per_day: parseInt(document.getElementById('itemPrice').value),
-                    category: document.getElementById('itemCategory').value
-                };
-                if (!formData.name || !formData.price_per_day) {
-                    alert('Заполните название и цену');
-                    return;
-                }
+                const formData = { name: document.getElementById('itemName').value, description: document.getElementById('itemDesc').value, price_per_day: parseInt(document.getElementById('itemPrice').value), category: document.getElementById('itemCategory').value };
+                if (!formData.name || !formData.price_per_day) { alert('Заполните название и цену'); return; }
                 await createItemWithImages(formData, selectedFiles);
             });
-            
-            document.getElementById('cancelCreateBtn').addEventListener('click', () => {
-                showMainPage();
+            document.getElementById('cancelCreateBtn').addEventListener('click', () => showMainPage());
+        }
+        
+        function updateImagePreview() {
+            const container = document.getElementById('imagePreview');
+            if (!container) return;
+            container.innerHTML = '';
+            selectedFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const div = document.createElement('div'); div.className = 'preview-item';
+                    div.innerHTML = `<img src="${e.target.result}"><button class="remove-image" data-index="${index}">×</button>`;
+                    container.appendChild(div);
+                    div.querySelector('.remove-image').addEventListener('click', () => { selectedFiles.splice(index, 1); updateImagePreview(); });
+                };
+                reader.readAsDataURL(file);
             });
         }
         
-        // ГЛАВНАЯ СТРАНИЦА
+        // ========== СТРАНИЦА РЕГИСТРАЦИИ ==========
+        function showRegisterPage() {
+            document.getElementById('app').innerHTML = `
+                <div class="auth-page"><div class="auth-card">
+                    <div class="auth-title">Регистрация</div>
+                    <div class="auth-sub">Создайте новый аккаунт</div>
+                    <form id="registerForm">
+                        <div class="input-group"><label>Имя пользователя *</label><input type="text" id="regUsername" required></div>
+                        <div class="input-group"><label>Email *</label><input type="email" id="regEmail" required></div>
+                        <div class="input-group"><label>Пароль *</label><input type="password" id="regPassword" required></div>
+                        <div class="input-group"><label>Подтверждение пароля *</label><input type="password" id="regPassword2" required></div>
+                        <div class="input-group"><label>Тип пользователя *</label>
+                            <select id="regUserType" required>
+                                <option value="individual">🏠 Физическое лицо (паспорт + ИНН)</option>
+                                <option value="entrepreneur">🏢 ИП (ИНН + ОГРНИП)</option>
+                                <option value="legal">🏛️ Юридическое лицо (ИНН + КПП)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="auth-btn">Зарегистрироваться</button>
+                        <div class="auth-footer">Уже есть аккаунт? <a href="#" id="switchToLogin">Войти</a></div>
+                        <div class="auth-footer"><a href="#" id="backToHomeReg">← На главную</a></div>
+                    </form>
+                </div></div>
+            `;
+            document.getElementById('registerForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const password = document.getElementById('regPassword').value;
+                const password2 = document.getElementById('regPassword2').value;
+                if (password !== password2) { alert('❌ Пароли не совпадают'); return; }
+                const success = await register(
+                    document.getElementById('regUsername').value,
+                    document.getElementById('regEmail').value,
+                    password,
+                    document.getElementById('regUserType').value
+                );
+                if (success) showMainPage();
+            });
+            document.getElementById('switchToLogin')?.addEventListener('click', (e) => { e.preventDefault(); showLoginPage(); });
+            document.getElementById('backToHomeReg')?.addEventListener('click', (e) => { e.preventDefault(); showMainPage(); });
+        }
+        
+        // ========== СТРАНИЦА ВХОДА ==========
+        function showLoginPage() {
+            document.getElementById('app').innerHTML = `
+                <div class="auth-page"><div class="auth-card">
+                    <div class="auth-title">Войти</div>
+                    <div class="auth-sub">Введите свои данные</div>
+                    <form id="loginForm">
+                        <div class="input-group"><label>Имя пользователя</label><input type="text" id="loginUsername" required></div>
+                        <div class="input-group"><label>Пароль</label><input type="password" id="loginPassword" required></div>
+                        <button type="submit" class="auth-btn">Войти</button>
+                        <div class="auth-footer">Нет аккаунта? <a href="#" id="switchToRegister">Зарегистрироваться</a></div>
+                        <div class="auth-footer"><a href="#" id="backToHome">← На главную</a></div>
+                    </form>
+                </div></div>
+            `;
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const success = await login(document.getElementById('loginUsername').value, document.getElementById('loginPassword').value);
+                if (success) { showMainPage(); loadProducts(1); }
+            });
+            document.getElementById('switchToRegister')?.addEventListener('click', (e) => { e.preventDefault(); showRegisterPage(); });
+            document.getElementById('backToHome')?.addEventListener('click', (e) => { e.preventDefault(); showMainPage(); });
+        }
+        
+        // ========== ГЛАВНАЯ СТРАНИЦА ==========
         function showMainPage() {
             document.getElementById('app').innerHTML = `
-                <div class="header">
-                    <div class="container header-inner">
-                        <span class="logo" id="logoBtn">Аренда вещей</span>
-                        <div id="authSection" class="auth-buttons"></div>
-                    </div>
-                </div>
-                <div class="categories">
-                    <div class="container">
-                        <ul class="cats-list" id="categoriesList">
-                            ${CATEGORIES.map(cat => `<li data-category="${cat.id}" class="${cat.id === 'all' ? 'active' : ''}">${cat.name}</li>`).join('')}
-                        </ul>
-                    </div>
-                </div>
-                <div class="container">
-                    <div id="productsContainer" class="products"><div class="loading">Загрузка товаров...</div></div>
-                    <div id="pagination" class="pagination"></div>
-                </div>
+                <div class="header"><div class="container header-inner"><span class="logo" id="logoBtn">Аренда вещей</span><div id="authSection" class="auth-buttons"></div></div></div>
+                <div class="categories"><div class="container"><ul class="cats-list" id="categoriesList">${CATEGORIES.map(cat => `<li data-category="${cat.id}" class="${cat.id === 'all' ? 'active' : ''}">${cat.name}</li>`).join('')}</ul></div></div>
+                <div class="container"><div id="productsContainer" class="products"><div class="loading">Загрузка товаров...</div></div><div id="pagination" class="pagination"></div></div>
                 <footer>© Аренда вещей — умная аренда</footer>
             `;
-            
             updateNavBar();
-            
             document.getElementById('logoBtn')?.addEventListener('click', () => showMainPage());
-            
             document.querySelectorAll('.cats-list li').forEach(cat => {
                 cat.addEventListener('click', () => {
                     document.querySelectorAll('.cats-list li').forEach(c => c.classList.remove('active'));
@@ -793,111 +859,9 @@
                     loadProducts(1);
                 });
             });
-            
             loadProducts(1);
         }
         
-        // СТРАНИЦА ВХОДА
-        function showLoginPage() {
-            document.getElementById('app').innerHTML = `
-                <div class="auth-page">
-                    <div class="auth-card">
-                        <div class="auth-title">Войти</div>
-                        <div class="auth-sub">Введите свои данные</div>
-                        <form id="loginForm">
-                            <div class="input-group">
-                                <label>Имя пользователя</label>
-                                <input type="text" id="loginUsername" required>
-                            </div>
-                            <div class="input-group">
-                                <label>Пароль</label>
-                                <input type="password" id="loginPassword" required>
-                            </div>
-                            <button type="submit" class="auth-btn">Войти</button>
-                            <div class="auth-footer">
-                                Нет аккаунта? <a href="#" id="switchToRegister">Зарегистрироваться</a>
-                            </div>
-                            <div class="auth-footer">
-                                <a href="#" id="backToHome">← На главную</a>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('loginForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const success = await login(
-                    document.getElementById('loginUsername').value,
-                    document.getElementById('loginPassword').value
-                );
-                if (success) {
-                    showMainPage();
-                    loadProducts(1);
-                }
-            });
-            
-            document.getElementById('switchToRegister')?.addEventListener('click', (e) => { e.preventDefault(); showRegisterPage(); });
-            document.getElementById('backToHome')?.addEventListener('click', (e) => { e.preventDefault(); showMainPage(); });
-        }
-        
-        // СТРАНИЦА РЕГИСТРАЦИИ
-        function showRegisterPage() {
-            document.getElementById('app').innerHTML = `
-                <div class="auth-page">
-                    <div class="auth-card">
-                        <div class="auth-title">Регистрация</div>
-                        <div class="auth-sub">Создайте новый аккаунт</div>
-                        <form id="registerForm">
-                            <div class="input-group">
-                                <label>Имя пользователя</label>
-                                <input type="text" id="regUsername" required>
-                            </div>
-                            <div class="input-group">
-                                <label>Email</label>
-                                <input type="email" id="regEmail" required>
-                            </div>
-                            <div class="input-group">
-                                <label>Пароль</label>
-                                <input type="password" id="regPassword" required>
-                            </div>
-                            <div class="input-group">
-                                <label>Подтверждение пароля</label>
-                                <input type="password" id="regPassword2" required>
-                            </div>
-                            <button type="submit" class="auth-btn">Зарегистрироваться</button>
-                            <div class="auth-footer">
-                                Уже есть аккаунт? <a href="#" id="switchToLogin">Войти</a>
-                            </div>
-                            <div class="auth-footer">
-                                <a href="#" id="backToHomeReg">← На главную</a>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('registerForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const password = document.getElementById('regPassword').value;
-                const password2 = document.getElementById('regPassword2').value;
-                if (password !== password2) {
-                    alert('❌ Пароли не совпадают');
-                    return;
-                }
-                const success = await register(
-                    document.getElementById('regUsername').value,
-                    document.getElementById('regEmail').value,
-                    password
-                );
-                if (success) showLoginPage();
-            });
-            
-            document.getElementById('switchToLogin')?.addEventListener('click', (e) => { e.preventDefault(); showLoginPage(); });
-            document.getElementById('backToHomeReg')?.addEventListener('click', (e) => { e.preventDefault(); showMainPage(); });
-        }
-        
-        // ЗАПУСК
         showMainPage();
     </script>
 </body>
