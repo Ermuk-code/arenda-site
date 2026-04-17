@@ -217,8 +217,8 @@
         
         async function updateProfile(profileData) {
             try {
-                const response = await apiRequest('/users/me/', {
-                    method: 'PATCH',
+                const response = await apiRequest('/users/profile/', {
+                    method: 'PUT',
                     body: JSON.stringify(profileData)
                 });
                 if (response.ok) {

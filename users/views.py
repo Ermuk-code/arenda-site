@@ -20,6 +20,24 @@ from drf_spectacular.utils import extend_schema
 class RegisterView(CreateAPIView):
     serializer_class = RegisterSerializer
 
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+
+        old_password = request.data.get('old_password')
+        new_password = request.data.get('new_password')
+
+        if not user.check_password(old_password):
+            return Response({'error': 'Wrong password'}, status=400)
+
+        user.set_password(new_password)
+        user.save()
+
+        return Response({'status': 'password changed'})
+
+
 class ProfileView(APIView):
     serializer_class = ProfileSerializer
     permission_classes = [IsAuthenticated]
