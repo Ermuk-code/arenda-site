@@ -81,9 +81,6 @@
         .user-type-info { background: #eef2f7; padding: 16px; border-radius: 16px; margin-top: 16px; }
         .user-type-info h4 { margin-bottom: 12px; color: #1a3e4c; }
         
-        .back-button { margin-bottom: 24px; display: inline-block; cursor: pointer; color: #2b6a7c; font-weight: 500; }
-        .back-button:hover { text-decoration: underline; }
-        
         @media (max-width: 720px) { .header-inner { flex-direction: column; } .cats-list { gap: 18px; } .user-info { justify-content: center; } }
     </style>
 </head>
@@ -109,21 +106,13 @@
         function getAccessToken() { return localStorage.getItem('access_token'); }
         function getRefreshToken() { return localStorage.getItem('refresh_token'); }
         
-        function setTokens(access, refresh, userId, username, email, userType, profileData) {
+        function setTokens(access, refresh, userId, username, email, userType) {
             localStorage.setItem('access_token', access);
             if (refresh) localStorage.setItem('refresh_token', refresh);
             if (userId) localStorage.setItem('user_id', userId);
             if (username) localStorage.setItem('username', username);
             if (email) localStorage.setItem('user_email', email);
             if (userType) localStorage.setItem('user_type', userType);
-            
-            if (profileData) {
-                if (profileData.passport_series) localStorage.setItem('passport_series', profileData.passport_series);
-                if (profileData.passport_number) localStorage.setItem('passport_number', profileData.passport_number);
-                if (profileData.inn) localStorage.setItem('inn', profileData.inn);
-                if (profileData.ogrnip) localStorage.setItem('ogrnip', profileData.ogrnip);
-                if (profileData.kpp) localStorage.setItem('kpp', profileData.kpp);
-            }
         }
         
         function clearTokens() {
@@ -133,11 +122,6 @@
             localStorage.removeItem('user_id');
             localStorage.removeItem('user_email');
             localStorage.removeItem('user_type');
-            localStorage.removeItem('passport_series');
-            localStorage.removeItem('passport_number');
-            localStorage.removeItem('inn');
-            localStorage.removeItem('ogrnip');
-            localStorage.removeItem('kpp');
         }
         
         function isAuthenticated() { return !!getAccessToken(); }
@@ -219,36 +203,16 @@
         }
         
         // ========== ПРОФИЛЬ ==========
-        function getSavedProfile() {
-            return {
-                username: localStorage.getItem('username'),
-                email: localStorage.getItem('user_email'),
-                user_type: localStorage.getItem('user_type') || 'individual',
-                passport_series: localStorage.getItem('passport_series') || '',
-                passport_number: localStorage.getItem('passport_number') || '',
-                inn: localStorage.getItem('inn') || '',
-                ogrnip: localStorage.getItem('ogrnip') || '',
-                kpp: localStorage.getItem('kpp') || ''
-            };
-        }
-        
         async function getUserProfile() {
             try {
                 const response = await apiRequest('/users/me/');
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.username) localStorage.setItem('username', data.username);
-                    if (data.email) localStorage.setItem('user_email', data.email);
-                    if (data.user_type) localStorage.setItem('user_type', data.user_type);
-                    if (data.passport_series) localStorage.setItem('passport_series', data.passport_series);
-                    if (data.passport_number) localStorage.setItem('passport_number', data.passport_number);
-                    if (data.inn) localStorage.setItem('inn', data.inn);
-                    if (data.ogrnip) localStorage.setItem('ogrnip', data.ogrnip);
-                    if (data.kpp) localStorage.setItem('kpp', data.kpp);
-                    return data;
-                }
+                if (response.ok) return await response.json();
             } catch (e) {}
-            return getSavedProfile();
+            return { 
+                username: localStorage.getItem('username'), 
+                email: localStorage.getItem('user_email') || '',
+                user_type: localStorage.getItem('user_type') || 'individual'
+            };
         }
         
         async function updateProfile(profileData) {
@@ -261,11 +225,6 @@
                     const data = await response.json();
                     if (data.username) localStorage.setItem('username', data.username);
                     if (data.email) localStorage.setItem('user_email', data.email);
-                    if (data.passport_series) localStorage.setItem('passport_series', data.passport_series);
-                    if (data.passport_number) localStorage.setItem('passport_number', data.passport_number);
-                    if (data.inn) localStorage.setItem('inn', data.inn);
-                    if (data.ogrnip) localStorage.setItem('ogrnip', data.ogrnip);
-                    if (data.kpp) localStorage.setItem('kpp', data.kpp);
                     return { success: true, data };
                 } else {
                     const error = await response.json();
@@ -333,8 +292,8 @@
                 return `
                 <div class="card">
                     ${isOwner ? '<div class="card-owner-badge">Ваше объявление</div>' : ''}
-                    <div class="card-image"><img src="${imageUrl}" alt="${product.title || product.name}"></div>
-                    <div class="card-title">${product.title || product.name || 'Без названия'}</div>
+                    <div class="card-image"><img src="${imageUrl}" alt="${product.name}"></div>
+                    <div class="card-title">${product.name || 'Без названия'}</div>
                     ${product.description ? `<div class="card-description">${product.description.substring(0, 80)}${product.description.length > 80 ? '...' : ''}</div>` : ''}
                     <div class="card-price">${product.price_per_day || product.price || 0} ₽/<small>день</small></div>
                     ${!isOwner ? `<button class="card-btn card-chat-btn" data-id="${product.id}" data-owner="${product.owner}" data-action="chat">💬 Написать продавцу</button>` : ''}
@@ -396,74 +355,28 @@
         // ========== СОЗДАНИЕ ОБЪЯВЛЕНИЯ ==========
         async function createItemWithImages(formData, images) {
             try {
-                const ownerId = localStorage.getItem('user_id');
-                console.log('👤 owner_id из localStorage:', ownerId);
-                
-                if (!ownerId) {
-                    alert('❌ Ошибка: пользователь не авторизован. Выйдите и войдите заново.');
-                    return false;
-                }
-                
-                const apiData = {
-                    title: formData.name,
-                    description: formData.description,
-                    price_per_day: formData.price_per_day,
-                    owner: parseInt(ownerId)
-                };
-                
-                if (formData.category && formData.category !== '') {
-                    apiData.category = formData.category;
-                }
-                
-                console.log('📤 Отправка данных:', apiData);
-                
-                const token = getAccessToken();
-                const response = await fetch(`${API_BASE}/items/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(apiData)
-                });
-                
-                console.log('📥 Статус ответа:', response.status);
-                
+                const response = await apiRequest('/items/', { method: 'POST', body: JSON.stringify(formData) });
                 if (!response.ok) {
                     const error = await response.json();
-                    console.error('❌ Ошибка API:', error);
                     alert('❌ Ошибка: ' + JSON.stringify(error));
                     return false;
                 }
-                
                 const item = await response.json();
-                console.log('✅ Товар создан:', item);
-                
                 if (images && images.length > 0) {
                     for (const imageFile of images) {
                         const imageFormData = new FormData();
                         imageFormData.append('image', imageFile);
-                        
-                        await fetch(`${API_BASE}/items/${item.id}/upload-image/`, {
-                            method: 'POST',
-                            headers: { 'Authorization': `Bearer ${token}` },
-                            body: imageFormData
-                        });
+                        await apiRequest(`/items/${item.id}/upload-image/`, { method: 'POST', body: imageFormData });
                     }
                 }
-                
                 alert('✅ Объявление опубликовано!');
                 showMainPage();
                 loadProducts(1);
                 return true;
-            } catch (error) {
-                console.error('❌ Ошибка:', error);
-                alert('❌ Ошибка подключения');
-                return false;
-            }
+            } catch (error) { alert('❌ Ошибка подключения'); return false; }
         }
         
-        // ========== РЕГИСТРАЦИЯ ==========
+        // ========== РЕГИСТРАЦИЯ (исправленная) ==========
         async function register(username, email, password, userType) {
             try {
                 console.log('📤 Отправка регистрации:', { username, email, user_type: userType });
@@ -497,10 +410,7 @@
                     
                     if (loginResponse.ok) {
                         const loginData = await loginResponse.json();
-                        const payload = JSON.parse(atob(loginData.access.split('.')[1]));
-                        const userId = payload.user_id;
-                        
-                        setTokens(loginData.access, loginData.refresh, userId, username, email, userType);
+                        setTokens(loginData.access, loginData.refresh, null, username, email, userType);
                         alert('✅ Регистрация успешна! Вы вошли в аккаунт.');
                         showMainPage();
                         loadProducts(1);
@@ -512,12 +422,25 @@
                     }
                 } else {
                     let errorMessage = 'Ошибка регистрации:\n';
-                    if (responseData.username) errorMessage += `• Имя пользователя: ${Array.isArray(responseData.username) ? responseData.username.join(', ') : responseData.username}\n`;
-                    if (responseData.email) errorMessage += `• Email: ${Array.isArray(responseData.email) ? responseData.email.join(', ') : responseData.email}\n`;
-                    if (responseData.password) errorMessage += `• Пароль: ${Array.isArray(responseData.password) ? responseData.password.join(', ') : responseData.password}\n`;
-                    if (responseData.user_type) errorMessage += `• Тип пользователя: ${Array.isArray(responseData.user_type) ? responseData.user_type.join(', ') : responseData.user_type}\n`;
-                    if (responseData.detail) errorMessage += `• ${responseData.detail}\n`;
-                    if (errorMessage === 'Ошибка регистрации:\n') errorMessage += `• ${JSON.stringify(responseData)}`;
+                    
+                    if (responseData.username) {
+                        errorMessage += `• Имя пользователя: ${Array.isArray(responseData.username) ? responseData.username.join(', ') : responseData.username}\n`;
+                    }
+                    if (responseData.email) {
+                        errorMessage += `• Email: ${Array.isArray(responseData.email) ? responseData.email.join(', ') : responseData.email}\n`;
+                    }
+                    if (responseData.password) {
+                        errorMessage += `• Пароль: ${Array.isArray(responseData.password) ? responseData.password.join(', ') : responseData.password}\n`;
+                    }
+                    if (responseData.user_type) {
+                        errorMessage += `• Тип пользователя: ${Array.isArray(responseData.user_type) ? responseData.user_type.join(', ') : responseData.user_type}\n`;
+                    }
+                    if (responseData.detail) {
+                        errorMessage += `• ${responseData.detail}\n`;
+                    }
+                    if (errorMessage === 'Ошибка регистрации:\n') {
+                        errorMessage += `• ${JSON.stringify(responseData)}`;
+                    }
                     
                     alert(errorMessage);
                     return false;
@@ -537,19 +460,9 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
-                
                 if (response.ok) {
                     const data = await response.json();
-                    
-                    // Декодируем токен, чтобы получить user_id
-                    const payload = JSON.parse(atob(data.access.split('.')[1]));
-                    const userId = payload.user_id;
-                    
-                    console.log('👤 user_id из токена:', userId);
-                    
-                    const profile = await getUserProfile();
-                    setTokens(data.access, data.refresh, userId, username, profile.email || '', profile.user_type || 'individual', profile);
-                    
+                    setTokens(data.access, data.refresh, null, username, '', '');
                     alert('✅ Вход выполнен успешно!');
                     showMainPage();
                     loadProducts(1);
@@ -559,7 +472,6 @@
                     return false;
                 }
             } catch (error) {
-                console.error('❌ Ошибка:', error);
                 alert('❌ Ошибка подключения к серверу');
                 return false;
             }
@@ -604,7 +516,6 @@
             const conversations = await getConversations();
             document.getElementById('app').innerHTML = `
                 <div class="chats-page"><div class="chats-card">
-                    <div class="back-button" id="backToMainFromChats">← Назад</div>
                     <div class="chats-title">💬 Мои чаты</div>
                     <div class="chats-sub">Общение с продавцами и покупателями</div>
                     ${conversations.length === 0 ? '<div class="empty-message">📭 У вас пока нет чатов. Напишите продавцу на карточке товара!</div>' : `
@@ -623,10 +534,11 @@
                             `).join('')}
                         </ul>
                     `}
+                    <div class="form-actions"><button type="button" class="btn-outline" id="backToMainBtn">← На главную</button></div>
                 </div></div>
             `;
             document.querySelectorAll('.conversation-item').forEach(item => item.addEventListener('click', () => showChatPage(item.dataset.id)));
-            document.getElementById('backToMainFromChats')?.addEventListener('click', () => showMainPage());
+            document.getElementById('backToMainBtn')?.addEventListener('click', () => showMainPage());
         }
         
         // ========== СТРАНИЦА ЧАТА ==========
@@ -638,13 +550,13 @@
             
             document.getElementById('app').innerHTML = `
                 <div class="chat-page"><div class="chat-card">
-                    <div class="back-button" id="backToChatsFromChat">← Назад</div>
                     <div class="chat-title">💬 Чат с ${conversationData.other_user?.username || 'пользователем'}</div>
                     <div class="chat-messages" id="chatMessages">${renderMessages(conversationData.messages || [])}</div>
                     <div class="chat-input-area">
                         <input type="text" id="messageInput" placeholder="Введите сообщение..." onkeypress="if(event.key==='Enter') sendMessage()">
                         <button class="btn-primary" onclick="sendMessage()">📤 Отправить</button>
                     </div>
+                    <div class="form-actions" style="margin-top: 16px;"><button type="button" class="btn-outline" id="backToChatsBtn">← Назад к чатам</button></div>
                 </div></div>
             `;
             
@@ -668,7 +580,7 @@
                 messagesContainer.insertAdjacentHTML('beforeend', renderSingleMessage(data, data.sender_id == localStorage.getItem('user_id')));
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             };
-            document.getElementById('backToChatsFromChat')?.addEventListener('click', () => { if (wsConnection) wsConnection.close(); showChatsPage(); });
+            document.getElementById('backToChatsBtn').addEventListener('click', () => { if (wsConnection) wsConnection.close(); showChatsPage(); });
             const messagesContainer = document.getElementById('chatMessages');
             if (messagesContainer) messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
@@ -689,8 +601,14 @@
         async function showProfilePage() {
             if (!isAuthenticated()) { alert('Пожалуйста, войдите в систему'); showLoginPage(); return; }
             
-            let profile = await getUserProfile();
-            const userType = profile.user_type || localStorage.getItem('user_type') || 'individual';
+            let profile = { user_type: localStorage.getItem('user_type') || 'individual' };
+            try {
+                const response = await apiRequest('/users/me/');
+                if (response.ok) profile = await response.json();
+            } catch (e) {}
+            
+            const userType = profile.user_type || 'individual';
+            localStorage.setItem('user_type', userType);
             
             let additionalFields = '';
             if (userType === 'individual') {
@@ -722,7 +640,6 @@
             
             document.getElementById('app').innerHTML = `
                 <div class="profile-page"><div class="profile-card">
-                    <div class="back-button" id="backToMainFromProfile">← Назад</div>
                     <div class="profile-title">👤 Мой профиль</div>
                     <div class="profile-sub">Управление аккаунтом</div>
                     <div id="profileMessage"></div>
@@ -734,12 +651,10 @@
                                 <option value="legal" ${userType === 'legal' ? 'selected' : ''}>🏛️ Юридическое лицо</option>
                             </select>
                         </div>
-                        <div class="form-group"><label>Имя пользователя</label><input type="text" id="profileUsername" value="${profile.username || ''}" placeholder="username"></div>
-                        <div class="form-group"><label>Email</label><input type="email" id="profileEmail" value="${profile.email || ''}" placeholder="email@example.com"></div>
+                        <div class="form-group"><label>Имя пользователя</label><input type="text" id="profileUsername" value="${profile.username || localStorage.getItem('username') || ''}" placeholder="username"></div>
+                        <div class="form-group"><label>Email</label><input type="email" id="profileEmail" value="${profile.email || localStorage.getItem('user_email') || ''}" placeholder="email@example.com"></div>
                         ${additionalFields}
-                        <div class="form-actions">
-                            <button type="submit" class="btn-primary">💾 Сохранить изменения</button>
-                        </div>
+                        <div class="form-actions"><button type="submit" class="btn-primary">💾 Сохранить изменения</button><button type="button" class="btn-outline" id="cancelProfileBtn">Отмена</button></div>
                     </form>
                     <hr>
                     <div class="profile-title" style="font-size: 1.5rem;">🔐 Смена пароля</div>
@@ -755,11 +670,11 @@
             document.getElementById('profileForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const updateData = { 
-                    user_type: userType,
                     username: document.getElementById('profileUsername').value, 
                     email: document.getElementById('profileEmail').value 
                 };
                 
+                // Собираем дополнительные данные
                 if (userType === 'individual') {
                     updateData.passport_series = document.getElementById('passportSeries')?.value || '';
                     updateData.passport_number = document.getElementById('passportNumber')?.value || '';
@@ -813,7 +728,7 @@
                 }
             });
             
-            document.getElementById('backToMainFromProfile')?.addEventListener('click', () => showMainPage());
+            document.getElementById('cancelProfileBtn').addEventListener('click', () => showMainPage());
         }
         
         // ========== СТРАНИЦА СОЗДАНИЯ ОБЪЯВЛЕНИЯ ==========
@@ -822,30 +737,15 @@
             selectedFiles = [];
             document.getElementById('app').innerHTML = `
                 <div class="create-page"><div class="create-card">
-                    <div class="back-button" id="backToMainFromCreate">← Назад</div>
                     <div class="create-title">➕ Новое объявление</div>
                     <div class="create-sub">Расскажите о вещи, которую хотите сдать в аренду</div>
                     <form id="createItemForm">
                         <div class="form-group"><label>Название товара *</label><input type="text" id="itemName" placeholder="Например: Дрель Makita" required></div>
                         <div class="form-group"><label>Описание</label><textarea id="itemDesc" rows="4" placeholder="Опишите состояние, характеристики..."></textarea></div>
                         <div class="form-group"><label>Цена за день (₽) *</label><input type="number" id="itemPrice" placeholder="500" required></div>
-                        <div class="form-group"><label>Категория</label>
-                            <select id="itemCategory">
-                                <option value="">Без категории</option>
-                                <option value="electronics">📱 Электроника</option>
-                                <option value="tools">🔧 Инструменты</option>
-                                <option value="sport">⚽ Спорт</option>
-                                <option value="clothing">👕 Одежда</option>
-                                <option value="home">🏠 Дом и сад</option>
-                            </select>
-                        </div>
-                        <div class="form-group"><label>Фотографии</label>
-                            <label class="file-input-label">📷 Выбрать изображения<input type="file" id="itemImages" accept="image/*" multiple></label>
-                            <div id="imagePreview" class="image-preview"></div>
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn-primary">📤 Опубликовать</button>
-                        </div>
+                        <div class="form-group"><label>Категория</label><select id="itemCategory"><option value="">Выберите категорию</option><option value="electronics">📱 Электроника</option><option value="tools">🔧 Инструменты</option><option value="sport">⚽ Спорт</option><option value="clothing">👕 Одежда</option><option value="home">🏠 Дом и сад</option></select></div>
+                        <div class="form-group"><label>Фотографии</label><label class="file-input-label">📷 Выбрать изображения<input type="file" id="itemImages" accept="image/*" multiple></label><div id="imagePreview" class="image-preview"></div></div>
+                        <div class="form-actions"><button type="submit" class="btn-primary">📤 Опубликовать</button><button type="button" class="btn-outline" id="cancelCreateBtn">Отмена</button></div>
                     </form>
                 </div></div>
             `;
@@ -853,16 +753,11 @@
             fileInput.addEventListener('change', (e) => { selectedFiles = Array.from(e.target.files); updateImagePreview(); });
             document.getElementById('createItemForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const formData = { 
-                    name: document.getElementById('itemName').value, 
-                    description: document.getElementById('itemDesc').value, 
-                    price_per_day: parseInt(document.getElementById('itemPrice').value), 
-                    category: document.getElementById('itemCategory').value
-                };
+                const formData = { name: document.getElementById('itemName').value, description: document.getElementById('itemDesc').value, price_per_day: parseInt(document.getElementById('itemPrice').value), category: document.getElementById('itemCategory').value };
                 if (!formData.name || !formData.price_per_day) { alert('Заполните название и цену'); return; }
                 await createItemWithImages(formData, selectedFiles);
             });
-            document.getElementById('backToMainFromCreate')?.addEventListener('click', () => showMainPage());
+            document.getElementById('cancelCreateBtn').addEventListener('click', () => showMainPage());
         }
         
         function updateImagePreview() {
@@ -885,7 +780,6 @@
         function showRegisterPage() {
             document.getElementById('app').innerHTML = `
                 <div class="auth-page"><div class="auth-card">
-                    <div class="back-button" id="backToMainFromRegister">← Назад</div>
                     <div class="auth-title">Регистрация</div>
                     <div class="auth-sub">Создайте новый аккаунт</div>
                     <form id="registerForm">
@@ -902,6 +796,7 @@
                         </div>
                         <button type="submit" class="auth-btn">Зарегистрироваться</button>
                         <div class="auth-footer">Уже есть аккаунт? <a href="#" id="switchToLogin">Войти</a></div>
+                        <div class="auth-footer"><a href="#" id="backToHomeReg">← На главную</a></div>
                     </form>
                 </div></div>
             `;
@@ -919,14 +814,13 @@
                 if (success) showMainPage();
             });
             document.getElementById('switchToLogin')?.addEventListener('click', (e) => { e.preventDefault(); showLoginPage(); });
-            document.getElementById('backToMainFromRegister')?.addEventListener('click', () => showMainPage());
+            document.getElementById('backToHomeReg')?.addEventListener('click', (e) => { e.preventDefault(); showMainPage(); });
         }
         
         // ========== СТРАНИЦА ВХОДА ==========
         function showLoginPage() {
             document.getElementById('app').innerHTML = `
                 <div class="auth-page"><div class="auth-card">
-                    <div class="back-button" id="backToMainFromLogin">← Назад</div>
                     <div class="auth-title">Войти</div>
                     <div class="auth-sub">Введите свои данные</div>
                     <form id="loginForm">
@@ -934,6 +828,7 @@
                         <div class="input-group"><label>Пароль</label><input type="password" id="loginPassword" required></div>
                         <button type="submit" class="auth-btn">Войти</button>
                         <div class="auth-footer">Нет аккаунта? <a href="#" id="switchToRegister">Зарегистрироваться</a></div>
+                        <div class="auth-footer"><a href="#" id="backToHome">← На главную</a></div>
                     </form>
                 </div></div>
             `;
@@ -943,7 +838,7 @@
                 if (success) { showMainPage(); loadProducts(1); }
             });
             document.getElementById('switchToRegister')?.addEventListener('click', (e) => { e.preventDefault(); showRegisterPage(); });
-            document.getElementById('backToMainFromLogin')?.addEventListener('click', () => showMainPage());
+            document.getElementById('backToHome')?.addEventListener('click', (e) => { e.preventDefault(); showMainPage(); });
         }
         
         // ========== ГЛАВНАЯ СТРАНИЦА ==========
