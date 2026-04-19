@@ -1,10 +1,18 @@
 from rest_framework import serializers
 from .models import Item, ItemImage
+from .models import Category
 
 class ItemImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ItemImage
         fields = ['id', 'image']
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name']
+
 class ItemSerializer(serializers.ModelSerializer):
     images = ItemImageSerializer(many=True, read_only=True)
     owner_rating = serializers.DecimalField(

@@ -15,7 +15,13 @@ from bookings.serializers import BookingCalculateSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
+from rest_framework.viewsets import ModelViewSet
+from .models import Category
+from .serializers import CategorySerializer
 
+class CategoryViewSet(ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
 
 class ItemViewSet(viewsets.ModelViewSet):
 
