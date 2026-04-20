@@ -327,7 +327,7 @@
             
             container.innerHTML = products.map(product => {
                 const isOwner = currentUserId && product.owner == currentUserId;
-                let imageUrl = product.image || product.images?.[0] || 'https://placehold.co/400x300/eef2f7/2b6a7c?text=Нет+фото';
+                let imageUrl = product.image || product.images?.[0]?.image || 'https://placehold.co/400x300/eef2f7/2b6a7c?text=Нет+фото';
                 if (Array.isArray(imageUrl)) imageUrl = imageUrl[0] || 'https://placehold.co/400x300/eef2f7/2b6a7c?text=Нет+фото';
                 
                 return `
@@ -442,9 +442,10 @@
                 if (images && images.length > 0) {
                     for (const imageFile of images) {
                         const imageFormData = new FormData();
+                        imageFormData.append('item', item.id);
                         imageFormData.append('image', imageFile);
                         
-                        await fetch(`${API_BASE}/items/${item.id}/upload-image/`, {
+                        await fetch(`${API_BASE}/items/upload-image/`, {
                             method: 'POST',
                             headers: { 'Authorization': `Bearer ${token}` },
                             body: imageFormData
