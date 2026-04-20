@@ -1,5 +1,5 @@
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from users.permissions import IsProfileCompleted
 from .models import Item
 from .permissions import IsOwner
@@ -12,6 +12,15 @@ from rest_framework import generics
 from .models import ItemImage
 from .serializers import ItemImageSerializer
 from .permissions import IsOwner
+
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.exceptions import PermissionDenied, ValidationError
+from .models import Category
+from .serializers import CategorySerializer
+
+class CategoryViewSet(ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
 
 class ItemViewSet(viewsets.ModelViewSet):
 
@@ -59,12 +68,19 @@ class ItemViewSet(viewsets.ModelViewSet):
 class ItemImageUploadView(generics.CreateAPIView):
     serializer_class = ItemImageSerializer
     parser_classes = (MultiPartParser, FormParser)
+    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         item_id = self.request.data.get('item')
-        item = Item.objects.get(id=item_id)
+        if not item_id:
+            raise ValidationError({'item': ['This field is required.']})
+
+        try:
+            item = Item.objects.get(id=item_id)
+        except Item.DoesNotExist:
+            raise ValidationError({'item': ['Invalid item id.']})
 
         if item.owner != self.request.user:
-            raise PermissionError("You are not the owner of this item")
+            raise PermissionDenied("You are not the owner of this item")
 
         serializer.save(item=item)
