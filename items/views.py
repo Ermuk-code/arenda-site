@@ -11,7 +11,17 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import generics
 from .models import ItemImage
 from .serializers import ItemImageSerializer
-from .permissions import IsOwner
+from bookings.serializers import BookingCalculateSerializer
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
+from rest_framework.viewsets import ModelViewSet
+from .models import Category
+from .serializers import CategorySerializer
+
+class CategoryViewSet(ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
 
 class ItemViewSet(viewsets.ModelViewSet):
 
@@ -68,3 +78,14 @@ class ItemImageUploadView(generics.CreateAPIView):
             raise PermissionError("You are not the owner of this item")
 
         serializer.save(item=item)
+
+class BookingCalculateView(APIView):
+    permission_classes = [AllowAny]  # можно даже без авторизации
+
+    def post(self, request):
+        serializer = BookingCalculateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        result = serializer.calculate()
+
+        return Response(result)
