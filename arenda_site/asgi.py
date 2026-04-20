@@ -15,15 +15,13 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'arenda_site.settings')
 django_asgi_app = get_asgi_application()
 
 from channels.routing import ProtocolTypeRouter, URLRouter
-from channels.auth import AuthMiddlewareStack
+from arenda_site.middleware import JWTAuthMiddleware
 from chats.routing import websocket_urlpatterns
 
 
 application = ProtocolTypeRouter({
     "http": django_asgi_app,
-    "websocket": AuthMiddlewareStack(
-        URLRouter(
-            websocket_urlpatterns
-        )
+    "websocket": JWTAuthMiddleware(
+        URLRouter(websocket_urlpatterns)
     ),
 })
