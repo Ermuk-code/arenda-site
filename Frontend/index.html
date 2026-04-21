@@ -78,14 +78,10 @@
         .error-message-box { background: #f8d7da; color: #721c24; padding: 12px; border-radius: 12px; margin-bottom: 20px; text-align: center; }
 
         hr { margin: 32px 0; border: none; border-top: 1px solid #e2e9ef; }
-
         .user-type-info { background: #eef2f7; padding: 16px; border-radius: 16px; margin-top: 16px; }
         .user-type-info h4 { margin-bottom: 12px; color: #1a3e4c; }
-
         .back-button { margin-bottom: 24px; display: inline-block; cursor: pointer; color: #2b6a7c; font-weight: 500; }
         .back-button:hover { text-decoration: underline; }
-
-        @media (max-width: 720px) { .header-inner { flex-direction: column; } .cats-list { gap: 18px; } .user-info { justify-content: center; } }
 
         .conversation-list { list-style: none; margin: 20px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
         .conversation-item {
@@ -152,12 +148,10 @@
                 radial-gradient(900px 320px at 90% 20%, #1f8a6b0c, transparent 50%),
                 #f6f9fd;
         }
-
         .chat-messages { display: flex; flex-direction: column; gap: 10px; }
         .message-row { display: flex; margin: 4px 0; }
         .message-row.their-message { justify-content: flex-start; }
         .message-row.my-message { justify-content: flex-end; }
-
         .message {
             max-width: min(560px, 78%);
             display: grid;
@@ -195,7 +189,6 @@
         }
         .their-message .message-meta { justify-content: flex-start; }
         .message-time { opacity: 0.9; }
-
         .read-dot {
             width: 8px;
             height: 8px;
@@ -207,7 +200,6 @@
             background: #0f1f26;
             box-shadow: 0 0 0 3px rgba(15, 31, 38, 0.22);
         }
-
         .message-image {
             width: 100%;
             max-width: 520px;
@@ -238,7 +230,6 @@
             gap: 10px;
             align-items: flex-end;
         }
-
         .chat-attach-btn {
             width: 44px;
             height: 44px;
@@ -253,7 +244,6 @@
             flex: 0 0 auto;
         }
         .chat-attach-btn:hover { border-color: #2b6a7c; box-shadow: 0 0 0 4px rgba(43,106,124,0.08); background: #fff; }
-
         .chat-input {
             flex: 1;
             resize: none;
@@ -269,7 +259,6 @@
             background: #fbfdff;
         }
         .chat-input:focus { border-color: #2b6a7c; box-shadow: 0 0 0 4px rgba(43,106,124,0.08); background: #fff; }
-
         .chat-send-btn {
             padding: 12px 18px;
             border-radius: 18px;
@@ -282,7 +271,6 @@
             min-width: 120px;
         }
         .chat-send-btn:hover { background: #1e5668; transform: translateY(-1px); }
-
         .chat-attachment-preview {
             display: none;
             align-items: center;
@@ -330,11 +318,13 @@
         }
         .rent-modal-overlay.active { display: flex; }
         .rent-modal {
-            width: min(100%, 560px);
+            width: min(100%, 620px);
             background: #fff;
             border-radius: 28px;
             padding: 28px;
             box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+            max-height: calc(100vh - 48px);
+            overflow: auto;
         }
         .rent-modal-header {
             display: flex;
@@ -396,7 +386,7 @@
             margin-top: 14px;
             color: #6b8b9c;
             font-size: 0.9rem;
-            line-height: 1.4;
+            line-height: 1.45;
         }
         .rent-error {
             background: #f8d7da;
@@ -412,8 +402,57 @@
             border-radius: 14px;
             margin-bottom: 16px;
         }
+        .rent-info {
+            background: #e8f1f7;
+            color: #204657;
+            padding: 12px 14px;
+            border-radius: 14px;
+            margin-bottom: 16px;
+        }
+        .payment-box {
+            display: none;
+            margin-top: 18px;
+            padding: 16px;
+            border-radius: 18px;
+            border: 1px solid #dbe6ed;
+            background: #fbfdff;
+        }
+        .payment-box.active { display: block; }
+        .payment-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+            color: #35515d;
+            word-break: break-word;
+        }
+        .payment-row:last-child { margin-bottom: 0; }
+        .payment-row strong { color: #163a45; }
+        .payment-link {
+            display: inline-block;
+            margin-top: 12px;
+            text-decoration: none;
+        }
+        .payment-code {
+            margin-top: 12px;
+            padding: 12px;
+            background: #f3f7fb;
+            border-radius: 14px;
+            border: 1px solid #e1e9f0;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: #244756;
+        }
+        .payment-confirm-btn {
+            margin-top: 12px;
+            width: 100%;
+        }
 
         @media (max-width: 720px) {
+            .header-inner { flex-direction: column; }
+            .cats-list { gap: 18px; }
+            .user-info { justify-content: center; }
             .chat-shell { height: 80vh; }
             .conversation-info p { max-width: 210px; }
             .chat-send-btn { min-width: 96px; padding: 12px 14px; }
@@ -463,22 +502,55 @@
                     <span id="rentSummaryDays">0</span>
                 </div>
                 <div class="rent-summary-row">
-                    <span>Залог 20%</span>
-                    <span id="rentSummaryDeposit">0 ₽</span>
+                    <span>Предварительная сумма</span>
+                    <span id="rentSummaryTotal">0 ₽</span>
                 </div>
                 <div class="rent-summary-row total">
-                    <span>Полная сумма</span>
-                    <span id="rentSummaryTotal">0 ₽</span>
+                    <span>Статус брони</span>
+                    <span id="rentSummaryStatus">Не создана</span>
                 </div>
             </div>
 
             <div class="rent-payment-actions">
-                <button class="btn-outline" id="payDepositBtn" type="button">Оплатить залог</button>
-                <button class="btn-primary" id="payFullBtn" type="button">Оплатить полностью</button>
+                <button class="btn-outline" id="createBookingBtn" type="button">Отправить заявку</button>
+                <button class="btn-primary" id="startPaymentBtn" type="button">Перейти к оплате</button>
+            </div>
+
+            <div class="payment-box" id="paymentBox">
+                <div class="payment-row">
+                    <strong>Банк</strong>
+                    <span id="paymentBank">—</span>
+                </div>
+                <div class="payment-row">
+                    <strong>Получатель</strong>
+                    <span id="paymentRecipient">—</span>
+                </div>
+                <div class="payment-row">
+                    <strong>Телефон</strong>
+                    <span id="paymentPhone">—</span>
+                </div>
+                <div class="payment-row">
+                    <strong>Сумма</strong>
+                    <span id="paymentAmount">—</span>
+                </div>
+                <div class="payment-row">
+                    <strong>Статус оплаты</strong>
+                    <span id="paymentStatus">—</span>
+                </div>
+                <div class="payment-row">
+                    <strong>Истекает</strong>
+                    <span id="paymentExpires">—</span>
+                </div>
+
+                <a class="btn-primary payment-link" id="paymentLinkBtn" href="#" target="_blank" rel="noopener">Открыть оплату через СБП</a>
+
+                <div class="payment-code" id="paymentQrPayload"></div>
+
+                <button class="btn-outline payment-confirm-btn" id="confirmPaymentBtn" type="button">Я оплатил, подтвердить оплату</button>
             </div>
 
             <div class="rent-note">
-                Недоступные даты блокируются календарём. Для этого нужен `GET /api/items/{id}/booked_ranges/` или поле `booked_ranges` у товара.
+                По текущему API оплата доступна только после подтверждения брони владельцем. Поэтому кнопка оплаты сработает после создания и подтверждения заявки.
             </div>
         </div>
     </div>
@@ -504,9 +576,16 @@
         let chatSelectedImagePreviewUrl = null;
 
         let currentRentalItem = null;
+        let currentBooking = null;
+        let currentPaymentPayload = null;
         let rentStartPicker = null;
         let rentEndPicker = null;
         let bookedDateRanges = [];
+
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentCategory = 'all';
+        let allProducts = [];
 
         function getAccessToken() { return localStorage.getItem('access_token'); }
         function getRefreshToken() { return localStorage.getItem('refresh_token'); }
@@ -628,6 +707,26 @@
             return diff > 0 ? diff : 0;
         }
 
+        function formatBookingStatus(status) {
+            const map = {
+                pending: 'Ожидает подтверждения',
+                confirmed: 'Подтверждена',
+                cancelled: 'Отменена',
+                completed: 'Завершена'
+            };
+            return map[status] || 'Не создана';
+        }
+
+        function formatPaymentStatus(status) {
+            const map = {
+                unpaid: 'Не оплачено',
+                pending: 'Ожидает оплаты',
+                paid: 'Оплачено',
+                failed: 'Ошибка оплаты'
+            };
+            return map[status] || '—';
+        }
+
         async function ensureServerCategoriesLoaded() {
             if (Array.isArray(serverCategories)) return serverCategories;
             try {
@@ -724,9 +823,7 @@
                 const response = await apiRequest('/chats/conversations/');
                 if (response.ok) return await response.json();
                 return [];
-            } catch (error) {
-                return [];
-            }
+            } catch (error) { return []; }
         }
 
         async function createConversation(otherUserId, itemId = null) {
@@ -739,9 +836,7 @@
                 });
                 if (response.ok) return await response.json();
                 return null;
-            } catch (error) {
-                return null;
-            }
+            } catch (error) { return null; }
         }
 
         async function getMessages(conversationId) {
@@ -749,9 +844,7 @@
                 const response = await apiRequest(`/chats/conversations/${conversationId}/`);
                 if (response.ok) return await response.json();
                 return null;
-            } catch (error) {
-                return null;
-            }
+            } catch (error) { return null; }
         }
 
         async function markConversationRead(conversationId) {
@@ -760,7 +853,7 @@
             } catch (error) {}
         }
 
-        function getSavedProfile() {
+        async function getSavedProfile() {
             return {
                 username: localStorage.getItem('username'),
                 email: localStorage.getItem('user_email'),
@@ -840,11 +933,25 @@
                 }
             } catch (error) {}
 
-            if (currentRentalItem?.booked_ranges && Array.isArray(currentRentalItem.booked_ranges)) {
-                return currentRentalItem.booked_ranges;
-            }
+            const fallback = allProducts.find(item => String(item.id) === String(itemId));
+            if (Array.isArray(fallback?.booked_ranges)) return fallback.booked_ranges;
 
             return [];
+        }
+
+        async function getMyBookingForItem(itemId) {
+            try {
+                const response = await apiRequest('/bookings/?role=outgoing');
+                if (!response.ok) return null;
+                const data = await response.json();
+                const list = Array.isArray(data) ? data : (data.results || data || []);
+                return list.find(booking =>
+                    String(booking.item) === String(itemId) ||
+                    String(booking.item?.id) === String(itemId)
+                ) || null;
+            } catch (error) {
+                return null;
+            }
         }
 
         function buildFlatpickrDisabledRanges(ranges) {
@@ -871,7 +978,8 @@
                 box.innerHTML = '';
                 return;
             }
-            box.innerHTML = `<div class="${type === 'success' ? 'rent-success' : 'rent-error'}">${text}</div>`;
+            const css = type === 'success' ? 'rent-success' : (type === 'info' ? 'rent-info' : 'rent-error');
+            box.innerHTML = `<div class="${css}">${text}</div>`;
         }
 
         function updateRentalSummary() {
@@ -880,34 +988,78 @@
             const days = calculateRentalDays(startDate, endDate);
             const pricePerDay = Number(currentRentalItem?.price_per_day || currentRentalItem?.price || 0);
             const total = days * pricePerDay;
-            const deposit = Math.ceil(total * 0.2);
 
             document.getElementById('rentSummaryItem').textContent = currentRentalItem?.title || currentRentalItem?.name || '—';
             document.getElementById('rentSummaryPrice').textContent = `${formatPrice(pricePerDay)} / день`;
             document.getElementById('rentSummaryDays').textContent = String(days);
-            document.getElementById('rentSummaryDeposit').textContent = formatPrice(deposit);
             document.getElementById('rentSummaryTotal').textContent = formatPrice(total);
+            document.getElementById('rentSummaryStatus').textContent = formatBookingStatus(currentBooking?.status || '');
+        }
+
+        function resetPaymentBox() {
+            currentPaymentPayload = null;
+            const box = document.getElementById('paymentBox');
+            if (!box) return;
+            box.classList.remove('active');
+            document.getElementById('paymentBank').textContent = '—';
+            document.getElementById('paymentRecipient').textContent = '—';
+            document.getElementById('paymentPhone').textContent = '—';
+            document.getElementById('paymentAmount').textContent = '—';
+            document.getElementById('paymentStatus').textContent = '—';
+            document.getElementById('paymentExpires').textContent = '—';
+            document.getElementById('paymentQrPayload').textContent = '';
+            const paymentLinkBtn = document.getElementById('paymentLinkBtn');
+            paymentLinkBtn.href = '#';
+        }
+
+        function fillPaymentBox(payload) {
+            currentPaymentPayload = payload;
+            const box = document.getElementById('paymentBox');
+            if (!box) return;
+
+            document.getElementById('paymentBank').textContent = payload.bank_name || '—';
+            document.getElementById('paymentRecipient').textContent = payload.recipient || '—';
+            document.getElementById('paymentPhone').textContent = payload.phone_number || '—';
+            document.getElementById('paymentAmount').textContent = `${payload.amount || '0'} ${payload.currency || 'RUB'}`;
+            document.getElementById('paymentStatus').textContent = formatPaymentStatus(payload.payment_status);
+            document.getElementById('paymentExpires').textContent = payload.expires_at ? new Date(payload.expires_at).toLocaleString('ru-RU') : '—';
+            document.getElementById('paymentQrPayload').textContent = payload.qr_payload || '';
+            document.getElementById('paymentLinkBtn').href = payload.deeplink || '#';
+
+            box.classList.add('active');
         }
 
         function closeRentalModal() {
             destroyRentalPickers();
             currentRentalItem = null;
+            currentBooking = null;
+            currentPaymentPayload = null;
             bookedDateRanges = [];
             setRentModalMessage('', '');
+            resetPaymentBox();
             document.getElementById('rentModalOverlay')?.classList.remove('active');
+        }
+
+        async function refreshCurrentBookingState() {
+            if (!currentRentalItem) return null;
+            currentBooking = await getMyBookingForItem(currentRentalItem.id);
+            updateRentalSummary();
+            return currentBooking;
         }
 
         async function openRentalModal(item) {
             currentRentalItem = item;
+            currentBooking = await getMyBookingForItem(item.id);
             bookedDateRanges = await getBookedRangesForItem(item.id);
 
             const minDate = getTodayDateString();
             const disabledRanges = buildFlatpickrDisabledRanges(bookedDateRanges);
 
             document.getElementById('rentModalTitle').textContent = `Аренда: ${item.title || item.name || 'товар'}`;
-            document.getElementById('rentStartDate').value = '';
-            document.getElementById('rentEndDate').value = '';
+            document.getElementById('rentStartDate').value = currentBooking?.start_date || '';
+            document.getElementById('rentEndDate').value = currentBooking?.end_date || '';
             setRentModalMessage('', '');
+            resetPaymentBox();
             updateRentalSummary();
 
             destroyRentalPickers();
@@ -916,7 +1068,8 @@
                 dateFormat: 'Y-m-d',
                 minDate,
                 disable: disabledRanges,
-                onChange: function(selectedDates, dateStr) {
+                defaultDate: currentBooking?.start_date || null,
+                onChange(selectedDates, dateStr) {
                     if (rentEndPicker) {
                         rentEndPicker.set('minDate', dateStr || minDate);
                     }
@@ -928,15 +1081,22 @@
                 dateFormat: 'Y-m-d',
                 minDate,
                 disable: disabledRanges,
-                onChange: function() {
+                defaultDate: currentBooking?.end_date || null,
+                onChange() {
                     updateRentalSummary();
                 }
             });
 
             document.getElementById('rentModalOverlay')?.classList.add('active');
+
+            if (currentBooking?.status === 'confirmed' && currentBooking?.payment_status === 'pending') {
+                setRentModalMessage('info', 'Бронь подтверждена. Можно перейти к оплате через СБП.');
+            } else if (currentBooking?.status === 'pending') {
+                setRentModalMessage('info', 'У вас уже есть заявка по этому товару. Оплата станет доступна после подтверждения владельцем.');
+            }
         }
 
-        async function createBookingWithPayment(paymentType) {
+        async function createBookingRequest() {
             if (!currentRentalItem) return;
 
             const startDate = document.getElementById('rentStartDate')?.value;
@@ -953,13 +1113,13 @@
                 return;
             }
 
-            const pricePerDay = Number(currentRentalItem.price_per_day || currentRentalItem.price || 0);
-            const total = days * pricePerDay;
-            const deposit = Math.ceil(total * 0.2);
-            const amountToPay = paymentType === 'deposit' ? deposit : total;
+            if (currentBooking && ['pending', 'confirmed'].includes(currentBooking.status)) {
+                setRentModalMessage('info', 'Заявка по этому товару уже существует.');
+                return;
+            }
 
             try {
-                const bookingResponse = await apiRequest('/bookings/', {
+                const response = await apiRequest('/bookings/', {
                     method: 'POST',
                     body: JSON.stringify({
                         item: currentRentalItem.id,
@@ -968,50 +1128,95 @@
                     })
                 });
 
-                const bookingData = await bookingResponse.json().catch(() => ({}));
+                const data = await response.json().catch(() => ({}));
 
-                if (!bookingResponse.ok) {
-                    setRentModalMessage('error', bookingData.detail || bookingData.non_field_errors?.[0] || 'Не удалось создать бронь. Возможно, даты уже заняты.');
+                if (!response.ok) {
+                    const message = data.detail || data.non_field_errors?.[0] || data[0] || 'Не удалось создать бронь.';
+                    setRentModalMessage('error', message);
                     return;
                 }
 
-                let paymentResponse = null;
-                try {
-                    paymentResponse = await apiRequest(`/bookings/${bookingData.id}/pay/`, {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            payment_type: paymentType,
-                            amount: amountToPay
-                        })
-                    });
-                } catch (error) {}
-
-                if (paymentResponse && !paymentResponse.ok) {
-                    const paymentData = await paymentResponse.json().catch(() => ({}));
-                    setRentModalMessage('error', paymentData.detail || 'Бронь создана, но оплату завершить не удалось.');
-                    return;
-                }
-
-                setRentModalMessage(
-                    'success',
-                    paymentType === 'deposit'
-                        ? `Залог ${formatPrice(amountToPay)} успешно оплачен.`
-                        : `Полная оплата ${formatPrice(amountToPay)} успешно выполнена.`
-                );
-
-                setTimeout(() => {
-                    closeRentalModal();
-                    loadProducts(1);
-                }, 1200);
+                currentBooking = data;
+                updateRentalSummary();
+                setRentModalMessage('success', 'Заявка на аренду отправлена. После подтверждения владельцем станет доступна оплата.');
             } catch (error) {
-                setRentModalMessage('error', 'Ошибка подключения при оформлении аренды.');
+                setRentModalMessage('error', 'Ошибка подключения при создании брони.');
             }
         }
 
-        let currentPage = 1;
-        let totalPages = 1;
-        let currentCategory = 'all';
-        let allProducts = [];
+        async function startBookingPayment() {
+            const booking = await refreshCurrentBookingState();
+
+            if (!booking) {
+                setRentModalMessage('error', 'Сначала создайте заявку на аренду.');
+                return;
+            }
+
+            if (booking.status !== 'confirmed') {
+                setRentModalMessage('info', 'Оплата доступна только после подтверждения брони владельцем.');
+                return;
+            }
+
+            if (booking.payment_status === 'paid') {
+                setRentModalMessage('success', 'Эта бронь уже оплачена.');
+                return;
+            }
+
+            try {
+                const response = await apiRequest(`/bookings/${booking.id}/start_payment/`, {
+                    method: 'POST',
+                    body: JSON.stringify({})
+                });
+
+                const data = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    const message = data.detail || data.error || data.non_field_errors?.[0] || 'Не удалось начать оплату.';
+                    setRentModalMessage('error', message);
+                    return;
+                }
+
+                fillPaymentBox(data);
+                setRentModalMessage('success', 'Платёжная сессия создана. Откройте оплату по кнопке ниже, затем подтвердите её.');
+            } catch (error) {
+                setRentModalMessage('error', 'Ошибка подключения при запуске оплаты.');
+            }
+        }
+
+        async function confirmBookingPayment() {
+            const booking = await refreshCurrentBookingState();
+
+            if (!booking) {
+                setRentModalMessage('error', 'Бронь не найдена.');
+                return;
+            }
+
+            try {
+                const response = await apiRequest(`/bookings/${booking.id}/confirm_payment/`, {
+                    method: 'POST',
+                    body: JSON.stringify({})
+                });
+
+                const data = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    const message = data.detail || data.error || data.non_field_errors?.[0] || 'Не удалось подтвердить оплату.';
+                    setRentModalMessage('error', message);
+                    return;
+                }
+
+                currentBooking = data;
+                updateRentalSummary();
+                resetPaymentBox();
+                setRentModalMessage('success', 'Оплата подтверждена. Обновляем список объявлений.');
+                setTimeout(() => {
+                    closeRentalModal();
+                    loadProducts(currentPage);
+                }, 1200);
+            } catch (error) {
+                setRentModalMessage('error', 'Ошибка подключения при подтверждении оплаты.');
+            }
+        }
 
         async function loadProducts(page = 1) {
             const container = document.getElementById('productsContainer');
@@ -1020,22 +1225,15 @@
             currentPage = page;
 
             try {
-                let url = `/items/?page=${page}`;
-                const response = await apiRequest(url);
+                const response = await apiRequest(`/items/?page=${page}`);
                 if (!response.ok) throw new Error();
+
                 const data = await response.json();
-                allProducts = (data.results || []).filter(item => item.status !== 'blocked');
+                const rawProducts = data.results || [];
+                allProducts = rawProducts.filter(item => item.status !== 'blocked' && item.status !== 'unavailable');
 
-                if (currentCategory !== 'all') {
-                    allProducts = allProducts.filter(item => {
-                        const categoryName = item.category_name || item.category?.name || '';
-                        const categoryId = String(item.category || item.category_id || '');
-                        return categoryId === currentCategory || categoryName.toLowerCase() === currentCategory.toLowerCase();
-                    });
-                }
-
-                totalPages = Math.ceil((data.count || allProducts.length) / 10) || 1;
                 renderProducts(allProducts);
+                totalPages = Math.ceil((data.count || allProducts.length) / 10) || 1;
                 renderPagination();
             } catch (error) {
                 container.innerHTML = '<div class="error-message">❌ Ошибка загрузки товаров</div>';
@@ -1044,14 +1242,20 @@
 
         function renderProducts(products) {
             const container = document.getElementById('productsContainer');
-            if (!products.length) {
+            if (!container) return;
+
+            const filteredProducts = currentCategory === 'all'
+                ? products
+                : products.filter(product => String(product.category || '') === String(currentCategory));
+
+            if (!filteredProducts.length) {
                 container.innerHTML = '<div class="empty-message">📦 Товаров пока нет. Добавьте первое объявление!</div>';
                 return;
             }
 
             const currentUserId = localStorage.getItem('user_id');
 
-            container.innerHTML = products.map(product => {
+            container.innerHTML = filteredProducts.map(product => {
                 const isOwner = currentUserId && product.owner == currentUserId;
 
                 let imageUrl =
@@ -1066,17 +1270,18 @@
                 }
 
                 return `
-                <div class="card">
-                    ${isOwner ? '<div class="card-owner-badge">Ваше объявление</div>' : ''}
-                    <div class="card-image"><img src="${imageUrl}" alt="${escapeHtml(product.title || product.name || 'Без названия')}"></div>
-                    <div class="card-title">${escapeHtml(product.title || product.name || 'Без названия')}</div>
-                    ${product.description ? `<div class="card-description">${escapeHtml(product.description.substring(0, 80))}${product.description.length > 80 ? '...' : ''}</div>` : ''}
-                    <div class="card-price">${product.price_per_day || product.price || 0} ₽/<small>день</small></div>
-                    ${!isOwner ? `<button class="card-btn card-chat-btn" data-id="${product.id}" data-owner="${product.owner}" data-action="chat">💬 Написать продавцу</button>` : ''}
-                    ${!isOwner ? `<button class="card-btn" data-id="${product.id}" data-owner="${product.owner}" data-title="${escapeHtml(product.title || product.name || 'Товар')}" data-price="${product.price_per_day || product.price || 0}" data-status="${product.status || 'available'}" data-action="rent">Арендовать</button>` : ''}
-                    ${isOwner ? `<button class="card-btn card-delete-btn" data-id="${product.id}" data-action="delete">🗑 Удалить</button>` : ''}
-                </div>
-            `}).join('');
+                    <div class="card">
+                        ${isOwner ? '<div class="card-owner-badge">Ваше объявление</div>' : ''}
+                        <div class="card-image"><img src="${imageUrl}" alt="${escapeHtml(product.title || product.name || 'Без названия')}"></div>
+                        <div class="card-title">${escapeHtml(product.title || product.name || 'Без названия')}</div>
+                        ${product.description ? `<div class="card-description">${escapeHtml(product.description.substring(0, 80))}${product.description.length > 80 ? '...' : ''}</div>` : ''}
+                        <div class="card-price">${product.price_per_day || product.price || 0} ₽/<small>день</small></div>
+                        ${!isOwner ? `<button class="card-btn card-chat-btn" data-id="${product.id}" data-owner="${product.owner}" data-action="chat">💬 Написать продавцу</button>` : ''}
+                        ${!isOwner ? `<button class="card-btn" data-id="${product.id}" data-owner="${product.owner}" data-title="${escapeHtml(product.title || product.name || 'Товар')}" data-price="${product.price_per_day || product.price || 0}" data-action="rent">Арендовать</button>` : ''}
+                        ${isOwner ? `<button class="card-btn card-delete-btn" data-id="${product.id}" data-action="delete">🗑 Удалить</button>` : ''}
+                    </div>
+                `;
+            }).join('');
 
             document.querySelectorAll('.card-btn').forEach(btn => {
                 btn.onclick = async () => {
@@ -1092,21 +1297,30 @@
                     }
 
                     if (action === 'chat') {
-                        if (!isAuthenticated()) { alert('Пожалуйста, войдите в систему'); showLoginPage(); return; }
+                        if (!isAuthenticated()) {
+                            alert('Пожалуйста, войдите в систему');
+                            showLoginPage();
+                            return;
+                        }
                         await startChat(ownerId, productId);
                         return;
                     }
 
                     if (action === 'rent') {
-                        if (!isAuthenticated()) { alert('Пожалуйста, войдите в систему'); showLoginPage(); return; }
+                        if (!isAuthenticated()) {
+                            alert('Пожалуйста, войдите в систему');
+                            showLoginPage();
+                            return;
+                        }
+
+                        const sourceItem = allProducts.find(item => String(item.id) === String(productId));
 
                         const rentalItem = {
                             id: productId,
                             owner: ownerId,
                             title: btn.dataset.title,
                             price_per_day: Number(btn.dataset.price || 0),
-                            status: btn.dataset.status,
-                            booked_ranges: allProducts.find(item => String(item.id) === String(productId))?.booked_ranges || []
+                            booked_ranges: sourceItem?.booked_ranges || []
                         };
 
                         await openRentalModal(rentalItem);
@@ -1117,7 +1331,10 @@
 
         async function startChat(otherUserId, itemId) {
             const currentUserId = localStorage.getItem('user_id');
-            if (currentUserId == otherUserId) { alert('Вы не можете начать чат с самим собой'); return; }
+            if (currentUserId == otherUserId) {
+                alert('Вы не можете начать чат с самим собой');
+                return;
+            }
             const conversation = await createConversation(otherUserId, itemId);
             if (conversation) showChatPage(conversation.id);
             else alert('Не удалось создать чат');
@@ -1126,8 +1343,12 @@
         async function deleteItem(productId) {
             try {
                 const response = await apiRequest(`/items/${productId}/`, { method: 'DELETE' });
-                if (response.ok) { alert('✅ Объявление удалено'); loadProducts(1); }
-                else alert('❌ Ошибка при удалении');
+                if (response.ok) {
+                    alert('✅ Объявление удалено');
+                    loadProducts(currentPage);
+                } else {
+                    alert('❌ Ошибка при удалении');
+                }
             } catch (error) {
                 alert('❌ Ошибка подключения');
             }
@@ -1139,6 +1360,7 @@
                 if (container) container.innerHTML = '';
                 return;
             }
+
             let html = '';
             for (let i = 1; i <= totalPages; i++) {
                 html += `<button class="${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
@@ -1879,8 +2101,9 @@
         }
 
         document.getElementById('rentModalCloseBtn')?.addEventListener('click', closeRentalModal);
-        document.getElementById('payDepositBtn')?.addEventListener('click', () => createBookingWithPayment('deposit'));
-        document.getElementById('payFullBtn')?.addEventListener('click', () => createBookingWithPayment('full'));
+        document.getElementById('createBookingBtn')?.addEventListener('click', createBookingRequest);
+        document.getElementById('startPaymentBtn')?.addEventListener('click', startBookingPayment);
+        document.getElementById('confirmPaymentBtn')?.addEventListener('click', confirmBookingPayment);
         document.getElementById('rentModalOverlay')?.addEventListener('click', (e) => {
             if (e.target.id === 'rentModalOverlay') closeRentalModal();
         });
