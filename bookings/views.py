@@ -12,6 +12,8 @@ class BookingViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        if self.action == 'confirm':
+            return Booking.objects.filter(item__owner=self.request.user)
         return Booking.objects.filter(renter=self.request.user)
 
     @action(detail=True, methods=['post'])
@@ -25,6 +27,7 @@ class BookingViewSet(viewsets.ModelViewSet):
             )
 
         try:
+            booking._status_changed_by = request.user
             booking.change_status('confirmed')
         except ValidationError as e:
             return Response({"error": str(e)}, status=400)

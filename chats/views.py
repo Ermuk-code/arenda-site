@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from notifications.services import notify_new_message
 from .models import Message, Chat
 from .serializers import MessageCreateSerializer, MessageSerializer, ChatSerializer
 
@@ -76,6 +77,7 @@ class ConversationMessageCreateView(APIView):
         serializer = MessageCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         message = serializer.save(chat=chat, sender=request.user)
+        notify_new_message(message)
 
         response_serializer = MessageSerializer(message, context={'request': request})
         self._broadcast_message(chat.id, response_serializer.data)

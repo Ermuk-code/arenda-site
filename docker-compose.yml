@@ -16,6 +16,8 @@ services:
       - DJANGO_SETTINGS_MODULE=arenda_site.settings
       - DEBUG=1
       - PYTHONUNBUFFERED=1
+      - EMAIL_HOST_USER=mokitoki.notifications@gmail.com
+      - EMAIL_HOST_PASSWORD=smvc syis jbce xpwl
 
   db:
     image: postgres:15

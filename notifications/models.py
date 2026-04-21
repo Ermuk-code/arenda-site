@@ -9,6 +9,8 @@ class Notification(models.Model):
     NOTIFICATION_TYPES = (
         ('booking_created', 'Booking Created'),
         ('booking_confirmed', 'Booking Confirmed'),
+        ('booking_cancelled', 'Booking Cancelled'),
+        ('return_reminder', 'Return Reminder'),
         ('new_message', 'New Message'),
         ('new_review', 'New Review'),
     )
