@@ -4,7 +4,12 @@ from items.models import Item
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.db.models import Avg
-from notifications.models import Notification
+from notifications.services import (
+    notify_booking_cancelled,
+    notify_booking_confirmed,
+    notify_booking_created,
+    notify_new_review,
+)
 
 
 class Booking(models.Model):
@@ -66,6 +71,7 @@ class Booking(models.Model):
         if overlapping.exists():
             raise ValidationError("This item is already booked for selected dates")
     def save(self, *args, **kwargs):
+        is_new = self.pk is None
 
         self.clean()
 
@@ -74,17 +80,9 @@ class Booking(models.Model):
 
         # Умножаем на цену товара
         self.total_price = days * self.item.price_per_day
-        Notification.objects.create(
-            user=self.item.owner,
-            type='booking_created',
-            message=f"New booking request for {self.item.title}"
-        )
-        Notification.objects.create(
-            user=self.renter,
-            type='booking_confirmed',
-            message=f"Your booking for {self.item.title} was confirmed"
-        )
         super().save(*args, **kwargs)
+        if is_new:
+            notify_booking_created(self)
     def change_status(self, new_status):
 
         allowed_transitions = {
@@ -99,8 +97,15 @@ class Booking(models.Model):
                 f"Cannot change status from {self.status} to {new_status}"
             )
 
+        previous_status = self.status
         self.status = new_status
         self.save()
+        if previous_status != new_status:
+            if new_status == 'confirmed':
+                notify_booking_confirmed(self)
+            elif new_status == 'cancelled':
+                cancelled_by = getattr(self, '_status_changed_by', None) or self.renter
+                notify_booking_cancelled(self, cancelled_by)
     def __str__(self):
         return f"{self.item.title} - {self.renter.username}"
 class Review(models.Model):
@@ -126,6 +131,7 @@ class Review(models.Model):
 
     def save(self, *args, **kwargs):
         from chats.models import Chat
+        is_new = self.pk is None
         self.clean()
         super().save(*args, **kwargs)
 
@@ -137,11 +143,8 @@ class Review(models.Model):
         item_reviews = Review.objects.filter(
             booking__item=item
         )
-        Notification.objects.create(
-            user=self.booking.item.owner,
-            type='new_review',
-            message="You received a new review"
-        )
+        if is_new:
+            notify_new_review(self)
         item.average_rating = item_reviews.aggregate(
             Avg('rating')
         )['rating__avg'] or 0
