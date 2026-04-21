@@ -44,7 +44,7 @@
         .pagination button { padding: 8px 16px; background: white; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; }
         .pagination button.active { background: #2b6a7c; color: white; border-color: #2b6a7c; }
         footer { text-align: center; padding: 32px 0; border-top: 1px solid #e2e8f0; color: #6c8b9b; background: white; }
-        
+
         .create-page, .profile-page, .chats-page, .chat-page { min-height: 80vh; padding: 48px 24px; background: #f5f9fe; }
         .create-card, .profile-card, .chats-card, .chat-card { max-width: 800px; margin: 0 auto; background: white; border-radius: 48px; padding: 40px 32px; box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1); }
         .create-title, .profile-title, .chats-title, .chat-title { font-size: 2rem; font-weight: 700; margin-bottom: 8px; color: #1a3e4c; }
@@ -54,14 +54,14 @@
         .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 14px 18px; border-radius: 16px; border: 1.5px solid #e2e9ef; font-size: 1rem; transition: 0.2s; }
         .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: #2b6a7c; }
         .form-actions { display: flex; gap: 12px; margin-top: 32px; }
-        
+
         .image-preview { margin-top: 16px; display: flex; gap: 16px; flex-wrap: wrap; }
         .preview-item { position: relative; width: 100px; height: 100px; border-radius: 16px; overflow: hidden; border: 2px solid #e2e9ef; }
         .preview-item img { width: 100%; height: 100%; object-fit: cover; }
         .remove-image { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; }
         .file-input-label { display: inline-block; padding: 12px 20px; background: #f0f4f9; border-radius: 40px; cursor: pointer; font-weight: 500; margin-top: 8px; }
         input[type="file"] { display: none; }
-        
+
         .auth-page { min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 48px 24px; background: #f5f9fe; }
         .auth-card { max-width: 480px; width: 100%; background: white; border-radius: 48px; padding: 40px 32px; box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1); }
         .auth-title { font-size: 2rem; font-weight: 700; margin-bottom: 8px; color: #1a3e4c; }
@@ -72,19 +72,180 @@
         .auth-btn { width: 100%; background: #2b6a7c; color: white; border: none; padding: 14px; border-radius: 60px; font-weight: 700; font-size: 1.1rem; cursor: pointer; }
         .auth-footer { margin-top: 28px; text-align: center; }
         .auth-footer a { color: #2b6a7c; text-decoration: none; font-weight: 600; }
-        
+
         .success-message { background: #d4edda; color: #155724; padding: 12px; border-radius: 12px; margin-bottom: 20px; text-align: center; }
         .error-message-box { background: #f8d7da; color: #721c24; padding: 12px; border-radius: 12px; margin-bottom: 20px; text-align: center; }
-        
+
         hr { margin: 32px 0; border: none; border-top: 1px solid #e2e9ef; }
-        
+
         .user-type-info { background: #eef2f7; padding: 16px; border-radius: 16px; margin-top: 16px; }
         .user-type-info h4 { margin-bottom: 12px; color: #1a3e4c; }
-        
+
         .back-button { margin-bottom: 24px; display: inline-block; cursor: pointer; color: #2b6a7c; font-weight: 500; }
         .back-button:hover { text-decoration: underline; }
-        
+
         @media (max-width: 720px) { .header-inner { flex-direction: column; } .cats-list { gap: 18px; } .user-info { justify-content: center; } }
+
+        /* ================= Улучшенный UI чата ================= */
+        .conversation-list { list-style: none; margin: 20px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+        .conversation-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px 16px;
+            border: 1px solid #eef2f6;
+            border-radius: 18px;
+            cursor: pointer;
+            transition: 0.2s;
+            background: linear-gradient(180deg, #ffffff, #fbfdff);
+        }
+        .conversation-item:hover { transform: translateY(-2px); box-shadow: 0 12px 20px rgba(0,0,0,0.05); border-color: #e3ebf2; }
+        .conversation-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .avatar {
+            width: 44px; height: 44px; border-radius: 50%;
+            display: grid; place-items: center;
+            background: linear-gradient(135deg, #2b6a7c15, #1f8a6b15);
+            border: 1px solid #e7eef5;
+            color: #2b6a7c;
+            font-weight: 800;
+            flex: 0 0 auto;
+            user-select: none;
+        }
+        .conversation-info { min-width: 0; }
+        .conversation-info h4 { font-size: 1rem; font-weight: 800; color: #163a45; margin: 0 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .conversation-info p { margin: 0; color: #6b8b9c; font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 420px; }
+        .conversation-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex: 0 0 auto; }
+        .conversation-date { color: #8aa1af; font-size: 0.85rem; }
+        .unread-badge {
+            background: #1f8a6b;
+            color: #fff;
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            min-width: 34px;
+            text-align: center;
+            box-shadow: 0 10px 16px rgba(31,138,107,0.18);
+        }
+
+        .chat-card { padding: 0; overflow: hidden; }
+        .chat-shell { display: flex; flex-direction: column; height: min(78vh, 760px); }
+        .chat-topbar {
+            padding: 18px 22px;
+            border-bottom: 1px solid #eef2f6;
+            background: linear-gradient(180deg, #ffffff, #fbfdff);
+        }
+        .chat-topbar-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+        .chat-peer { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .chat-peer-text { min-width: 0; }
+        .chat-peer-name { font-weight: 900; color: #163a45; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-peer-sub { color: #6b8b9c; font-size: 0.9rem; margin-top: 2px; }
+        .chat-actions { display: flex; gap: 10px; align-items: center; }
+
+        .chat-messages {
+            flex: 1;
+            padding: 18px 18px 10px;
+            overflow: auto;
+            background:
+                radial-gradient(1200px 400px at 20% 0%, #2b6a7c0d, transparent 55%),
+                radial-gradient(900px 320px at 90% 20%, #1f8a6b0c, transparent 50%),
+                #f6f9fd;
+        }
+
+        /* ВАЖНО: выравнивание сообщений (мои справа / собеседник слева) */
+        .chat-messages { display: flex; flex-direction: column; gap: 10px; }
+
+        .message-row { display: flex; margin: 4px 0; }
+        .message-row.their-message { justify-content: flex-start; }
+        .message-row.my-message { justify-content: flex-end; }
+
+        .message {
+            max-width: min(560px, 78%);
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 6px;
+        }
+        .message-bubble {
+            padding: 10px 12px;
+            border-radius: 16px;
+            line-height: 1.35;
+            font-size: 0.98rem;
+            word-break: break-word;
+            white-space: pre-wrap;
+            border: 1px solid #e7eef5;
+            box-shadow: 0 10px 18px rgba(0,0,0,0.04);
+        }
+
+        /* Мои сообщения (справа) */
+        .my-message .message-bubble {
+            background: linear-gradient(135deg, #2b6a7c, #1f8a6b);
+            color: white;
+            border-color: transparent;
+            border-bottom-right-radius: 6px;
+        }
+
+        /* Сообщения собеседника (слева) — другой оттенок */
+        .their-message .message-bubble {
+            background: #eef2f7;
+            color: #14323c;
+            border-bottom-left-radius: 6px;
+        }
+
+        .message-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: flex-end;
+            color: #8aa1af;
+            font-size: 0.78rem;
+        }
+        .their-message .message-meta { justify-content: flex-start; }
+        .message-time { opacity: 0.9; }
+
+        .chat-input-area {
+            padding: 14px 14px;
+            border-top: 1px solid #e9edf2;
+            background: #ffffff;
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        .chat-input {
+            flex: 1;
+            resize: none;
+            min-height: 44px;
+            max-height: 120px;
+            padding: 12px 14px;
+            border-radius: 18px;
+            border: 1.5px solid #e2e9ef;
+            outline: none;
+            font-size: 1rem;
+            line-height: 1.25;
+            transition: 0.2s;
+            background: #fbfdff;
+        }
+        .chat-input:focus { border-color: #2b6a7c; box-shadow: 0 0 0 4px rgba(43,106,124,0.08); background: #fff; }
+        .chat-send-btn {
+            padding: 12px 18px;
+            border-radius: 18px;
+            font-weight: 800;
+            border: none;
+            cursor: pointer;
+            background: #2b6a7c;
+            color: #fff;
+            transition: 0.2s;
+            min-width: 120px;
+        }
+        .chat-send-btn:hover { background: #1e5668; transform: translateY(-1px); }
+
+        @media (max-width: 720px) {
+            .chat-shell { height: 80vh; }
+            .conversation-info p { max-width: 210px; }
+            .chat-send-btn { min-width: 96px; padding: 12px 14px; }
+            .chat-topbar { padding: 16px 16px; }
+            .chat-messages { padding: 14px 14px 8px; }
+        }
     </style>
 </head>
 <body>
@@ -105,7 +266,10 @@
         
         let selectedFiles = [];
         let wsConnection = null;
-        
+
+        // категории из бэка (id+name)
+        let serverCategories = null;
+
         function getAccessToken() { return localStorage.getItem('access_token'); }
         function getRefreshToken() { return localStorage.getItem('refresh_token'); }
         
@@ -180,6 +344,30 @@
                 }
             }
             return response;
+        }
+
+        function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+
+        function getInitials(name) {
+            const s = (name || '').trim();
+            if (!s) return 'U';
+            const parts = s.split(/\s+/).filter(Boolean);
+            const first = parts[0]?.[0] || 'U';
+            const second = parts[1]?.[0] || '';
+            return (first + second).toUpperCase();
+        }
+
+        async function ensureServerCategoriesLoaded() {
+            if (Array.isArray(serverCategories)) return serverCategories;
+            try {
+                const resp = await apiRequest('/items/categories/');
+                if (!resp.ok) { serverCategories = []; return serverCategories; }
+                const data = await resp.json();
+                serverCategories = Array.isArray(data) ? data : (data.results || []);
+            } catch (e) {
+                serverCategories = [];
+            }
+            return serverCategories;
         }
         
         // ========== ЧАТЫ ==========
@@ -412,7 +600,7 @@
                 };
                 
                 if (formData.category && formData.category !== '') {
-                    apiData.category = parseInt(formData.category);
+                    apiData.category = parseInt(formData.category, 10);
                 }
                 
                 console.log('📤 Отправка данных:', apiData);
@@ -542,7 +730,6 @@
                 if (response.ok) {
                     const data = await response.json();
                     
-                    // Декодируем токен, чтобы получить user_id
                     const payload = JSON.parse(atob(data.access.split('.')[1]));
                     const userId = payload.user_id;
                     
@@ -610,18 +797,28 @@
                     <div class="chats-sub">Общение с продавцами и покупателями</div>
                     ${conversations.length === 0 ? '<div class="empty-message">📭 У вас пока нет чатов. Напишите продавцу на карточке товара!</div>' : `
                         <ul class="conversation-list">
-                            ${conversations.map(conv => `
-                                <li class="conversation-item" data-id="${conv.id}">
-                                    <div class="conversation-info">
-                                        <h4>${conv.other_user?.username || 'Пользователь'}</h4>
-                                        <p>${conv.last_message?.text || 'Нет сообщений'}</p>
-                                    </div>
-                                    <div class="conversation-date">
-                                        ${conv.last_message?.created_at ? new Date(conv.last_message.created_at).toLocaleDateString() : ''}
-                                        ${conv.unread_count > 0 ? `<span class="unread-badge">${conv.unread_count}</span>` : ''}
-                                    </div>
-                                </li>
-                            `).join('')}
+                            ${conversations.map(conv => {
+                                const name = conv.other_user?.username || 'Пользователь';
+                                const initials = getInitials(name);
+                                const last = conv.last_message?.text || 'Нет сообщений';
+                                const date = conv.last_message?.created_at ? new Date(conv.last_message.created_at).toLocaleDateString() : '';
+                                const unread = conv.unread_count > 0 ? `<span class="unread-badge">${conv.unread_count}</span>` : '';
+                                return `
+                                    <li class="conversation-item" data-id="${conv.id}">
+                                        <div class="conversation-left">
+                                            <div class="avatar" aria-hidden="true">${initials}</div>
+                                            <div class="conversation-info">
+                                                <h4>${name}</h4>
+                                                <p>${escapeHtml(last)}</p>
+                                            </div>
+                                        </div>
+                                        <div class="conversation-meta">
+                                            <div class="conversation-date">${date}</div>
+                                            ${unread}
+                                        </div>
+                                    </li>
+                                `;
+                            }).join('')}
                         </ul>
                     `}
                 </div></div>
@@ -636,55 +833,113 @@
             const conversationData = await getMessages(conversationId);
             if (!conversationData) { alert('Не удалось загрузить чат'); showChatsPage(); return; }
             await markConversationRead(conversationId);
-            
+
+            const peerName = conversationData.other_user?.username || 'пользователем';
+            const peerInitials = getInitials(peerName);
+
             document.getElementById('app').innerHTML = `
-                <div class="chat-page"><div class="chat-card">
-                    <div class="back-button" id="backToChatsFromChat">← Назад</div>
-                    <div class="chat-title">💬 Чат с ${conversationData.other_user?.username || 'пользователем'}</div>
-                    <div class="chat-messages" id="chatMessages">${renderMessages(conversationData.messages || [])}</div>
-                    <div class="chat-input-area">
-                        <input type="text" id="messageInput" placeholder="Введите сообщение..." onkeypress="if(event.key==='Enter') sendMessage()">
-                        <button class="btn-primary" onclick="sendMessage()">📤 Отправить</button>
+                <div class="chat-page">
+                    <div class="chat-card">
+                        <div class="chat-shell">
+                            <div class="chat-topbar">
+                                <div class="chat-topbar-row">
+                                    <div class="chat-peer">
+                                        <div class="avatar" aria-hidden="true">${peerInitials}</div>
+                                        <div class="chat-peer-text">
+                                            <div class="chat-peer-name">Чат с ${peerName}</div>
+                                            <div class="chat-peer-sub">Enter — отправить • Shift+Enter — новая строка</div>
+                                        </div>
+                                    </div>
+                                    <div class="chat-actions">
+                                        <button class="btn-outline" id="backToChatsFromChat">← К чатам</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="chat-messages" id="chatMessages">
+                                ${renderMessages(conversationData.messages || [])}
+                            </div>
+
+                            <div class="chat-input-area">
+                                <textarea class="chat-input" id="messageInput" placeholder="Введите сообщение..." rows="1"></textarea>
+                                <button class="chat-send-btn" id="sendBtn">Отправить</button>
+                            </div>
+                        </div>
                     </div>
-                </div></div>
+                </div>
             `;
-            
+
+            const input = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const messagesContainer = document.getElementById('chatMessages');
+
+            function autosizeTextarea(el) {
+                el.style.height = 'auto';
+                el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+            }
+            autosizeTextarea(input);
+            input.addEventListener('input', () => autosizeTextarea(input));
+
             window.sendMessage = () => {
-                const input = document.getElementById('messageInput');
                 const text = input.value.trim();
                 if (!text) return;
                 if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
                     wsConnection.send(JSON.stringify({ message: text }));
                     input.value = '';
-                } else { alert('Нет соединения с сервером'); }
+                    autosizeTextarea(input);
+                    input.focus();
+                } else {
+                    alert('Нет соединения с сервером');
+                }
             };
-            
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    window.sendMessage();
+                }
+            });
+            sendBtn.addEventListener('click', () => window.sendMessage());
+
             const token = getAccessToken();
             const wsUrl = `${WS_BASE}/chat/${conversationId}/?token=${token}`;
             if (wsConnection) wsConnection.close();
             wsConnection = new WebSocket(wsUrl);
             wsConnection.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                const messagesContainer = document.getElementById('chatMessages');
                 messagesContainer.insertAdjacentHTML('beforeend', renderSingleMessage(data, data.sender_id == localStorage.getItem('user_id')));
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             };
-            document.getElementById('backToChatsFromChat')?.addEventListener('click', () => { if (wsConnection) wsConnection.close(); showChatsPage(); });
-            const messagesContainer = document.getElementById('chatMessages');
+
+            document.getElementById('backToChatsFromChat')?.addEventListener('click', () => {
+                if (wsConnection) wsConnection.close();
+                showChatsPage();
+            });
+
             if (messagesContainer) messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            input.focus();
         }
-        
+
         function renderMessages(messages) {
             const currentUser = localStorage.getItem('user_id');
             return messages.map(msg => renderSingleMessage(msg, msg.sender_id == currentUser)).join('');
         }
-        
+
         function renderSingleMessage(message, isMyMessage) {
-            const time = new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            return `<div class="message ${isMyMessage ? 'my-message' : 'their-message'}"><div class="message-bubble">${escapeHtml(message.text)}</div><div class="message-time">${time}</div></div>`;
+            const time = message?.created_at
+                ? new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                : '';
+            const rowClass = isMyMessage ? 'my-message' : 'their-message';
+            const safeText = escapeHtml(message?.text || '');
+            return `
+                <div class="message-row ${rowClass}">
+                    <div class="message ${rowClass}">
+                        <div class="message-bubble">${safeText}</div>
+                        <div class="message-meta"><span class="message-time">${time}</span></div>
+                    </div>
+                </div>
+            `;
         }
-        
-        function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
         
         // ========== СТРАНИЦА ПРОФИЛЯ ==========
         async function showProfilePage() {
@@ -818,9 +1073,15 @@
         }
         
         // ========== СТРАНИЦА СОЗДАНИЯ ОБЪЯВЛЕНИЯ ==========
-        function showCreatePage() {
+        async function showCreatePage() {
             if (!isAuthenticated()) { alert('Пожалуйста, войдите в систему'); showLoginPage(); return; }
             selectedFiles = [];
+
+            const categories = await ensureServerCategoriesLoaded();
+            const categoryOptions = categories.length
+                ? (`<option value="">Без категории</option>` + categories.map(c => `<option value="${c.id}">${c.name}</option>`).join(''))
+                : (`<option value="">Без категории</option><option value="" disabled>— Категории не загрузились —</option>`);
+
             document.getElementById('app').innerHTML = `
                 <div class="create-page"><div class="create-card">
                     <div class="back-button" id="backToMainFromCreate">← Назад</div>
@@ -831,14 +1092,7 @@
                         <div class="form-group"><label>Описание</label><textarea id="itemDesc" rows="4" placeholder="Опишите состояние, характеристики..."></textarea></div>
                         <div class="form-group"><label>Цена за день (₽) *</label><input type="number" id="itemPrice" placeholder="500" required></div>
                         <div class="form-group"><label>Категория</label>
-                            <select id="itemCategory">
-                                <option value="">Без категории</option>
-                                <option value="electronics">📱 Электроника</option>
-                                <option value="tools">🔧 Инструменты</option>
-                                <option value="sport">⚽ Спорт</option>
-                                <option value="clothing">👕 Одежда</option>
-                                <option value="home">🏠 Дом и сад</option>
-                            </select>
+                            <select id="itemCategory">${categoryOptions}</select>
                         </div>
                         <div class="form-group"><label>Фотографии</label>
                             <label class="file-input-label">📷 Выбрать изображения<input type="file" id="itemImages" accept="image/*" multiple></label>
@@ -850,19 +1104,22 @@
                     </form>
                 </div></div>
             `;
+
             const fileInput = document.getElementById('itemImages');
             fileInput.addEventListener('change', (e) => { selectedFiles = Array.from(e.target.files); updateImagePreview(); });
+
             document.getElementById('createItemForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const formData = { 
                     name: document.getElementById('itemName').value, 
                     description: document.getElementById('itemDesc').value, 
-                    price_per_day: parseInt(document.getElementById('itemPrice').value), 
+                    price_per_day: parseInt(document.getElementById('itemPrice').value, 10), 
                     category: document.getElementById('itemCategory').value
                 };
                 if (!formData.name || !formData.price_per_day) { alert('Заполните название и цену'); return; }
                 await createItemWithImages(formData, selectedFiles);
             });
+
             document.getElementById('backToMainFromCreate')?.addEventListener('click', () => showMainPage());
         }
         
