@@ -153,7 +153,7 @@
                 #f6f9fd;
         }
 
-        /* ВАЖНО: выравнивание сообщений (мои справа / собеседник слева) */
+        /* мои сообщения справа / собеседника слева */
         .chat-messages { display: flex; flex-direction: column; gap: 10px; }
 
         .message-row { display: flex; margin: 4px 0; }
@@ -177,7 +177,6 @@
             box-shadow: 0 10px 18px rgba(0,0,0,0.04);
         }
 
-        /* Мои сообщения (справа) */
         .my-message .message-bubble {
             background: linear-gradient(135deg, #2b6a7c, #1f8a6b);
             color: white;
@@ -185,7 +184,6 @@
             border-bottom-right-radius: 6px;
         }
 
-        /* Сообщения собеседника (слева) — другой оттенок */
         .their-message .message-bubble {
             background: #eef2f7;
             color: #14323c;
@@ -203,6 +201,42 @@
         .their-message .message-meta { justify-content: flex-start; }
         .message-time { opacity: 0.9; }
 
+        /* точки непрочитанного */
+        .read-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: #1f8a6b;
+            box-shadow: 0 0 0 3px rgba(31,138,107,0.12);
+        }
+        .my-message .read-dot {
+            background: rgba(255,255,255,0.9);
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.18);
+        }
+
+        /* сообщения-картинки */
+        .message-image {
+            width: 100%;
+            max-width: 520px;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid #e7eef5;
+            box-shadow: 0 10px 18px rgba(0,0,0,0.06);
+            background: #fff;
+        }
+        .message-image img {
+            display: block;
+            width: 100%;
+            height: auto;
+            max-height: 380px;
+            object-fit: cover;
+        }
+        .message-image a {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+        }
+
         .chat-input-area {
             padding: 14px 14px;
             border-top: 1px solid #e9edf2;
@@ -211,6 +245,22 @@
             gap: 10px;
             align-items: flex-end;
         }
+
+        .chat-attach-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 16px;
+            border: 1.5px solid #e2e9ef;
+            background: #fbfdff;
+            cursor: pointer;
+            font-size: 18px;
+            display: grid;
+            place-items: center;
+            transition: 0.2s;
+            flex: 0 0 auto;
+        }
+        .chat-attach-btn:hover { border-color: #2b6a7c; box-shadow: 0 0 0 4px rgba(43,106,124,0.08); background: #fff; }
+
         .chat-input {
             flex: 1;
             resize: none;
@@ -226,6 +276,7 @@
             background: #fbfdff;
         }
         .chat-input:focus { border-color: #2b6a7c; box-shadow: 0 0 0 4px rgba(43,106,124,0.08); background: #fff; }
+
         .chat-send-btn {
             padding: 12px 18px;
             border-radius: 18px;
@@ -239,12 +290,48 @@
         }
         .chat-send-btn:hover { background: #1e5668; transform: translateY(-1px); }
 
+        .chat-attachment-preview {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border-top: 1px solid #eef2f6;
+            background: #fbfdff;
+        }
+        .chat-attachment-preview.active { display: flex; }
+        .chat-attachment-thumb {
+            width: 54px;
+            height: 54px;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid #e7eef5;
+            background: #fff;
+            flex: 0 0 auto;
+        }
+        .chat-attachment-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .chat-attachment-meta { min-width: 0; }
+        .chat-attachment-title { font-weight: 800; color: #163a45; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 420px; }
+        .chat-attachment-sub { color: #8aa1af; font-size: 0.85rem; margin-top: 2px; }
+        .chat-attachment-remove {
+            margin-left: auto;
+            border: none;
+            background: #fee2e2;
+            color: #c0392b;
+            border-radius: 14px;
+            padding: 10px 12px;
+            cursor: pointer;
+            font-weight: 800;
+            transition: 0.2s;
+        }
+        .chat-attachment-remove:hover { background: #fccaca; transform: translateY(-1px); }
+
         @media (max-width: 720px) {
             .chat-shell { height: 80vh; }
             .conversation-info p { max-width: 210px; }
             .chat-send-btn { min-width: 96px; padding: 12px 14px; }
             .chat-topbar { padding: 16px 16px; }
             .chat-messages { padding: 14px 14px 8px; }
+            .chat-attachment-title { max-width: 200px; }
         }
     </style>
 </head>
@@ -254,7 +341,7 @@
     <script>
         const API_BASE = '/api';
         const WS_BASE = 'ws://localhost/ws';
-        
+
         const CATEGORIES = [
             { id: 'all', name: 'Все' },
             { id: 'electronics', name: 'Электроника' },
@@ -263,16 +350,20 @@
             { id: 'clothing', name: 'Одежда' },
             { id: 'home', name: 'Дом и сад' }
         ];
-        
+
         let selectedFiles = [];
         let wsConnection = null;
 
         // категории из бэка (id+name)
         let serverCategories = null;
 
+        // выбранное изображение для чата (один файл)
+        let chatSelectedImageFile = null;
+        let chatSelectedImagePreviewUrl = null;
+
         function getAccessToken() { return localStorage.getItem('access_token'); }
         function getRefreshToken() { return localStorage.getItem('refresh_token'); }
-        
+
         function setTokens(access, refresh, userId, username, email, userType, profileData) {
             localStorage.setItem('access_token', access);
             if (refresh) localStorage.setItem('refresh_token', refresh);
@@ -280,7 +371,7 @@
             if (username) localStorage.setItem('username', username);
             if (email) localStorage.setItem('user_email', email);
             if (userType) localStorage.setItem('user_type', userType);
-            
+
             if (profileData) {
                 if (profileData.passport_series) localStorage.setItem('passport_series', profileData.passport_series);
                 if (profileData.passport_number) localStorage.setItem('passport_number', profileData.passport_number);
@@ -289,7 +380,7 @@
                 if (profileData.kpp) localStorage.setItem('kpp', profileData.kpp);
             }
         }
-        
+
         function clearTokens() {
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
@@ -303,9 +394,9 @@
             localStorage.removeItem('ogrnip');
             localStorage.removeItem('kpp');
         }
-        
+
         function isAuthenticated() { return !!getAccessToken(); }
-        
+
         async function refreshAccessToken() {
             const refresh = getRefreshToken();
             if (!refresh) return false;
@@ -323,17 +414,17 @@
             } catch (e) {}
             return false;
         }
-        
+
         async function apiRequest(endpoint, options = {}) {
             const url = `${API_BASE}${endpoint}`;
             const headers = { ...options.headers };
             const token = getAccessToken();
             if (token) headers['Authorization'] = `Bearer ${token}`;
-            
+
             if (!(options.body instanceof FormData)) {
                 headers['Content-Type'] = 'application/json';
             }
-            
+
             let response = await fetch(url, { ...options, headers });
             if (response.status === 401 && !options._retry) {
                 const refreshed = await refreshAccessToken();
@@ -357,6 +448,15 @@
             return (first + second).toUpperCase();
         }
 
+        function formatBytes(bytes) {
+            if (!bytes && bytes !== 0) return '';
+            const units = ['B', 'KB', 'MB', 'GB'];
+            let i = 0;
+            let n = bytes;
+            while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+            return `${n.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+        }
+
         async function ensureServerCategoriesLoaded() {
             if (Array.isArray(serverCategories)) return serverCategories;
             try {
@@ -369,7 +469,89 @@
             }
             return serverCategories;
         }
-        
+
+        function resetChatAttachmentPreview() {
+            chatSelectedImageFile = null;
+            if (chatSelectedImagePreviewUrl) {
+                URL.revokeObjectURL(chatSelectedImagePreviewUrl);
+                chatSelectedImagePreviewUrl = null;
+            }
+            const box = document.getElementById('chatAttachmentPreview');
+            if (!box) return;
+            box.classList.remove('active');
+            const img = document.getElementById('chatAttachmentThumbImg');
+            if (img) img.src = '';
+            const title = document.getElementById('chatAttachmentTitle');
+            if (title) title.textContent = '';
+            const sub = document.getElementById('chatAttachmentSub');
+            if (sub) sub.textContent = '';
+        }
+
+        function setChatAttachmentPreview(file) {
+            chatSelectedImageFile = file || null;
+            const box = document.getElementById('chatAttachmentPreview');
+            if (!box) return;
+
+            if (!file) {
+                resetChatAttachmentPreview();
+                return;
+            }
+
+            if (chatSelectedImagePreviewUrl) URL.revokeObjectURL(chatSelectedImagePreviewUrl);
+            chatSelectedImagePreviewUrl = URL.createObjectURL(file);
+
+            const img = document.getElementById('chatAttachmentThumbImg');
+            if (img) img.src = chatSelectedImagePreviewUrl;
+
+            const title = document.getElementById('chatAttachmentTitle');
+            if (title) title.textContent = file.name || 'Изображение';
+
+            const sub = document.getElementById('chatAttachmentSub');
+            if (sub) sub.textContent = `${formatBytes(file.size)} • ${file.type || 'image/*'}`;
+
+            box.classList.add('active');
+        }
+
+        async function sendChatMessageWithOptionalImage(conversationId, text) {
+            const hasText = !!(text || '').trim();
+            const hasImage = !!chatSelectedImageFile;
+
+            if (!hasText && !hasImage) return;
+
+            // Если есть изображение — отправляем через HTTP (multipart) на /messages/
+            // Бэк сам сделает broadcast в WS-группу, и сообщение появится у всех.
+            if (hasImage) {
+                const token = getAccessToken();
+                const fd = new FormData();
+                if (hasText) fd.append('text', (text || '').trim());
+                fd.append('image', chatSelectedImageFile);
+
+                const resp = await fetch(`${API_BASE}/chats/conversations/${conversationId}/messages/`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: fd
+                });
+
+                const respText = await resp.text().catch(() => '');
+                if (!resp.ok) {
+                    console.error('❌ chat image upload failed', resp.status, respText);
+                    alert(`❌ Не удалось отправить изображение (${resp.status})`);
+                    return;
+                }
+
+                resetChatAttachmentPreview();
+                return;
+            }
+
+            // Если только текст — отправляем через WS
+            if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+                wsConnection.send(JSON.stringify({ message: (text || '').trim() }));
+                return;
+            }
+
+            alert('Нет соединения с сервером');
+        }
+
         // ========== ЧАТЫ ==========
         async function getConversations() {
             try {
@@ -378,7 +560,7 @@
                 return [];
             } catch (error) { return []; }
         }
-        
+
         async function createConversation(otherUserId, itemId = null) {
             try {
                 const body = { participant_id: otherUserId };
@@ -391,7 +573,7 @@
                 return null;
             } catch (error) { return null; }
         }
-        
+
         async function getMessages(conversationId) {
             try {
                 const response = await apiRequest(`/chats/conversations/${conversationId}/`);
@@ -399,13 +581,13 @@
                 return null;
             } catch (error) { return null; }
         }
-        
+
         async function markConversationRead(conversationId) {
             try {
                 await apiRequest(`/chats/conversations/${conversationId}/mark_read/`, { method: 'POST' });
             } catch (error) {}
         }
-        
+
         // ========== ПРОФИЛЬ ==========
         function getSavedProfile() {
             return {
@@ -419,7 +601,7 @@
                 kpp: localStorage.getItem('kpp') || ''
             };
         }
-        
+
         async function getUserProfile() {
             try {
                 const response = await apiRequest('/users/me/');
@@ -438,7 +620,7 @@
             } catch (e) {}
             return getSavedProfile();
         }
-        
+
         async function updateProfile(profileData) {
             try {
                 const response = await apiRequest('/users/profile/', {
@@ -463,7 +645,7 @@
                 return { success: false, error: { detail: 'Ошибка подключения' } };
             }
         }
-        
+
         async function changePassword(oldPassword, newPassword) {
             try {
                 const response = await apiRequest('/users/change-password/', {
@@ -477,19 +659,19 @@
                 return { success: false, error: { detail: 'Ошибка подключения' } };
             }
         }
-        
+
         // ========== ТОВАРЫ ==========
         let currentPage = 1;
         let totalPages = 1;
         let currentCategory = 'all';
         let allProducts = [];
-        
+
         async function loadProducts(page = 1) {
             const container = document.getElementById('productsContainer');
             if (!container) return;
             container.innerHTML = '<div class="loading">Загрузка товаров...</div>';
             currentPage = page;
-            
+
             try {
                 let url = `/items/?page=${page}`;
                 const response = await apiRequest(url);
@@ -503,21 +685,30 @@
                 container.innerHTML = '<div class="error-message">❌ Ошибка загрузки товаров</div>';
             }
         }
-        
+
         function renderProducts(products) {
             const container = document.getElementById('productsContainer');
             if (!products.length) {
                 container.innerHTML = '<div class="empty-message">📦 Товаров пока нет. Добавьте первое объявление!</div>';
                 return;
             }
-            
+
             const currentUserId = localStorage.getItem('user_id');
-            
+
             container.innerHTML = products.map(product => {
                 const isOwner = currentUserId && product.owner == currentUserId;
-                let imageUrl = product.image || product.images?.[0]?.image || 'https://placehold.co/400x300/eef2f7/2b6a7c?text=Нет+фото';
-                if (Array.isArray(imageUrl)) imageUrl = imageUrl[0] || 'https://placehold.co/400x300/eef2f7/2b6a7c?text=Нет+фото';
-                
+
+                let imageUrl =
+                    product.image ||
+                    product.images?.[0]?.image ||
+                    'https://placehold.co/400x300/eef2f7/2b6a7c?text=Нет+фото';
+
+                if (Array.isArray(imageUrl)) {
+                    const first = imageUrl[0];
+                    imageUrl = (typeof first === 'string' ? first : first?.image) ||
+                        'https://placehold.co/400x300/eef2f7/2b6a7c?text=Нет+фото';
+                }
+
                 return `
                 <div class="card">
                     ${isOwner ? '<div class="card-owner-badge">Ваше объявление</div>' : ''}
@@ -530,13 +721,13 @@
                     ${isOwner ? `<button class="card-btn card-delete-btn" data-id="${product.id}" data-action="delete">🗑 Удалить</button>` : ''}
                 </div>
             `}).join('');
-            
+
             document.querySelectorAll('.card-btn').forEach(btn => {
                 btn.onclick = async () => {
                     const productId = btn.dataset.id;
                     const action = btn.dataset.action;
                     const ownerId = btn.dataset.owner;
-                    
+
                     if (action === 'delete') {
                         if (confirm('Вы уверены, что хотите удалить это объявление?')) {
                             await deleteItem(productId);
@@ -555,7 +746,7 @@
                 };
             });
         }
-        
+
         async function startChat(otherUserId, itemId) {
             const currentUserId = localStorage.getItem('user_id');
             if (currentUserId == otherUserId) { alert('Вы не можете начать чат с самим собой'); return; }
@@ -563,7 +754,7 @@
             if (conversation) showChatPage(conversation.id);
             else alert('Не удалось создать чат');
         }
-        
+
         async function deleteItem(productId) {
             try {
                 const response = await apiRequest(`/items/${productId}/`, { method: 'DELETE' });
@@ -571,7 +762,7 @@
                 else alert('❌ Ошибка при удалении');
             } catch (error) { alert('❌ Ошибка подключения'); }
         }
-        
+
         function renderPagination() {
             const container = document.getElementById('pagination');
             if (!container || totalPages <= 1) { if(container) container.innerHTML = ''; return; }
@@ -580,31 +771,28 @@
             container.innerHTML = html;
             container.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => loadProducts(parseInt(btn.dataset.page))));
         }
-        
+
         // ========== СОЗДАНИЕ ОБЪЯВЛЕНИЯ ==========
         async function createItemWithImages(formData, images) {
             try {
                 const ownerId = localStorage.getItem('user_id');
-                console.log('👤 owner_id из localStorage:', ownerId);
-                
+
                 if (!ownerId) {
                     alert('❌ Ошибка: пользователь не авторизован. Выйдите и войдите заново.');
                     return false;
                 }
-                
+
                 const apiData = {
                     title: formData.name,
                     description: formData.description,
                     price_per_day: formData.price_per_day,
-                    owner: parseInt(ownerId)
+                    owner: parseInt(ownerId, 10)
                 };
-                
+
                 if (formData.category && formData.category !== '') {
                     apiData.category = parseInt(formData.category, 10);
                 }
-                
-                console.log('📤 Отправка данных:', apiData);
-                
+
                 const token = getAccessToken();
                 const response = await fetch(`${API_BASE}/items/`, {
                     method: 'POST',
@@ -614,33 +802,35 @@
                     },
                     body: JSON.stringify(apiData)
                 });
-                
-                console.log('📥 Статус ответа:', response.status);
-                
+
                 if (!response.ok) {
-                    const error = await response.json();
+                    const error = await response.json().catch(() => ({}));
                     console.error('❌ Ошибка API:', error);
                     alert('❌ Ошибка: ' + JSON.stringify(error));
                     return false;
                 }
-                
+
                 const item = await response.json();
-                console.log('✅ Товар создан:', item);
-                
+
                 if (images && images.length > 0) {
                     for (const imageFile of images) {
                         const imageFormData = new FormData();
                         imageFormData.append('item', item.id);
                         imageFormData.append('image', imageFile);
-                        
-                        await fetch(`${API_BASE}/items/upload-image/`, {
+
+                        const uploadResp = await fetch(`${API_BASE}/items/upload-image/`, {
                             method: 'POST',
                             headers: { 'Authorization': `Bearer ${token}` },
                             body: imageFormData
                         });
+
+                        if (!uploadResp.ok) {
+                            const t = await uploadResp.text().catch(() => '');
+                            console.error('❌ Ошибка загрузки фото:', uploadResp.status, t);
+                        }
                     }
                 }
-                
+
                 alert('✅ Объявление опубликовано!');
                 showMainPage();
                 loadProducts(1);
@@ -651,44 +841,37 @@
                 return false;
             }
         }
-        
+
         // ========== РЕГИСТРАЦИЯ ==========
         async function register(username, email, password, userType) {
             try {
-                console.log('📤 Отправка регистрации:', { username, email, user_type: userType });
-                
                 const response = await fetch(`${API_BASE}/users/register/`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, email, password, user_type: userType })
                 });
-                
-                console.log('📥 Статус ответа:', response.status);
-                
+
                 let responseData;
                 const responseText = await response.text();
-                console.log('📄 Текст ответа:', responseText);
-                
+
                 try {
                     responseData = JSON.parse(responseText);
                 } catch (e) {
                     responseData = { detail: responseText || 'Неизвестная ошибка' };
                 }
-                
+
                 if (response.ok) {
-                    console.log('✅ Успех:', responseData);
-                    
                     const loginResponse = await fetch(`${API_BASE}/token/`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ username, password })
                     });
-                    
+
                     if (loginResponse.ok) {
                         const loginData = await loginResponse.json();
                         const payload = JSON.parse(atob(loginData.access.split('.')[1]));
                         const userId = payload.user_id;
-                        
+
                         setTokens(loginData.access, loginData.refresh, userId, username, email, userType);
                         alert('✅ Регистрация успешна! Вы вошли в аккаунт.');
                         showMainPage();
@@ -707,7 +890,7 @@
                     if (responseData.user_type) errorMessage += `• Тип пользователя: ${Array.isArray(responseData.user_type) ? responseData.user_type.join(', ') : responseData.user_type}\n`;
                     if (responseData.detail) errorMessage += `• ${responseData.detail}\n`;
                     if (errorMessage === 'Ошибка регистрации:\n') errorMessage += `• ${JSON.stringify(responseData)}`;
-                    
+
                     alert(errorMessage);
                     return false;
                 }
@@ -717,7 +900,7 @@
                 return false;
             }
         }
-        
+
         // ========== ВХОД ==========
         async function login(username, password) {
             try {
@@ -726,18 +909,16 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
-                    
+
                     const payload = JSON.parse(atob(data.access.split('.')[1]));
                     const userId = payload.user_id;
-                    
-                    console.log('👤 user_id из токена:', userId);
-                    
+
                     const profile = await getUserProfile();
                     setTokens(data.access, data.refresh, userId, username, profile.email || '', profile.user_type || 'individual', profile);
-                    
+
                     alert('✅ Вход выполнен успешно!');
                     showMainPage();
                     loadProducts(1);
@@ -752,7 +933,7 @@
                 return false;
             }
         }
-        
+
         function logout() {
             if (wsConnection) { wsConnection.close(); wsConnection = null; }
             clearTokens();
@@ -760,11 +941,11 @@
             showMainPage();
             loadProducts(1);
         }
-        
+
         function updateNavBar() {
             const authSection = document.getElementById('authSection');
             if (!authSection) return;
-            
+
             if (isAuthenticated()) {
                 authSection.innerHTML = `
                     <div class="user-info">
@@ -785,7 +966,7 @@
                 document.getElementById('registerNavBtn')?.addEventListener('click', (e) => { e.preventDefault(); showRegisterPage(); });
             }
         }
-        
+
         // ========== СТРАНИЦА ЧАТОВ ==========
         async function showChatsPage() {
             if (!isAuthenticated()) { alert('Пожалуйста, войдите в систему'); showLoginPage(); return; }
@@ -800,7 +981,7 @@
                             ${conversations.map(conv => {
                                 const name = conv.other_user?.username || 'Пользователь';
                                 const initials = getInitials(name);
-                                const last = conv.last_message?.text || 'Нет сообщений';
+                                const lastText = conv.last_message?.text || (conv.last_message?.image ? '[Изображение]' : 'Нет сообщений');
                                 const date = conv.last_message?.created_at ? new Date(conv.last_message.created_at).toLocaleDateString() : '';
                                 const unread = conv.unread_count > 0 ? `<span class="unread-badge">${conv.unread_count}</span>` : '';
                                 return `
@@ -809,7 +990,7 @@
                                             <div class="avatar" aria-hidden="true">${initials}</div>
                                             <div class="conversation-info">
                                                 <h4>${name}</h4>
-                                                <p>${escapeHtml(last)}</p>
+                                                <p>${escapeHtml(lastText)}</p>
                                             </div>
                                         </div>
                                         <div class="conversation-meta">
@@ -826,13 +1007,15 @@
             document.querySelectorAll('.conversation-item').forEach(item => item.addEventListener('click', () => showChatPage(item.dataset.id)));
             document.getElementById('backToMainFromChats')?.addEventListener('click', () => showMainPage());
         }
-        
+
         // ========== СТРАНИЦА ЧАТА ==========
         async function showChatPage(conversationId) {
             if (!isAuthenticated()) { showLoginPage(); return; }
             const conversationData = await getMessages(conversationId);
             if (!conversationData) { alert('Не удалось загрузить чат'); showChatsPage(); return; }
             await markConversationRead(conversationId);
+
+            resetChatAttachmentPreview();
 
             const peerName = conversationData.other_user?.username || 'пользователем';
             const peerInitials = getInitials(peerName);
@@ -860,9 +1043,20 @@
                                 ${renderMessages(conversationData.messages || [])}
                             </div>
 
+                            <div class="chat-attachment-preview" id="chatAttachmentPreview">
+                                <div class="chat-attachment-thumb"><img id="chatAttachmentThumbImg" alt="preview"></div>
+                                <div class="chat-attachment-meta">
+                                    <div class="chat-attachment-title" id="chatAttachmentTitle"></div>
+                                    <div class="chat-attachment-sub" id="chatAttachmentSub"></div>
+                                </div>
+                                <button class="chat-attachment-remove" id="chatAttachmentRemoveBtn" type="button">Убрать</button>
+                            </div>
+
                             <div class="chat-input-area">
+                                <button class="chat-attach-btn" id="attachBtn" type="button" title="Прикрепить изображение">📎</button>
+                                <input type="file" id="chatImageInput" accept="image/*">
                                 <textarea class="chat-input" id="messageInput" placeholder="Введите сообщение..." rows="1"></textarea>
-                                <button class="chat-send-btn" id="sendBtn">Отправить</button>
+                                <button class="chat-send-btn" id="sendBtn" type="button">Отправить</button>
                             </div>
                         </div>
                     </div>
@@ -872,6 +1066,9 @@
             const input = document.getElementById('messageInput');
             const sendBtn = document.getElementById('sendBtn');
             const messagesContainer = document.getElementById('chatMessages');
+            const attachBtn = document.getElementById('attachBtn');
+            const chatImageInput = document.getElementById('chatImageInput');
+            const removeAttachBtn = document.getElementById('chatAttachmentRemoveBtn');
 
             function autosizeTextarea(el) {
                 el.style.height = 'auto';
@@ -880,17 +1077,38 @@
             autosizeTextarea(input);
             input.addEventListener('input', () => autosizeTextarea(input));
 
-            window.sendMessage = () => {
-                const text = input.value.trim();
-                if (!text) return;
-                if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
-                    wsConnection.send(JSON.stringify({ message: text }));
-                    input.value = '';
-                    autosizeTextarea(input);
-                    input.focus();
-                } else {
-                    alert('Нет соединения с сервером');
+            attachBtn.addEventListener('click', () => chatImageInput.click());
+            chatImageInput.addEventListener('change', (e) => {
+                const file = e.target.files?.[0] || null;
+                if (!file) return;
+
+                if (!file.type.startsWith('image/')) {
+                    alert('Можно прикрепить только изображение');
+                    chatImageInput.value = '';
+                    return;
                 }
+
+                const maxBytes = 8 * 1024 * 1024; // 8 MB
+                if (file.size > maxBytes) {
+                    alert('Слишком большой файл. Максимум 8 MB.');
+                    chatImageInput.value = '';
+                    return;
+                }
+
+                setChatAttachmentPreview(file);
+            });
+
+            removeAttachBtn.addEventListener('click', () => {
+                chatImageInput.value = '';
+                resetChatAttachmentPreview();
+            });
+
+            window.sendMessage = async () => {
+                const text = input.value;
+                await sendChatMessageWithOptionalImage(conversationId, text);
+                input.value = '';
+                autosizeTextarea(input);
+                input.focus();
             };
 
             input.addEventListener('keydown', (e) => {
@@ -905,6 +1123,7 @@
             const wsUrl = `${WS_BASE}/chat/${conversationId}/?token=${token}`;
             if (wsConnection) wsConnection.close();
             wsConnection = new WebSocket(wsUrl);
+
             wsConnection.onmessage = (event) => {
                 const data = JSON.parse(event.data);
                 messagesContainer.insertAdjacentHTML('beforeend', renderSingleMessage(data, data.sender_id == localStorage.getItem('user_id')));
@@ -913,6 +1132,7 @@
 
             document.getElementById('backToChatsFromChat')?.addEventListener('click', () => {
                 if (wsConnection) wsConnection.close();
+                resetChatAttachmentPreview();
                 showChatsPage();
             });
 
@@ -930,24 +1150,53 @@
                 ? new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                 : '';
             const rowClass = isMyMessage ? 'my-message' : 'their-message';
-            const safeText = escapeHtml(message?.text || '');
+
+            const parts = [];
+
+            const safeText = (message?.text || '').trim();
+            if (safeText) {
+                parts.push(`<div class="message-bubble">${escapeHtml(safeText)}</div>`);
+            }
+
+            if (message?.image) {
+                const safeUrl = message.image;
+                parts.push(`
+                    <div class="message-image">
+                        <a href="${safeUrl}" target="_blank" rel="noopener">
+                            <img src="${safeUrl}" alt="image">
+                        </a>
+                    </div>
+                `);
+            }
+
+            if (!parts.length) {
+                parts.push(`<div class="message-bubble"></div>`);
+            }
+
+            const unreadDot = message && message.is_read === false
+                ? `<span class="read-dot" title="Не прочитано"></span>`
+                : '';
+
             return `
                 <div class="message-row ${rowClass}">
                     <div class="message ${rowClass}">
-                        <div class="message-bubble">${safeText}</div>
-                        <div class="message-meta"><span class="message-time">${time}</span></div>
+                        ${parts.join('')}
+                        <div class="message-meta">
+                            ${unreadDot}
+                            <span class="message-time">${time}</span>
+                        </div>
                     </div>
                 </div>
             `;
         }
-        
+
         // ========== СТРАНИЦА ПРОФИЛЯ ==========
         async function showProfilePage() {
             if (!isAuthenticated()) { alert('Пожалуйста, войдите в систему'); showLoginPage(); return; }
-            
+
             let profile = await getUserProfile();
             const userType = profile.user_type || localStorage.getItem('user_type') || 'individual';
-            
+
             let additionalFields = '';
             if (userType === 'individual') {
                 additionalFields = `
@@ -975,7 +1224,7 @@
                     </div>
                 `;
             }
-            
+
             document.getElementById('app').innerHTML = `
                 <div class="profile-page"><div class="profile-card">
                     <div class="back-button" id="backToMainFromProfile">← Назад</div>
@@ -1007,15 +1256,15 @@
                     </form>
                 </div></div>
             `;
-            
+
             document.getElementById('profileForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const updateData = { 
+                const updateData = {
                     user_type: userType,
-                    username: document.getElementById('profileUsername').value, 
-                    email: document.getElementById('profileEmail').value 
+                    username: document.getElementById('profileUsername').value,
+                    email: document.getElementById('profileEmail').value
                 };
-                
+
                 if (userType === 'individual') {
                     updateData.passport_series = document.getElementById('passportSeries')?.value || '';
                     updateData.passport_number = document.getElementById('passportNumber')?.value || '';
@@ -1027,7 +1276,7 @@
                     updateData.inn = document.getElementById('inn')?.value || '';
                     updateData.kpp = document.getElementById('kpp')?.value || '';
                 }
-                
+
                 const result = await updateProfile(updateData);
                 const msgDiv = document.getElementById('profileMessage');
                 if (result.success) {
@@ -1036,27 +1285,27 @@
                     localStorage.setItem('user_email', updateData.email);
                     setTimeout(() => msgDiv.innerHTML = '', 2000);
                     updateNavBar();
-                } else { 
-                    msgDiv.innerHTML = '<div class="error-message-box">❌ Ошибка: ' + JSON.stringify(result.error) + '</div>'; 
+                } else {
+                    msgDiv.innerHTML = '<div class="error-message-box">❌ Ошибка: ' + JSON.stringify(result.error) + '</div>';
                 }
             });
-            
+
             document.getElementById('passwordForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const msgDiv = document.getElementById('profileMessage');
                 const newPassword = document.getElementById('newPassword').value;
                 const confirmPassword = document.getElementById('confirmPassword').value;
-                
+
                 if (newPassword !== confirmPassword) {
                     msgDiv.innerHTML = '<div class="error-message-box">❌ Пароли не совпадают</div>';
                     return;
                 }
-                
+
                 if (newPassword.length < 4) {
                     msgDiv.innerHTML = '<div class="error-message-box">❌ Пароль должен быть не менее 4 символов</div>';
                     return;
                 }
-                
+
                 const result = await changePassword(document.getElementById('oldPassword').value, newPassword);
                 if (result.success) {
                     msgDiv.innerHTML = '<div class="success-message">✅ Пароль успешно изменён!</div>';
@@ -1064,14 +1313,14 @@
                     document.getElementById('newPassword').value = '';
                     document.getElementById('confirmPassword').value = '';
                     setTimeout(() => msgDiv.innerHTML = '', 2000);
-                } else { 
-                    msgDiv.innerHTML = '<div class="error-message-box">❌ ' + (result.error?.detail || 'Ошибка смены пароля') + '</div>'; 
+                } else {
+                    msgDiv.innerHTML = '<div class="error-message-box">❌ ' + (result.error?.detail || 'Ошибка смены пароля') + '</div>';
                 }
             });
-            
+
             document.getElementById('backToMainFromProfile')?.addEventListener('click', () => showMainPage());
         }
-        
+
         // ========== СТРАНИЦА СОЗДАНИЯ ОБЪЯВЛЕНИЯ ==========
         async function showCreatePage() {
             if (!isAuthenticated()) { alert('Пожалуйста, войдите в систему'); showLoginPage(); return; }
@@ -1104,25 +1353,22 @@
                     </form>
                 </div></div>
             `;
-
             const fileInput = document.getElementById('itemImages');
             fileInput.addEventListener('change', (e) => { selectedFiles = Array.from(e.target.files); updateImagePreview(); });
-
             document.getElementById('createItemForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const formData = { 
-                    name: document.getElementById('itemName').value, 
-                    description: document.getElementById('itemDesc').value, 
-                    price_per_day: parseInt(document.getElementById('itemPrice').value, 10), 
+                const formData = {
+                    name: document.getElementById('itemName').value,
+                    description: document.getElementById('itemDesc').value,
+                    price_per_day: parseInt(document.getElementById('itemPrice').value, 10),
                     category: document.getElementById('itemCategory').value
                 };
                 if (!formData.name || !formData.price_per_day) { alert('Заполните название и цену'); return; }
                 await createItemWithImages(formData, selectedFiles);
             });
-
             document.getElementById('backToMainFromCreate')?.addEventListener('click', () => showMainPage());
         }
-        
+
         function updateImagePreview() {
             const container = document.getElementById('imagePreview');
             if (!container) return;
@@ -1138,7 +1384,7 @@
                 reader.readAsDataURL(file);
             });
         }
-        
+
         // ========== СТРАНИЦА РЕГИСТРАЦИИ ==========
         function showRegisterPage() {
             document.getElementById('app').innerHTML = `
@@ -1179,7 +1425,7 @@
             document.getElementById('switchToLogin')?.addEventListener('click', (e) => { e.preventDefault(); showLoginPage(); });
             document.getElementById('backToMainFromRegister')?.addEventListener('click', () => showMainPage());
         }
-        
+
         // ========== СТРАНИЦА ВХОДА ==========
         function showLoginPage() {
             document.getElementById('app').innerHTML = `
@@ -1203,7 +1449,7 @@
             document.getElementById('switchToRegister')?.addEventListener('click', (e) => { e.preventDefault(); showRegisterPage(); });
             document.getElementById('backToMainFromLogin')?.addEventListener('click', () => showMainPage());
         }
-        
+
         // ========== ГЛАВНАЯ СТРАНИЦА ==========
         function showMainPage() {
             document.getElementById('app').innerHTML = `
@@ -1224,7 +1470,7 @@
             });
             loadProducts(1);
         }
-        
+
         showMainPage();
     </script>
 </body>
