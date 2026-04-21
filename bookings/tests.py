@@ -169,6 +169,8 @@ class BookingApiTest(TestCase):
         booking = self.create_booking()
         booking._status_changed_by = self.owner
         booking.change_status('confirmed')
+        booking.start_sbp_payment()
+        booking.confirm_sbp_payment()
 
         response = self.owner_client.post(f'/api/bookings/{booking.id}/complete/')
 
@@ -180,6 +182,8 @@ class BookingApiTest(TestCase):
         booking = self.create_booking()
         booking._status_changed_by = self.owner
         booking.change_status('confirmed')
+        booking.start_sbp_payment()
+        booking.confirm_sbp_payment()
         booking._status_changed_by = self.owner
         booking.change_status('completed')
 
@@ -191,3 +195,50 @@ class BookingApiTest(TestCase):
 
         self.assertEqual(response.status_code, 201)
         self.assertTrue(Review.objects.filter(booking=booking).exists())
+
+    def test_renter_can_start_sbp_payment(self):
+        booking = self.create_booking()
+        booking._status_changed_by = self.owner
+        booking.change_status('confirmed')
+
+        response = self.renter_client.post(f'/api/bookings/{booking.id}/start_payment/')
+
+        self.assertEqual(response.status_code, 200)
+        booking.refresh_from_db()
+        self.assertEqual(booking.payment_status, 'pending')
+        self.assertEqual(response.data['provider'], 'sbp_stub')
+        self.assertEqual(response.data['booking_id'], booking.id)
+        self.assertIn('qr_payload', response.data)
+
+    def test_payment_cannot_start_before_confirmation(self):
+        booking = self.create_booking()
+
+        response = self.renter_client.post(f'/api/bookings/{booking.id}/start_payment/')
+
+        self.assertEqual(response.status_code, 400)
+        booking.refresh_from_db()
+        self.assertEqual(booking.payment_status, 'unpaid')
+
+    def test_renter_can_confirm_sbp_payment(self):
+        booking = self.create_booking()
+        booking._status_changed_by = self.owner
+        booking.change_status('confirmed')
+        booking.start_sbp_payment()
+
+        response = self.renter_client.post(f'/api/bookings/{booking.id}/confirm_payment/')
+
+        self.assertEqual(response.status_code, 200)
+        booking.refresh_from_db()
+        self.assertEqual(booking.payment_status, 'paid')
+        self.assertIsNotNone(booking.paid_at)
+
+    def test_complete_requires_paid_booking(self):
+        booking = self.create_booking()
+        booking._status_changed_by = self.owner
+        booking.change_status('confirmed')
+
+        response = self.owner_client.post(f'/api/bookings/{booking.id}/complete/')
+
+        self.assertEqual(response.status_code, 400)
+        booking.refresh_from_db()
+        self.assertEqual(booking.status, 'confirmed')

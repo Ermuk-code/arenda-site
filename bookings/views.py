@@ -6,7 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from .models import Booking
-from .serializers import BookingSerializer, ReviewSerializer
+from .serializers import BookingPaymentSerializer, BookingSerializer, ReviewSerializer
 
 class BookingViewSet(viewsets.ModelViewSet):
 
@@ -43,6 +43,14 @@ class BookingViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(booking)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def _ensure_renter(self, booking):
+        if booking.renter != self.request.user:
+            return Response(
+                {"error": "Only renter can perform payment actions"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return None
 
     @action(detail=True, methods=['post'])
     def confirm(self, request, pk=None):
@@ -93,6 +101,38 @@ class BookingViewSet(viewsets.ModelViewSet):
             )
 
         return self._change_status(booking, 'completed')
+
+    @action(detail=True, methods=['post'])
+    def start_payment(self, request, pk=None):
+        booking = self.get_object()
+
+        renter_error = self._ensure_renter(booking)
+        if renter_error:
+            return renter_error
+
+        try:
+            payment_payload = booking.start_sbp_payment()
+        except DjangoValidationError as error:
+            raise ValidationError(self._validation_error_payload(error)) from error
+
+        serializer = BookingPaymentSerializer(payment_payload)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def confirm_payment(self, request, pk=None):
+        booking = self.get_object()
+
+        renter_error = self._ensure_renter(booking)
+        if renter_error:
+            return renter_error
+
+        try:
+            booking.confirm_sbp_payment()
+        except DjangoValidationError as error:
+            raise ValidationError(self._validation_error_payload(error)) from error
+
+        serializer = self.get_serializer(booking)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'])
     def review(self, request, pk=None):
