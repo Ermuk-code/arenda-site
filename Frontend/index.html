@@ -22,6 +22,45 @@
         .cats-list { display: flex; gap: 28px; flex-wrap: wrap; justify-content: center; list-style: none; }
         .cats-list li { font-weight: 500; color: #2f4f5f; cursor: pointer; transition: 0.2s; padding: 5px 0; }
         .cats-list li.active { color: #1f8a6b; font-weight: 700; border-bottom: 2px solid #1f8a6b; }
+        .availability-toolbar {
+            background: white;
+            border-bottom: 1px solid #eef2f6;
+            padding: 14px 0 18px;
+        }
+        .availability-inner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .availability-chip {
+            border: 1.5px solid #d9e5ec;
+            background: #f8fbfe;
+            color: #35515d;
+            border-radius: 999px;
+            padding: 10px 16px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .availability-chip.active {
+            background: #1f8a6b;
+            border-color: #1f8a6b;
+            color: white;
+        }
+        .availability-custom {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .availability-custom input {
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1.5px solid #d9e5ec;
+            background: #fff;
+        }
         .products { display: flex; gap: 32px; flex-wrap: wrap; justify-content: center; margin: 40px 0; min-height: 400px; }
         .card { background: white; border-radius: 32px; padding: 24px 22px 28px; flex: 1; min-width: 260px; max-width: 320px; box-shadow: 0 12px 28px rgba(0,0,0,0.04); transition: 0.25s; border: 1px solid #eef2f0; text-align: center; position: relative; }
         .card:hover { transform: translateY(-6px); box-shadow: 0 24px 36px rgba(0,0,0,0.08); }
@@ -46,10 +85,10 @@
         .pagination button.active { background: #2b6a7c; color: white; border-color: #2b6a7c; }
         footer { text-align: center; padding: 32px 0; border-top: 1px solid #e2e8f0; color: #6c8b9b; background: white; }
 
-        .create-page, .profile-page, .chats-page, .chat-page { min-height: 80vh; padding: 48px 24px; background: #f5f9fe; }
-        .create-card, .profile-card, .chats-card, .chat-card { max-width: 800px; margin: 0 auto; background: white; border-radius: 48px; padding: 40px 32px; box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1); }
-        .create-title, .profile-title, .chats-title, .chat-title { font-size: 2rem; font-weight: 700; margin-bottom: 8px; color: #1a3e4c; }
-        .create-sub, .profile-sub, .chats-sub, .chat-sub { color: #6b8b9c; margin-bottom: 32px; }
+        .create-page, .profile-page, .chats-page, .chat-page, .bookings-page, .my-items-page { min-height: 80vh; padding: 48px 24px; background: #f5f9fe; }
+        .create-card, .profile-card, .chats-card, .chat-card, .bookings-card, .my-items-card { max-width: 1080px; margin: 0 auto; background: white; border-radius: 48px; padding: 40px 32px; box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1); }
+        .create-title, .profile-title, .chats-title, .chat-title, .bookings-title, .my-items-title { font-size: 2rem; font-weight: 700; margin-bottom: 8px; color: #1a3e4c; }
+        .create-sub, .profile-sub, .chats-sub, .chat-sub, .bookings-sub, .my-items-sub { color: #6b8b9c; margin-bottom: 32px; }
         .form-group { margin-bottom: 24px; }
         .form-group label { display: block; font-weight: 500; margin-bottom: 8px; color: #2c6072; }
         .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 14px 18px; border-radius: 16px; border: 1.5px solid #e2e9ef; font-size: 1rem; transition: 0.2s; }
@@ -448,6 +487,182 @@
             margin-top: 12px;
             width: 100%;
         }
+        .site-toast-stack {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 1200;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: min(360px, calc(100vw - 24px));
+            pointer-events: none;
+        }
+        .site-toast {
+            pointer-events: auto;
+            background: linear-gradient(135deg, #163a45, #235665);
+            color: white;
+            border-radius: 20px;
+            padding: 16px 18px;
+            box-shadow: 0 18px 36px rgba(18, 42, 50, 0.28);
+            border: 1px solid rgba(255,255,255,0.08);
+            animation: toast-in 0.25s ease-out;
+        }
+        .site-toast-title {
+            font-size: 0.95rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+        .site-toast-body {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            color: rgba(255,255,255,0.9);
+        }
+        .site-toast-close {
+            margin-top: 10px;
+            background: rgba(255,255,255,0.12);
+            color: white;
+            border: none;
+            border-radius: 999px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .bookings-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 20px;
+        }
+        .booking-request {
+            border: 1px solid #e2e9ef;
+            border-radius: 24px;
+            padding: 18px 20px;
+            background: linear-gradient(180deg, #ffffff, #fbfdff);
+        }
+        .booking-request-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 10px;
+        }
+        .booking-request-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #163a45;
+        }
+        .booking-request-status {
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            background: #eef2f7;
+            color: #35515d;
+            white-space: nowrap;
+        }
+        .booking-request-meta {
+            display: grid;
+            gap: 6px;
+            color: #5f7a88;
+            font-size: 0.95rem;
+        }
+        .booking-request-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #f8fbff, #eef5fb);
+            border: 1px solid #e2e9ef;
+            border-radius: 24px;
+            padding: 18px 20px;
+        }
+        .stat-card-label {
+            font-size: 0.9rem;
+            color: #6b8b9c;
+            margin-bottom: 8px;
+        }
+        .stat-card-value {
+            font-size: 1.7rem;
+            font-weight: 800;
+            color: #163a45;
+        }
+        .section-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #163a45;
+            margin: 28px 0 14px;
+        }
+        .owner-items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+        .owner-item-card {
+            border: 1px solid #e2e9ef;
+            border-radius: 24px;
+            padding: 16px;
+            background: linear-gradient(180deg, #ffffff, #fbfdff);
+        }
+        .owner-item-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 18px;
+            background: #eef2f7;
+            margin-bottom: 12px;
+        }
+        .owner-item-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #163a45;
+            margin-bottom: 8px;
+        }
+        .owner-item-meta {
+            display: grid;
+            gap: 6px;
+            color: #5f7a88;
+            font-size: 0.92rem;
+        }
+        .owner-item-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+        .existing-media-grid {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        .existing-media-card {
+            width: 110px;
+            height: 110px;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid #d9e5ec;
+            background: #eef2f7;
+        }
+        .existing-media-card img,
+        .existing-media-card video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
 
         @media (max-width: 720px) {
             .header-inner { flex-direction: column; }
@@ -460,11 +675,197 @@
             .chat-messages { padding: 14px 14px 8px; }
             .chat-attachment-title { max-width: 200px; }
             .rent-payment-actions { flex-direction: column; }
+            .booking-request-head { flex-direction: column; }
+            .booking-request-actions { flex-direction: column; }
+        }
+        .item-preview-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(14, 27, 34, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            z-index: 1150;
+        }
+        .item-preview-overlay.active { display: flex; }
+        .item-preview-modal {
+            width: min(1080px, 100%);
+            max-height: min(90vh, 920px);
+            overflow: auto;
+            background: #fff;
+            border-radius: 36px;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.18);
+            padding: 28px;
+        }
+        .item-preview-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: flex-start;
+            margin-bottom: 22px;
+        }
+        .item-preview-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #163a45;
+        }
+        .item-preview-subtitle {
+            color: #6b8b9c;
+            margin-top: 6px;
+        }
+        .item-preview-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+            gap: 24px;
+        }
+        .item-gallery-main {
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            object-fit: cover;
+            border-radius: 28px;
+            background: #eef2f7;
+            border: 1px solid #e2e9ef;
+        }
+        .item-gallery-thumbs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        .item-gallery-thumb {
+            width: 84px;
+            height: 84px;
+            border-radius: 18px;
+            object-fit: cover;
+            border: 2px solid #e2e9ef;
+            cursor: pointer;
+            background: #eef2f7;
+        }
+        .item-gallery-thumb.video {
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, #163a45, #2b6a7c);
+            color: white;
+            font-weight: 800;
+            font-size: 0.85rem;
+        }
+        .item-preview-video {
+            width: 100%;
+            border-radius: 24px;
+            margin-top: 18px;
+            background: #000;
+        }
+        .item-preview-panel {
+            background: linear-gradient(180deg, #fbfdff, #f6f9fd);
+            border: 1px solid #e2e9ef;
+            border-radius: 28px;
+            padding: 20px;
+        }
+        .item-preview-price {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #2b6a7c;
+            margin-bottom: 14px;
+        }
+        .item-preview-meta {
+            display: grid;
+            gap: 10px;
+            color: #4e6875;
+            margin-bottom: 18px;
+        }
+        .item-preview-description {
+            line-height: 1.6;
+            color: #274653;
+            margin-top: 18px;
+        }
+        .preview-section-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #163a45;
+            margin: 22px 0 12px;
+        }
+        .date-pill-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .date-pill {
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: #eef6f3;
+            color: #1a7058;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .date-pill.booked {
+            background: #fff1f1;
+            color: #b04949;
+        }
+        .review-list {
+            display: grid;
+            gap: 12px;
+        }
+        .review-card {
+            border: 1px solid #e2e9ef;
+            border-radius: 22px;
+            padding: 16px 18px;
+            background: #fff;
+        }
+        .review-form {
+            margin-top: 18px;
+            border: 1px solid #e2e9ef;
+            border-radius: 24px;
+            padding: 18px;
+            background: #fbfdff;
+        }
+        .review-form textarea, .review-form select {
+            width: 100%;
+            margin-top: 10px;
+            padding: 12px 14px;
+            border-radius: 16px;
+            border: 1.5px solid #d9e5ec;
+            font-size: 0.95rem;
+        }
+        .media-picker-note {
+            color: #6b8b9c;
+            font-size: 0.9rem;
+            margin-top: 8px;
+        }
+        .review-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 8px;
+            color: #5f7a88;
+            font-size: 0.92rem;
+        }
+        .review-author {
+            font-weight: 800;
+            color: #163a45;
+        }
+        @media (max-width: 920px) {
+            .item-preview-layout { grid-template-columns: 1fr; }
+            .item-preview-modal { padding: 20px; }
         }
     </style>
 </head>
 <body>
     <div id="app"></div>
+    <div class="site-toast-stack" id="siteToastStack"></div>
+
+    <div class="item-preview-overlay" id="itemPreviewOverlay">
+        <div class="item-preview-modal">
+            <div class="item-preview-header">
+                <div>
+                    <div class="item-preview-title" id="itemPreviewTitle">Объявление</div>
+                    <div class="item-preview-subtitle" id="itemPreviewSubtitle">Подробная информация о товаре</div>
+                </div>
+                <button class="rent-close-btn" id="itemPreviewCloseBtn" type="button">×</button>
+            </div>
+            <div id="itemPreviewContent"></div>
+        </div>
+    </div>
 
     <div class="rent-modal-overlay" id="rentModalOverlay">
         <div class="rent-modal">
@@ -569,7 +970,7 @@
             { id: 'home', name: 'Дом и сад' }
         ];
 
-        let selectedFiles = [];
+        let selectedMediaFiles = [];
         let wsConnection = null;
         let serverCategories = null;
         let chatSelectedImageFile = null;
@@ -581,10 +982,15 @@
         let rentStartPicker = null;
         let rentEndPicker = null;
         let bookedDateRanges = [];
+        let notificationPollInterval = null;
+        let shownNotificationIds = new Set();
 
         let currentPage = 1;
         let totalPages = 1;
         let currentCategory = 'all';
+        let availabilityFilterMode = 'all';
+        let availabilityFilterStart = '';
+        let availabilityFilterEnd = '';
         let allProducts = [];
 
         function getAccessToken() { return localStorage.getItem('access_token'); }
@@ -599,6 +1005,9 @@
             if (userType) localStorage.setItem('user_type', userType);
 
             if (profileData) {
+                if (profileData.full_name) localStorage.setItem('full_name', profileData.full_name);
+                if (profileData.entrepreneur_name) localStorage.setItem('entrepreneur_name', profileData.entrepreneur_name);
+                if (profileData.company_name) localStorage.setItem('company_name', profileData.company_name);
                 if (profileData.passport_series) localStorage.setItem('passport_series', profileData.passport_series);
                 if (profileData.passport_number) localStorage.setItem('passport_number', profileData.passport_number);
                 if (profileData.inn) localStorage.setItem('inn', profileData.inn);
@@ -614,6 +1023,9 @@
             localStorage.removeItem('user_id');
             localStorage.removeItem('user_email');
             localStorage.removeItem('user_type');
+            localStorage.removeItem('full_name');
+            localStorage.removeItem('entrepreneur_name');
+            localStorage.removeItem('company_name');
             localStorage.removeItem('passport_series');
             localStorage.removeItem('passport_number');
             localStorage.removeItem('inn');
@@ -692,6 +1104,13 @@
             return `${number.toLocaleString('ru-RU')} ₽`;
         }
 
+        function formatDateRu(dateString) {
+            if (!dateString) return '—';
+            const date = new Date(dateString);
+            if (Number.isNaN(date.getTime())) return dateString;
+            return date.toLocaleDateString('ru-RU');
+        }
+
         function getTodayDateString() {
             const now = new Date();
             const offset = now.getTimezoneOffset();
@@ -705,6 +1124,223 @@
             const end = new Date(endDate);
             const diff = Math.round((end - start) / (1000 * 60 * 60 * 24));
             return diff > 0 ? diff : 0;
+        }
+
+        function getItemImages(item) {
+            const images = Array.isArray(item?.images) ? item.images.map(img => img?.image).filter(Boolean) : [];
+            if (item?.image && !images.includes(item.image)) images.unshift(item.image);
+            if (!images.length) {
+                images.push('https://placehold.co/900x700/eef2f7/2b6a7c?text=Нет+фото');
+            }
+            return images;
+        }
+
+        function getItemVideos(item) {
+            return Array.isArray(item?.videos) ? item.videos.map(video => video?.video).filter(Boolean) : [];
+        }
+
+        function getFreeDateLabels(bookedRanges) {
+            const today = new Date();
+            const startPointer = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            const sorted = [...(bookedRanges || [])]
+                .filter(range => range.start_date && range.end_date)
+                .sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+
+            if (!sorted.length) {
+                return [`Свободно с ${formatDateRu(startPointer.toISOString())}`];
+            }
+
+            const labels = [];
+            let cursor = new Date(startPointer);
+
+            for (const range of sorted) {
+                const rangeStart = new Date(range.start_date);
+                const rangeEnd = new Date(range.end_date);
+                if (cursor < rangeStart) {
+                    labels.push(`${formatDateRu(cursor.toISOString())} - ${formatDateRu(rangeStart.toISOString())}`);
+                }
+                if (cursor < rangeEnd) {
+                    cursor = new Date(rangeEnd);
+                }
+            }
+
+            labels.push(`После ${formatDateRu(cursor.toISOString())}`);
+            return labels.slice(0, 4);
+        }
+
+        function addDays(dateString, days) {
+            const base = new Date(dateString);
+            base.setDate(base.getDate() + days);
+            return base.toISOString().split('T')[0];
+        }
+
+        function rangeOverlaps(startA, endA, startB, endB) {
+            return startA < endB && endA > startB;
+        }
+
+        function isProductAvailableForFilter(product) {
+            if (availabilityFilterMode === 'all') return true;
+
+            let start = '';
+            let end = '';
+            const today = getTodayDateString();
+
+            if (availabilityFilterMode === 'today') {
+                start = today;
+                end = addDays(today, 1);
+            } else if (availabilityFilterMode === 'tomorrow') {
+                start = addDays(today, 1);
+                end = addDays(today, 2);
+            } else if (availabilityFilterMode === 'custom') {
+                if (!availabilityFilterStart) return true;
+                start = availabilityFilterStart;
+                end = availabilityFilterEnd || addDays(availabilityFilterStart, 1);
+                if (end <= start) end = addDays(start, 1);
+            }
+
+            const bookedRanges = Array.isArray(product?.booked_ranges) ? product.booked_ranges : [];
+            return !bookedRanges.some(range => rangeOverlaps(start, end, range.start_date, range.end_date));
+        }
+
+        function renderItemPreview(item, reviewBooking = null) {
+            const images = getItemImages(item);
+            const videos = getItemVideos(item);
+            const bookedRanges = Array.isArray(item?.booked_ranges) ? item.booked_ranges : [];
+            const freeLabels = getFreeDateLabels(bookedRanges);
+            const reviews = Array.isArray(item?.item_reviews) ? item.item_reviews : [];
+
+            return `
+                <div class="item-preview-layout">
+                    <div>
+                        <img class="item-gallery-main" id="itemPreviewMainImage" src="${images[0]}" alt="${escapeHtml(item.title || 'Объявление')}">
+                        <div class="item-gallery-thumbs">
+                            ${images.map(src => `<img class="item-gallery-thumb" src="${src}" data-preview-image="${src}" alt="Фото товара">`).join('')}
+                            ${videos.map(src => `<button class="item-gallery-thumb video" data-preview-video="${src}" type="button">Видео</button>`).join('')}
+                        </div>
+                        ${videos.length ? `<video class="item-preview-video" id="itemPreviewVideo" controls src="${videos[0]}"></video>` : ''}
+                    </div>
+                    <div class="item-preview-panel">
+                        <div class="item-preview-price">${formatPrice(item.price_per_day || 0)} / день</div>
+                        <div class="item-preview-meta">
+                            <div><strong>Владелец:</strong> ${escapeHtml(item.owner_username || 'Не указан')}</div>
+                            <div><strong>Рейтинг продавца:</strong> ${Number(item.owner_rating || 0).toFixed(1)} / 5 (${item.owner_reviews_count || 0} отзывов)</div>
+                            <div><strong>Описание:</strong> ${escapeHtml(item.description || 'Описание пока не добавлено.')}</div>
+                        </div>
+
+                        <div class="preview-section-title">Свободные даты</div>
+                        <div class="date-pill-list">
+                            ${freeLabels.map(label => `<span class="date-pill">${escapeHtml(label)}</span>`).join('')}
+                        </div>
+
+                        <div class="preview-section-title">Занятые периоды</div>
+                        <div class="date-pill-list">
+                            ${bookedRanges.length
+                                ? bookedRanges.map(range => `<span class="date-pill booked">${escapeHtml(formatDateRu(range.start_date))} - ${escapeHtml(formatDateRu(range.end_date))}</span>`).join('')
+                                : '<span class="date-pill">Пока нет занятых дат</span>'}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="preview-section-title">Отзывы</div>
+                ${reviews.length
+                    ? `<div class="review-list">
+                        ${reviews.map(review => `
+                            <div class="review-card">
+                                <div class="review-head">
+                                    <span class="review-author">${escapeHtml(review.author_username || 'Пользователь')}</span>
+                                    <span>${'★'.repeat(Number(review.rating || 0))}${'☆'.repeat(Math.max(0, 5 - Number(review.rating || 0)))}</span>
+                                </div>
+                                <div class="review-head">
+                                    <span>${formatDateRu(review.created_at)}</span>
+                                </div>
+                                <div>${escapeHtml(review.comment || 'Пользователь поставил оценку без текста.')}</div>
+                            </div>
+                        `).join('')}
+                    </div>`
+                    : '<div class="empty-message">У этого объявления пока нет отзывов.</div>'}
+
+                ${reviewBooking ? `
+                    <div class="review-form">
+                        <button class="btn-primary" id="toggleReviewFormBtn" type="button">Оставить отзыв</button>
+                        <div id="reviewFormFields" style="display:none; margin-top:14px;">
+                            <div class="preview-section-title" style="margin-top:0;">Ваш отзыв</div>
+                            <div class="item-preview-subtitle">Вы завершили аренду этого товара. Поделитесь впечатлением.</div>
+                            <select id="reviewRatingInput">
+                                <option value="5">5 звезд</option>
+                                <option value="4">4 звезды</option>
+                                <option value="3">3 звезды</option>
+                                <option value="2">2 звезды</option>
+                                <option value="1">1 звезда</option>
+                            </select>
+                            <textarea id="reviewCommentInput" rows="4" placeholder="Напишите короткий отзыв"></textarea>
+                            <button class="btn-primary" id="submitReviewBtn" type="button" data-booking-id="${reviewBooking.id}">Отправить отзыв</button>
+                            <div id="reviewFormMessage" style="margin-top:12px;"></div>
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        async function openItemPreview(item) {
+            let reviewBooking = null;
+            if (isAuthenticated()) {
+                const outgoingBookings = await getOutgoingBookings();
+                reviewBooking = outgoingBookings.find(booking =>
+                    (String(booking.item) === String(item.id) || String(booking.item?.id) === String(item.id)) &&
+                    canLeaveReviewForBooking(booking)
+                ) || null;
+            }
+
+            document.getElementById('itemPreviewTitle').textContent = item.title || item.name || 'Объявление';
+            document.getElementById('itemPreviewSubtitle').textContent = `Подробная информация о товаре от ${item.owner_username || 'владельца'}`;
+            document.getElementById('itemPreviewContent').innerHTML = renderItemPreview(item, reviewBooking);
+            document.getElementById('itemPreviewOverlay')?.classList.add('active');
+
+            document.querySelectorAll('[data-preview-image]').forEach(img => {
+                img.addEventListener('click', () => {
+                    const main = document.getElementById('itemPreviewMainImage');
+                    if (main) main.src = img.dataset.previewImage;
+                });
+            });
+            document.querySelectorAll('[data-preview-video]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const video = document.getElementById('itemPreviewVideo');
+                    if (video) {
+                        video.src = btn.dataset.previewVideo;
+                        video.play().catch(() => {});
+                    }
+                });
+            });
+
+            document.getElementById('toggleReviewFormBtn')?.addEventListener('click', () => {
+                const fields = document.getElementById('reviewFormFields');
+                if (fields) {
+                    const shouldShow = fields.style.display === 'none';
+                    fields.style.display = shouldShow ? 'block' : 'none';
+                }
+            });
+
+            document.getElementById('submitReviewBtn')?.addEventListener('click', async () => {
+                const rating = Number(document.getElementById('reviewRatingInput')?.value || 5);
+                const comment = document.getElementById('reviewCommentInput')?.value || '';
+                const messageBox = document.getElementById('reviewFormMessage');
+                const result = await submitReview(reviewBooking.id, rating, comment);
+                if (result.success) {
+                    if (messageBox) messageBox.innerHTML = '<div class="success-message">✅ Отзыв отправлен.</div>';
+                    const refreshed = await apiRequest(`/items/${item.id}/`);
+                    if (refreshed.ok) {
+                        const updatedItem = await refreshed.json();
+                        setTimeout(() => openItemPreview(updatedItem), 400);
+                    }
+                } else if (messageBox) {
+                    messageBox.innerHTML = `<div class="error-message-box">❌ ${escapeHtml(result.data?.detail || result.data?.error || 'Не удалось отправить отзыв.')}</div>`;
+                }
+            });
+        }
+
+        function closeItemPreview() {
+            document.getElementById('itemPreviewOverlay')?.classList.remove('active');
+            document.getElementById('itemPreviewContent').innerHTML = '';
         }
 
         function formatBookingStatus(status) {
@@ -858,6 +1494,9 @@
                 username: localStorage.getItem('username'),
                 email: localStorage.getItem('user_email'),
                 user_type: localStorage.getItem('user_type') || 'individual',
+                full_name: localStorage.getItem('full_name') || '',
+                entrepreneur_name: localStorage.getItem('entrepreneur_name') || '',
+                company_name: localStorage.getItem('company_name') || '',
                 passport_series: localStorage.getItem('passport_series') || '',
                 passport_number: localStorage.getItem('passport_number') || '',
                 inn: localStorage.getItem('inn') || '',
@@ -868,12 +1507,15 @@
 
         async function getUserProfile() {
             try {
-                const response = await apiRequest('/users/me/');
+                const response = await apiRequest('/users/profile/');
                 if (response.ok) {
                     const data = await response.json();
                     if (data.username) localStorage.setItem('username', data.username);
                     if (data.email) localStorage.setItem('user_email', data.email);
                     if (data.user_type) localStorage.setItem('user_type', data.user_type);
+                    if (data.full_name !== undefined) localStorage.setItem('full_name', data.full_name || '');
+                    if (data.entrepreneur_name !== undefined) localStorage.setItem('entrepreneur_name', data.entrepreneur_name || '');
+                    if (data.company_name !== undefined) localStorage.setItem('company_name', data.company_name || '');
                     if (data.passport_series) localStorage.setItem('passport_series', data.passport_series);
                     if (data.passport_number) localStorage.setItem('passport_number', data.passport_number);
                     if (data.inn) localStorage.setItem('inn', data.inn);
@@ -895,6 +1537,9 @@
                     const data = await response.json();
                     if (data.username) localStorage.setItem('username', data.username);
                     if (data.email) localStorage.setItem('user_email', data.email);
+                    if (data.full_name !== undefined) localStorage.setItem('full_name', data.full_name || '');
+                    if (data.entrepreneur_name !== undefined) localStorage.setItem('entrepreneur_name', data.entrepreneur_name || '');
+                    if (data.company_name !== undefined) localStorage.setItem('company_name', data.company_name || '');
                     if (data.passport_series) localStorage.setItem('passport_series', data.passport_series);
                     if (data.passport_number) localStorage.setItem('passport_number', data.passport_number);
                     if (data.inn) localStorage.setItem('inn', data.inn);
@@ -951,6 +1596,189 @@
                 ) || null;
             } catch (error) {
                 return null;
+            }
+        }
+
+        async function getIncomingBookings() {
+            try {
+                const response = await apiRequest('/bookings/?role=incoming');
+                if (!response.ok) return [];
+                const data = await response.json();
+                return Array.isArray(data) ? data : (data.results || []);
+            } catch (error) {
+                return [];
+            }
+        }
+
+        async function getOutgoingBookings() {
+            try {
+                return await fetchPaginatedResults('/bookings/?role=outgoing');
+            } catch (error) {
+                return [];
+            }
+        }
+
+        async function fetchPaginatedResults(baseEndpoint) {
+            const results = [];
+            let page = 1;
+            let hasMore = true;
+
+            while (hasMore) {
+                const separator = baseEndpoint.includes('?') ? '&' : '?';
+                const response = await apiRequest(`${baseEndpoint}${separator}page=${page}`);
+                if (!response.ok) break;
+
+                const data = await response.json().catch(() => ({}));
+                const pageItems = Array.isArray(data) ? data : (data.results || []);
+                results.push(...pageItems);
+
+                if (Array.isArray(data) || !data.next) {
+                    hasMore = false;
+                } else {
+                    page += 1;
+                }
+            }
+
+            return results;
+        }
+
+        async function getRecentNotifications() {
+            try {
+                const response = await apiRequest('/notifications/');
+                if (!response.ok) return [];
+                const data = await response.json().catch(() => ({}));
+                return Array.isArray(data) ? data : (data.results || []);
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function getNotificationMeta(notification) {
+            const map = {
+                booking_cancelled: { title: 'Бронирование отменено' },
+                booking_confirmed: { title: 'Бронирование подтверждено' },
+                payment_confirmed: { title: 'Оплата подтверждена' },
+                new_message: { title: 'Новое сообщение' },
+            };
+            return map[notification?.type] || null;
+        }
+
+        async function markNotificationRead(notificationId) {
+            try {
+                await apiRequest(`/notifications/${notificationId}/mark_read/`, {
+                    method: 'POST',
+                    body: JSON.stringify({})
+                });
+            } catch (error) {}
+        }
+
+        function showSiteToast(notification) {
+            const stack = document.getElementById('siteToastStack');
+            const meta = getNotificationMeta(notification);
+            if (!stack || !meta) return;
+
+            const toast = document.createElement('div');
+            toast.className = 'site-toast';
+            toast.innerHTML = `
+                <div class="site-toast-title">${escapeHtml(meta.title)}</div>
+                <div class="site-toast-body">${escapeHtml(notification.message || '')}</div>
+                <button class="site-toast-close" type="button">Закрыть</button>
+            `;
+
+            const closeToast = () => {
+                toast.remove();
+            };
+
+            toast.querySelector('.site-toast-close')?.addEventListener('click', closeToast);
+            stack.appendChild(toast);
+            setTimeout(closeToast, 7000);
+        }
+
+        async function checkSiteNotifications() {
+            if (!isAuthenticated()) return;
+
+            const notifications = await getRecentNotifications();
+            for (const notification of notifications) {
+                const meta = getNotificationMeta(notification);
+                if (!meta) continue;
+                if (notification.is_read) continue;
+                if (shownNotificationIds.has(notification.id)) continue;
+
+                shownNotificationIds.add(notification.id);
+                showSiteToast(notification);
+                markNotificationRead(notification.id);
+            }
+        }
+
+        async function submitReview(bookingId, rating, comment) {
+            try {
+                const response = await apiRequest(`/bookings/${bookingId}/review/`, {
+                    method: 'POST',
+                    body: JSON.stringify({ rating, comment })
+                });
+                const data = await response.json().catch(() => ({}));
+                return { success: response.ok, data };
+            } catch (error) {
+                return { success: false, data: { detail: 'Ошибка подключения при отправке отзыва.' } };
+            }
+        }
+
+        function startNotificationPolling() {
+            stopNotificationPolling();
+            if (!isAuthenticated()) return;
+
+            checkSiteNotifications();
+            notificationPollInterval = setInterval(checkSiteNotifications, 10000);
+        }
+
+        function stopNotificationPolling() {
+            if (notificationPollInterval) {
+                clearInterval(notificationPollInterval);
+                notificationPollInterval = null;
+            }
+        }
+
+        async function getMyItems() {
+            try {
+                const items = await fetchPaginatedResults('/items/?mine=1');
+                const currentUserId = String(localStorage.getItem('user_id') || '');
+                return items.filter(item => String(item.owner) === currentUserId);
+            } catch (error) {
+                return [];
+            }
+        }
+
+        async function getAllIncomingBookings() {
+            try {
+                return await fetchPaginatedResults('/bookings/?role=incoming');
+            } catch (error) {
+                return [];
+            }
+        }
+
+        async function confirmIncomingBooking(bookingId) {
+            try {
+                const response = await apiRequest(`/bookings/${bookingId}/confirm/`, {
+                    method: 'POST',
+                    body: JSON.stringify({})
+                });
+                const data = await response.json().catch(() => ({}));
+                return { success: response.ok, data };
+            } catch (error) {
+                return { success: false, data: { detail: 'Ошибка подключения при подтверждении заявки.' } };
+            }
+        }
+
+        async function cancelIncomingBooking(bookingId) {
+            try {
+                const response = await apiRequest(`/bookings/${bookingId}/cancel/`, {
+                    method: 'POST',
+                    body: JSON.stringify({})
+                });
+                const data = await response.json().catch(() => ({}));
+                return { success: response.ok, data };
+            } catch (error) {
+                return { success: false, data: { detail: 'Ошибка подключения при отмене заявки.' } };
             }
         }
 
@@ -1247,15 +2075,16 @@
             const filteredProducts = currentCategory === 'all'
                 ? products
                 : products.filter(product => String(product.category || '') === String(currentCategory));
+            const availabilityFilteredProducts = filteredProducts.filter(isProductAvailableForFilter);
 
-            if (!filteredProducts.length) {
+            if (!availabilityFilteredProducts.length) {
                 container.innerHTML = '<div class="empty-message">📦 Товаров пока нет. Добавьте первое объявление!</div>';
                 return;
             }
 
             const currentUserId = localStorage.getItem('user_id');
 
-            container.innerHTML = filteredProducts.map(product => {
+            container.innerHTML = availabilityFilteredProducts.map(product => {
                 const isOwner = currentUserId && product.owner == currentUserId;
 
                 let imageUrl =
@@ -1276,6 +2105,7 @@
                         <div class="card-title">${escapeHtml(product.title || product.name || 'Без названия')}</div>
                         ${product.description ? `<div class="card-description">${escapeHtml(product.description.substring(0, 80))}${product.description.length > 80 ? '...' : ''}</div>` : ''}
                         <div class="card-price">${product.price_per_day || product.price || 0} ₽/<small>день</small></div>
+                        <button class="card-btn" data-id="${product.id}" data-action="open">Открыть</button>
                         ${!isOwner ? `<button class="card-btn card-chat-btn" data-id="${product.id}" data-owner="${product.owner}" data-action="chat">💬 Написать продавцу</button>` : ''}
                         ${!isOwner ? `<button class="card-btn" data-id="${product.id}" data-owner="${product.owner}" data-title="${escapeHtml(product.title || product.name || 'Товар')}" data-price="${product.price_per_day || product.price || 0}" data-action="rent">Арендовать</button>` : ''}
                         ${isOwner ? `<button class="card-btn card-delete-btn" data-id="${product.id}" data-action="delete">🗑 Удалить</button>` : ''}
@@ -1293,6 +2123,12 @@
                         if (confirm('Вы уверены, что хотите удалить это объявление?')) {
                             await deleteItem(productId);
                         }
+                        return;
+                    }
+
+                    if (action === 'open') {
+                        const sourceItem = allProducts.find(item => String(item.id) === String(productId));
+                        if (sourceItem) await openItemPreview(sourceItem);
                         return;
                     }
 
@@ -1369,7 +2205,7 @@
             container.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => loadProducts(parseInt(btn.dataset.page, 10))));
         }
 
-        async function createItemWithImages(formData, images) {
+        async function createItemWithImages(formData, mediaFiles) {
             try {
                 const ownerId = localStorage.getItem('user_id');
 
@@ -1390,44 +2226,81 @@
                 }
 
                 const token = getAccessToken();
-                const response = await fetch(`${API_BASE}/items/`, {
+                const response = await apiRequest('/items/', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify(apiData)
                 });
 
                 if (!response.ok) {
-                    const error = await response.json().catch(() => ({}));
+                    const responseText = await response.text().catch(() => '');
+                    let error = {};
+                    try {
+                        error = responseText ? JSON.parse(responseText) : {};
+                    } catch (e) {
+                        error = { detail: responseText || 'Неизвестная ошибка при создании объявления' };
+                    }
+
+                    const message =
+                        error.detail ||
+                        error.non_field_errors?.[0] ||
+                        error.owner?.[0] ||
+                        error.title?.[0] ||
+                        error.description?.[0] ||
+                        error.price_per_day?.[0] ||
+                        error.category?.[0] ||
+                        'Не удалось создать объявление';
+
                     console.error('❌ Ошибка API:', error);
-                    alert('❌ Ошибка: ' + JSON.stringify(error));
+                    alert('❌ Ошибка создания объявления: ' + message);
                     return false;
                 }
 
                 const item = await response.json();
+                const mediaUploadErrors = [];
 
-                if (images && images.length > 0) {
-                    for (const imageFile of images) {
-                        const imageFormData = new FormData();
-                        imageFormData.append('item', item.id);
-                        imageFormData.append('image', imageFile);
+                if (mediaFiles && mediaFiles.length > 0) {
+                    for (const mediaFile of mediaFiles) {
+                        const isVideo = (mediaFile.type || '').startsWith('video/');
+                        const uploadFormData = new FormData();
+                        uploadFormData.append('item', item.id);
+                        uploadFormData.append(isVideo ? 'video' : 'image', mediaFile);
 
-                        const uploadResp = await fetch(`${API_BASE}/items/upload-image/`, {
+                        const uploadResp = await apiRequest(isVideo ? '/items/upload-video/' : '/items/upload-image/', {
                             method: 'POST',
                             headers: { 'Authorization': `Bearer ${token}` },
-                            body: imageFormData
+                            body: uploadFormData
                         });
 
                         if (!uploadResp.ok) {
-                            const t = await uploadResp.text().catch(() => '');
-                            console.error('❌ Ошибка загрузки фото:', uploadResp.status, t);
+                            const responseText = await uploadResp.text().catch(() => '');
+                            let uploadError = {};
+                            try {
+                                uploadError = responseText ? JSON.parse(responseText) : {};
+                            } catch (e) {
+                                uploadError = { detail: responseText || 'Неизвестная ошибка при загрузке фото' };
+                            }
+
+                            const uploadMessage =
+                                uploadError.detail ||
+                                uploadError.video?.[0] ||
+                                uploadError.image?.[0] ||
+                                uploadError.item?.[0] ||
+                                (isVideo ? 'Не удалось загрузить видео' : 'Не удалось загрузить фото');
+
+                            mediaUploadErrors.push(`${mediaFile.name}: ${uploadMessage}`);
+                            console.error('❌ Ошибка загрузки медиа:', uploadError);
                         }
                     }
                 }
 
-                alert('✅ Объявление опубликовано!');
+                if (mediaUploadErrors.length) {
+                    alert(`✅ Объявление создано, но часть медиа не загрузилась:\n\n${mediaUploadErrors.join('\n')}`);
+                } else {
+                    alert('✅ Объявление опубликовано!');
+                }
                 showMainPage();
                 loadProducts(1);
                 return true;
@@ -1438,12 +2311,103 @@
             }
         }
 
-        async function register(username, email, password, userType) {
+        async function uploadItemMedia(itemId, mediaFiles, token) {
+            const mediaUploadErrors = [];
+
+            if (!mediaFiles || !mediaFiles.length) return mediaUploadErrors;
+
+            for (const mediaFile of mediaFiles) {
+                const isVideo = (mediaFile.type || '').startsWith('video/');
+                const uploadFormData = new FormData();
+                uploadFormData.append('item', itemId);
+                uploadFormData.append(isVideo ? 'video' : 'image', mediaFile);
+
+                const uploadResp = await apiRequest(isVideo ? '/items/upload-video/' : '/items/upload-image/', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: uploadFormData
+                });
+
+                if (!uploadResp.ok) {
+                    const responseText = await uploadResp.text().catch(() => '');
+                    let uploadError = {};
+                    try {
+                        uploadError = responseText ? JSON.parse(responseText) : {};
+                    } catch (e) {
+                        uploadError = { detail: responseText || 'Неизвестная ошибка при загрузке медиа' };
+                    }
+
+                    const uploadMessage =
+                        uploadError.detail ||
+                        uploadError.video?.[0] ||
+                        uploadError.image?.[0] ||
+                        uploadError.item?.[0] ||
+                        (isVideo ? 'Не удалось загрузить видео' : 'Не удалось загрузить фото');
+
+                    mediaUploadErrors.push(`${mediaFile.name}: ${uploadMessage}`);
+                    console.error('❌ Ошибка загрузки медиа:', uploadError);
+                }
+            }
+
+            return mediaUploadErrors;
+        }
+
+        async function updateItemWithMedia(itemId, formData, mediaFiles) {
+            try {
+                const token = getAccessToken();
+                const response = await apiRequest(`/items/${itemId}/`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    const responseText = await response.text().catch(() => '');
+                    let error = {};
+                    try {
+                        error = responseText ? JSON.parse(responseText) : {};
+                    } catch (e) {
+                        error = { detail: responseText || 'Неизвестная ошибка при обновлении объявления' };
+                    }
+
+                    const message =
+                        error.detail ||
+                        error.non_field_errors?.[0] ||
+                        error.title?.[0] ||
+                        error.description?.[0] ||
+                        error.price_per_day?.[0] ||
+                        error.category?.[0] ||
+                        'Не удалось обновить объявление';
+
+                    alert('❌ Ошибка редактирования объявления: ' + message);
+                    return false;
+                }
+
+                const mediaUploadErrors = await uploadItemMedia(itemId, mediaFiles, token);
+
+                if (mediaUploadErrors.length) {
+                    alert(`✅ Объявление обновлено, но часть медиа не загрузилась:\n\n${mediaUploadErrors.join('\n')}`);
+                } else {
+                    alert('✅ Объявление обновлено!');
+                }
+
+                await showMyItemsPage();
+                return true;
+            } catch (error) {
+                console.error('❌ Ошибка:', error);
+                alert('❌ Ошибка подключения');
+                return false;
+            }
+        }
+
+        async function register(username, email, password, userType, extraProfileData = {}) {
             try {
                 const response = await fetch(`${API_BASE}/users/register/`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, email, password, user_type: userType })
+                    body: JSON.stringify({ username, email, password, user_type: userType, ...extraProfileData })
                 });
 
                 let responseData;
@@ -1529,6 +2493,8 @@
 
         function logout() {
             if (wsConnection) { wsConnection.close(); wsConnection = null; }
+            stopNotificationPolling();
+            shownNotificationIds = new Set();
             clearTokens();
             updateNavBar();
             showMainPage();
@@ -1543,12 +2509,16 @@
                 authSection.innerHTML = `
                     <div class="user-info">
                         <span>👤 ${localStorage.getItem('username') || 'Пользователь'}</span>
+                        <button class="btn-outline" id="myItemsNavBtn">📦 Мои объявления</button>
+                        <button class="btn-outline" id="bookingsNavBtn">📥 Заявки</button>
                         <button class="btn-outline" id="chatsNavBtn">💬 Чаты</button>
                         <button class="btn-outline" id="profileNavBtn">👤 Профиль</button>
                         <button class="btn-outline" id="createItemNavBtn">+ Объявление</button>
                         <button class="btn-outline" id="logoutNavBtn">Выйти</button>
                     </div>
                 `;
+                document.getElementById('myItemsNavBtn')?.addEventListener('click', () => showMyItemsPage());
+                document.getElementById('bookingsNavBtn')?.addEventListener('click', () => showIncomingBookingsPage());
                 document.getElementById('chatsNavBtn')?.addEventListener('click', () => showChatsPage());
                 document.getElementById('profileNavBtn')?.addEventListener('click', () => showProfilePage());
                 document.getElementById('createItemNavBtn')?.addEventListener('click', () => showCreatePage());
@@ -1598,6 +2568,241 @@
             `;
             document.querySelectorAll('.conversation-item').forEach(item => item.addEventListener('click', () => showChatPage(item.dataset.id)));
             document.getElementById('backToMainFromChats')?.addEventListener('click', () => showMainPage());
+        }
+
+        async function showIncomingBookingsPage(flashMessage = '') {
+            if (!isAuthenticated()) { alert('Пожалуйста, войдите в систему'); showLoginPage(); return; }
+
+            const bookings = await getIncomingBookings();
+
+            document.getElementById('app').innerHTML = `
+                <div class="bookings-page"><div class="bookings-card">
+                    <div class="back-button" id="backToMainFromBookings">← Назад</div>
+                    <div class="bookings-title">📥 Входящие заявки</div>
+                    <div class="bookings-sub">Здесь владелец объявления видит новые бронирования и может их подтвердить.</div>
+                    <div id="bookingsMessage">${flashMessage}</div>
+                    ${bookings.length === 0 ? '<div class="empty-message">Пока нет входящих заявок на ваши объявления.</div>' : `
+                        <div class="bookings-list">
+                            ${bookings.map(booking => `
+                                <div class="booking-request" data-booking-id="${booking.id}">
+                                    <div class="booking-request-head">
+                                        <div>
+                                            <div class="booking-request-title">${escapeHtml(booking.item_title || `Объявление #${booking.item}`)}</div>
+                                            <div class="booking-request-meta">
+                                                <div>Арендатор: ${escapeHtml(booking.renter_username || 'Пользователь')}</div>
+                                                <div>Email: ${escapeHtml(booking.renter_email || '—')}</div>
+                                                <div>Период: ${escapeHtml(booking.start_date || '—')} — ${escapeHtml(booking.end_date || '—')}</div>
+                                                <div>Сумма: ${formatPrice(booking.total_price || 0)}</div>
+                                            </div>
+                                        </div>
+                                        <div class="booking-request-status">${formatBookingStatus(booking.status)}</div>
+                                    </div>
+                                    ${booking.status === 'pending' ? `
+                                        <div class="booking-request-actions">
+                                            <button class="btn-primary" data-action="confirm-booking" data-id="${booking.id}">Подтвердить</button>
+                                            <button class="btn-outline" data-action="cancel-booking" data-id="${booking.id}">Отклонить</button>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    `}
+                </div></div>
+            `;
+
+            document.getElementById('backToMainFromBookings')?.addEventListener('click', () => showMainPage());
+
+            document.querySelectorAll('[data-action="confirm-booking"]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const result = await confirmIncomingBooking(btn.dataset.id);
+                    if (result.success) {
+                        await showIncomingBookingsPage('<div class="success-message">✅ Заявка подтверждена. Теперь арендатор сможет перейти к оплате.</div>');
+                    } else {
+                        const msg = document.getElementById('bookingsMessage');
+                        msg.innerHTML = `<div class="error-message-box">❌ ${escapeHtml(result.data?.detail || result.data?.error || 'Не удалось подтвердить заявку.')}</div>`;
+                    }
+                });
+            });
+
+            document.querySelectorAll('[data-action="cancel-booking"]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const result = await cancelIncomingBooking(btn.dataset.id);
+                    if (result.success) {
+                        await showIncomingBookingsPage('<div class="success-message">✅ Заявка отклонена.</div>');
+                    } else {
+                        const msg = document.getElementById('bookingsMessage');
+                        msg.innerHTML = `<div class="error-message-box">❌ ${escapeHtml(result.data?.detail || result.data?.error || 'Не удалось отклонить заявку.')}</div>`;
+                    }
+                });
+            });
+        }
+
+        function getBookingSortDate(booking) {
+            return new Date(
+                booking?.start_date ||
+                booking?.created_at ||
+                '1970-01-01'
+            ).getTime();
+        }
+
+        function getBookingItemTitle(booking) {
+            return booking?.item_title || booking?.item?.title || booking?.item?.name || `Объявление #${booking?.item || '—'}`;
+        }
+
+        function canLeaveReviewForBooking(booking) {
+            const today = getTodayDateString();
+            return !!booking && !booking.has_review && (
+                booking.status === 'completed' ||
+                (
+                    booking.status === 'confirmed' &&
+                    booking.payment_status === 'paid' &&
+                    booking.end_date <= today
+                )
+            );
+        }
+
+        function getOwnerDashboardStats(items, bookings) {
+            const today = getTodayDateString();
+            const paidBookings = bookings.filter(booking => booking.payment_status === 'paid');
+            const currentBookings = bookings.filter(booking =>
+                ['pending', 'confirmed'].includes(booking.status) && booking.end_date >= today
+            );
+            const pastBookings = bookings.filter(booking =>
+                booking.status === 'completed' ||
+                booking.status === 'cancelled' ||
+                booking.end_date < today
+            );
+            const totalRevenue = paidBookings.reduce((sum, booking) => sum + Number(booking.total_price || 0), 0);
+
+            return {
+                itemsCount: items.length,
+                currentBookingsCount: currentBookings.length,
+                pastBookingsCount: pastBookings.length,
+                totalRevenue,
+            };
+        }
+
+        async function showMyItemsPage() {
+            if (!isAuthenticated()) { alert('Пожалуйста, войдите в систему'); showLoginPage(); return; }
+
+            const [items, bookings] = await Promise.all([
+                getMyItems(),
+                getAllIncomingBookings()
+            ]);
+
+            const stats = getOwnerDashboardStats(items, bookings);
+            const today = getTodayDateString();
+            const currentBookings = bookings
+                .filter(booking => ['pending', 'confirmed'].includes(booking.status) && booking.end_date >= today)
+                .sort((a, b) => getBookingSortDate(a) - getBookingSortDate(b));
+            const pastBookings = bookings
+                .filter(booking => booking.status === 'completed' || booking.status === 'cancelled' || booking.end_date < today)
+                .sort((a, b) => getBookingSortDate(b) - getBookingSortDate(a));
+
+            document.getElementById('app').innerHTML = `
+                <div class="my-items-page"><div class="my-items-card">
+                    <div class="back-button" id="backToMainFromMyItems">← Назад</div>
+                    <div class="my-items-title">📦 Мои объявления</div>
+                    <div class="my-items-sub">Личный кабинет владельца: ваши лоты, прибыль и история аренд.</div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-card-label">Всего объявлений</div>
+                            <div class="stat-card-value">${stats.itemsCount}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-label">Текущие аренды</div>
+                            <div class="stat-card-value">${stats.currentBookingsCount}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-label">Прошлые аренды</div>
+                            <div class="stat-card-value">${stats.pastBookingsCount}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-label">Общая прибыль</div>
+                            <div class="stat-card-value">${formatPrice(stats.totalRevenue)}</div>
+                        </div>
+                    </div>
+
+                    <div class="section-title">Ваши объявления</div>
+                    ${items.length === 0 ? '<div class="empty-message">У вас пока нет опубликованных объявлений.</div>' : `
+                        <div class="owner-items-grid">
+                            ${items.map(item => {
+                                const imageUrl =
+                                    item.image ||
+                                    item.images?.[0]?.image ||
+                                    'https://placehold.co/400x300/eef2e9/2b6a7c?text=Ваше+объявление';
+                                return `
+                                    <div class="owner-item-card">
+                                        <img class="owner-item-image" src="${imageUrl}" alt="${escapeHtml(item.title || 'Объявление')}">
+                                        <div class="owner-item-title">${escapeHtml(item.title || 'Без названия')}</div>
+                                        <div class="owner-item-meta">
+                                            <div>Цена: ${formatPrice(item.price_per_day || 0)} / день</div>
+                                            <div>Статус: ${escapeHtml(item.status || 'available')}</div>
+                                            <div>Броней в ожидании: ${(bookings.filter(booking => String(booking.item) === String(item.id) && booking.status === 'pending')).length}</div>
+                                        </div>
+                                        <div class="owner-item-actions">
+                                            <button class="btn-outline" type="button" data-action="edit-my-item" data-id="${item.id}">Изменить</button>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `}
+
+                    <div class="section-title">Текущие аренды</div>
+                    ${currentBookings.length === 0 ? '<div class="empty-message">Сейчас нет активных или ожидающих аренд.</div>' : `
+                        <div class="bookings-list">
+                            ${currentBookings.map(booking => `
+                                <div class="booking-request">
+                                    <div class="booking-request-head">
+                                        <div>
+                                            <div class="booking-request-title">${escapeHtml(getBookingItemTitle(booking))}</div>
+                                            <div class="booking-request-meta">
+                                                <div>Арендатор: ${escapeHtml(booking.renter_username || 'Пользователь')}</div>
+                                                <div>Период: ${escapeHtml(booking.start_date || '—')} — ${escapeHtml(booking.end_date || '—')}</div>
+                                                <div>Сумма: ${formatPrice(booking.total_price || 0)}</div>
+                                                <div>Оплата: ${formatPaymentStatus(booking.payment_status || 'unpaid')}</div>
+                                            </div>
+                                        </div>
+                                        <div class="booking-request-status">${formatBookingStatus(booking.status)}</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `}
+
+                    <div class="section-title">Прошлые аренды</div>
+                    ${pastBookings.length === 0 ? '<div class="empty-message">История прошлых аренд пока пуста.</div>' : `
+                        <div class="bookings-list">
+                            ${pastBookings.map(booking => `
+                                <div class="booking-request">
+                                    <div class="booking-request-head">
+                                        <div>
+                                            <div class="booking-request-title">${escapeHtml(getBookingItemTitle(booking))}</div>
+                                            <div class="booking-request-meta">
+                                                <div>Арендатор: ${escapeHtml(booking.renter_username || 'Пользователь')}</div>
+                                                <div>Период: ${escapeHtml(booking.start_date || '—')} — ${escapeHtml(booking.end_date || '—')}</div>
+                                                <div>Сумма: ${formatPrice(booking.total_price || 0)}</div>
+                                                <div>Оплата: ${formatPaymentStatus(booking.payment_status || 'unpaid')}</div>
+                                            </div>
+                                        </div>
+                                        <div class="booking-request-status">${formatBookingStatus(booking.status)}</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `}
+                </div></div>
+            `;
+
+            document.getElementById('backToMainFromMyItems')?.addEventListener('click', () => showMainPage());
+            document.querySelectorAll('[data-action="edit-my-item"]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const item = items.find(entry => String(entry.id) === String(btn.dataset.id));
+                    if (item) showEditItemPage(item);
+                });
+            });
         }
 
         async function showChatPage(conversationId) {
@@ -1793,6 +2998,7 @@
                 additionalFields = `
                     <div class="user-type-info">
                         <h4>📄 Данные физического лица</h4>
+                        <div class="form-group"><label>ФИО</label><input type="text" id="fullName" value="${profile.full_name || ''}" placeholder="Иванов Иван Иванович"></div>
                         <div class="form-group"><label>Серия паспорта</label><input type="text" id="passportSeries" value="${profile.passport_series || ''}" placeholder="Серия паспорта"></div>
                         <div class="form-group"><label>Номер паспорта</label><input type="text" id="passportNumber" value="${profile.passport_number || ''}" placeholder="Номер паспорта"></div>
                         <div class="form-group"><label>ИНН</label><input type="text" id="inn" value="${profile.inn || ''}" placeholder="ИНН"></div>
@@ -1802,6 +3008,7 @@
                 additionalFields = `
                     <div class="user-type-info">
                         <h4>🏢 Данные ИП</h4>
+                        <div class="form-group"><label>Наименование ИП</label><input type="text" id="entrepreneurName" value="${profile.entrepreneur_name || ''}" placeholder="ИП Иванов Иван Иванович"></div>
                         <div class="form-group"><label>ИНН</label><input type="text" id="inn" value="${profile.inn || ''}" placeholder="ИНН"></div>
                         <div class="form-group"><label>ОГРНИП</label><input type="text" id="ogrnip" value="${profile.ogrnip || ''}" placeholder="ОГРНИП"></div>
                     </div>
@@ -1810,6 +3017,7 @@
                 additionalFields = `
                     <div class="user-type-info">
                         <h4>🏛️ Данные юридического лица</h4>
+                        <div class="form-group"><label>Наименование ООО</label><input type="text" id="companyName" value="${profile.company_name || ''}" placeholder="ООО Ромашка"></div>
                         <div class="form-group"><label>ИНН</label><input type="text" id="inn" value="${profile.inn || ''}" placeholder="ИНН"></div>
                         <div class="form-group"><label>КПП</label><input type="text" id="kpp" value="${profile.kpp || ''}" placeholder="КПП"></div>
                     </div>
@@ -1857,13 +3065,16 @@
                 };
 
                 if (userType === 'individual') {
+                    updateData.full_name = document.getElementById('fullName')?.value || '';
                     updateData.passport_series = document.getElementById('passportSeries')?.value || '';
                     updateData.passport_number = document.getElementById('passportNumber')?.value || '';
                     updateData.inn = document.getElementById('inn')?.value || '';
                 } else if (userType === 'entrepreneur') {
+                    updateData.entrepreneur_name = document.getElementById('entrepreneurName')?.value || '';
                     updateData.inn = document.getElementById('inn')?.value || '';
                     updateData.ogrnip = document.getElementById('ogrnip')?.value || '';
                 } else if (userType === 'legal') {
+                    updateData.company_name = document.getElementById('companyName')?.value || '';
                     updateData.inn = document.getElementById('inn')?.value || '';
                     updateData.kpp = document.getElementById('kpp')?.value || '';
                 }
@@ -1914,7 +3125,7 @@
 
         async function showCreatePage() {
             if (!isAuthenticated()) { alert('Пожалуйста, войдите в систему'); showLoginPage(); return; }
-            selectedFiles = [];
+            selectedMediaFiles = [];
 
             const categories = await ensureServerCategoriesLoaded();
             const categoryOptions = categories.length
@@ -1933,8 +3144,9 @@
                         <div class="form-group"><label>Категория</label>
                             <select id="itemCategory">${categoryOptions}</select>
                         </div>
-                        <div class="form-group"><label>Фотографии</label>
-                            <label class="file-input-label">📷 Выбрать изображения<input type="file" id="itemImages" accept="image/*" multiple></label>
+                        <div class="form-group"><label>Фото и видео</label>
+                            <label class="file-input-label">🎞 Выбрать медиа<input type="file" id="itemMedia" accept="image/*,video/*" multiple></label>
+                            <div class="media-picker-note">Можно добавить несколько фото и видео.</div>
                             <div id="imagePreview" class="image-preview"></div>
                         </div>
                         <div class="form-actions">
@@ -1944,9 +3156,9 @@
                 </div></div>
             `;
 
-            const fileInput = document.getElementById('itemImages');
+            const fileInput = document.getElementById('itemMedia');
             fileInput.addEventListener('change', (e) => {
-                selectedFiles = Array.from(e.target.files);
+                selectedMediaFiles = Array.from(e.target.files);
                 updateImagePreview();
             });
 
@@ -1962,29 +3174,108 @@
                     alert('Заполните название и цену');
                     return;
                 }
-                await createItemWithImages(formData, selectedFiles);
+                await createItemWithImages(formData, selectedMediaFiles);
             });
 
             document.getElementById('backToMainFromCreate')?.addEventListener('click', () => showMainPage());
+        }
+
+        async function showEditItemPage(item) {
+            if (!isAuthenticated()) { alert('Пожалуйста, войдите в систему'); showLoginPage(); return; }
+            selectedMediaFiles = [];
+
+            const categories = await ensureServerCategoriesLoaded();
+            const categoryOptions = categories.length
+                ? (`<option value="">Без категории</option>` + categories.map(c => `<option value="${c.id}" ${String(c.id) === String(item.category || '') ? 'selected' : ''}>${escapeHtml(c.name)}</option>`).join(''))
+                : (`<option value="">Без категории</option><option value="" disabled>— Категории не загрузились —</option>`);
+
+            const existingImages = Array.isArray(item.images) ? item.images : [];
+            const existingVideos = Array.isArray(item.videos) ? item.videos : [];
+
+            document.getElementById('app').innerHTML = `
+                <div class="create-page"><div class="create-card">
+                    <div class="back-button" id="backToMyItemsFromEdit">← Назад</div>
+                    <div class="create-title">✏️ Редактирование объявления</div>
+                    <div class="create-sub">Обновите описание, цену и добавьте новые фото или видео</div>
+                    <form id="editItemForm">
+                        <div class="form-group"><label>Название товара *</label><input type="text" id="editItemName" value="${escapeHtml(item.title || '')}" placeholder="Например: Дрель Makita" required></div>
+                        <div class="form-group"><label>Описание</label><textarea id="editItemDesc" rows="4" placeholder="Опишите состояние, характеристики...">${escapeHtml(item.description || '')}</textarea></div>
+                        <div class="form-group"><label>Цена за день (₽) *</label><input type="number" id="editItemPrice" value="${Number(item.price_per_day || 0)}" placeholder="500" required></div>
+                        <div class="form-group"><label>Категория</label>
+                            <select id="editItemCategory">${categoryOptions}</select>
+                        </div>
+                        <div class="form-group">
+                            <label>Текущие медиа</label>
+                            <div class="existing-media-grid">
+                                ${existingImages.map(image => `<div class="existing-media-card"><img src="${image.image}" alt="Фото объявления"></div>`).join('')}
+                                ${existingVideos.map(video => `<div class="existing-media-card"><video src="${video.video}" muted controls></video></div>`).join('')}
+                                ${(!existingImages.length && !existingVideos.length) ? '<div class="empty-message" style="padding:20px;">Медиа пока нет</div>' : ''}
+                            </div>
+                        </div>
+                        <div class="form-group"><label>Добавить ещё фото и видео</label>
+                            <label class="file-input-label">🎞 Выбрать медиа<input type="file" id="editItemMedia" accept="image/*,video/*" multiple></label>
+                            <div class="media-picker-note">Новые файлы будут добавлены к существующим.</div>
+                            <div id="imagePreview" class="image-preview"></div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-primary">💾 Сохранить изменения</button>
+                        </div>
+                    </form>
+                </div></div>
+            `;
+
+            const fileInput = document.getElementById('editItemMedia');
+            fileInput.addEventListener('change', (e) => {
+                selectedMediaFiles = Array.from(e.target.files);
+                updateImagePreview();
+            });
+
+            document.getElementById('editItemForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = {
+                    title: document.getElementById('editItemName').value,
+                    description: document.getElementById('editItemDesc').value,
+                    price_per_day: parseInt(document.getElementById('editItemPrice').value, 10),
+                    category: document.getElementById('editItemCategory').value || null
+                };
+                if (!formData.title || !formData.price_per_day) {
+                    alert('Заполните название и цену');
+                    return;
+                }
+                await updateItemWithMedia(item.id, formData, selectedMediaFiles);
+            });
+
+            document.getElementById('backToMyItemsFromEdit')?.addEventListener('click', () => showMyItemsPage());
         }
 
         function updateImagePreview() {
             const container = document.getElementById('imagePreview');
             if (!container) return;
             container.innerHTML = '';
-            selectedFiles.forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const div = document.createElement('div');
-                    div.className = 'preview-item';
-                    div.innerHTML = `<img src="${e.target.result}" alt="preview"><button class="remove-image" data-index="${index}">×</button>`;
-                    container.appendChild(div);
-                    div.querySelector('.remove-image').addEventListener('click', () => {
-                        selectedFiles.splice(index, 1);
-                        updateImagePreview();
-                    });
-                };
-                reader.readAsDataURL(file);
+            selectedMediaFiles.forEach((file, index) => {
+                const div = document.createElement('div');
+                div.className = 'preview-item';
+
+                if ((file.type || '').startsWith('video/')) {
+                    const url = URL.createObjectURL(file);
+                    div.innerHTML = `<video src="${url}" muted playsinline style="width:100%;height:100%;object-fit:cover;"></video><button class="remove-image" data-index="${index}">×</button>`;
+                } else {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        div.innerHTML = `<img src="${e.target.result}" alt="preview"><button class="remove-image" data-index="${index}">×</button>`;
+                        div.querySelector('.remove-image').addEventListener('click', () => {
+                            selectedMediaFiles.splice(index, 1);
+                            updateImagePreview();
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                }
+
+                container.appendChild(div);
+                div.querySelector('.remove-image')?.addEventListener('click', () => {
+                    selectedMediaFiles.splice(index, 1);
+                    updateImagePreview();
+                });
             });
         }
 
@@ -1993,7 +3284,7 @@
                 <div class="auth-page"><div class="auth-card">
                     <div class="back-button" id="backToMainFromRegister">← Назад</div>
                     <div class="auth-title">Регистрация</div>
-                    <div class="auth-sub">Создайте новый аккаунт</div>
+                    <div class="auth-sub">Создайте новый аккаунт. Данные профиля можно заполнить сразу или позже.</div>
                     <form id="registerForm">
                         <div class="input-group"><label>Имя пользователя *</label><input type="text" id="regUsername" required></div>
                         <div class="input-group"><label>Email *</label><input type="email" id="regEmail" required></div>
@@ -2006,11 +3297,51 @@
                                 <option value="legal">🏛️ Юридическое лицо (ИНН + КПП)</option>
                             </select>
                         </div>
+                        <div id="registerExtraFields"></div>
                         <button type="submit" class="auth-btn">Зарегистрироваться</button>
                         <div class="auth-footer">Уже есть аккаунт? <a href="#" id="switchToLogin">Войти</a></div>
                     </form>
                 </div></div>
             `;
+
+            function renderRegisterExtraFields() {
+                const userType = document.getElementById('regUserType')?.value || 'individual';
+                const box = document.getElementById('registerExtraFields');
+                if (!box) return;
+
+                if (userType === 'individual') {
+                    box.innerHTML = `
+                        <div class="user-type-info">
+                            <h4>📄 Профиль физического лица</h4>
+                            <div class="input-group"><label>ФИО</label><input type="text" id="regFullName" placeholder="Иванов Иван Иванович"></div>
+                            <div class="input-group"><label>Серия паспорта</label><input type="text" id="regPassportSeries" placeholder="Необязательно на этом шаге"></div>
+                            <div class="input-group"><label>Номер паспорта</label><input type="text" id="regPassportNumber" placeholder="Необязательно на этом шаге"></div>
+                            <div class="input-group"><label>ИНН</label><input type="text" id="regInn" placeholder="Необязательно на этом шаге"></div>
+                        </div>
+                    `;
+                } else if (userType === 'entrepreneur') {
+                    box.innerHTML = `
+                        <div class="user-type-info">
+                            <h4>🏢 Профиль ИП</h4>
+                            <div class="input-group"><label>Наименование ИП</label><input type="text" id="regEntrepreneurName" placeholder="ИП Иванов Иван Иванович"></div>
+                            <div class="input-group"><label>ИНН</label><input type="text" id="regInn" placeholder="Необязательно на этом шаге"></div>
+                            <div class="input-group"><label>ОГРНИП</label><input type="text" id="regOgrnip" placeholder="Необязательно на этом шаге"></div>
+                        </div>
+                    `;
+                } else {
+                    box.innerHTML = `
+                        <div class="user-type-info">
+                            <h4>🏛️ Профиль юридического лица</h4>
+                            <div class="input-group"><label>Наименование ООО</label><input type="text" id="regCompanyName" placeholder="ООО Ромашка"></div>
+                            <div class="input-group"><label>ИНН</label><input type="text" id="regInn" placeholder="Необязательно на этом шаге"></div>
+                            <div class="input-group"><label>КПП</label><input type="text" id="regKpp" placeholder="Необязательно на этом шаге"></div>
+                        </div>
+                    `;
+                }
+            }
+
+            renderRegisterExtraFields();
+            document.getElementById('regUserType')?.addEventListener('change', renderRegisterExtraFields);
 
             document.getElementById('registerForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -2020,11 +3351,23 @@
                     alert('❌ Пароли не совпадают');
                     return;
                 }
+                const userType = document.getElementById('regUserType').value;
+                const extraProfileData = {
+                    full_name: document.getElementById('regFullName')?.value || '',
+                    entrepreneur_name: document.getElementById('regEntrepreneurName')?.value || '',
+                    company_name: document.getElementById('regCompanyName')?.value || '',
+                    passport_series: document.getElementById('regPassportSeries')?.value || '',
+                    passport_number: document.getElementById('regPassportNumber')?.value || '',
+                    inn: document.getElementById('regInn')?.value || '',
+                    ogrnip: document.getElementById('regOgrnip')?.value || '',
+                    kpp: document.getElementById('regKpp')?.value || ''
+                };
                 const success = await register(
                     document.getElementById('regUsername').value,
                     document.getElementById('regEmail').value,
                     password,
-                    document.getElementById('regUserType').value
+                    userType,
+                    extraProfileData
                 );
                 if (success) showMainPage();
             });
@@ -2079,6 +3422,20 @@
                         </ul>
                     </div>
                 </div>
+                <div class="availability-toolbar">
+                    <div class="container availability-inner">
+                        <button class="availability-chip ${availabilityFilterMode === 'all' ? 'active' : ''}" data-availability="all" type="button">Все даты</button>
+                        <button class="availability-chip ${availabilityFilterMode === 'today' ? 'active' : ''}" data-availability="today" type="button">Свободно сегодня</button>
+                        <button class="availability-chip ${availabilityFilterMode === 'tomorrow' ? 'active' : ''}" data-availability="tomorrow" type="button">Свободно завтра</button>
+                        <button class="availability-chip ${availabilityFilterMode === 'custom' ? 'active' : ''}" data-availability="custom" type="button">Выбрать даты</button>
+                        <div class="availability-custom">
+                            <input type="date" id="availabilityStartDate" value="${availabilityFilterStart}">
+                            <input type="date" id="availabilityEndDate" value="${availabilityFilterEnd}">
+                            <button class="btn-outline" id="applyAvailabilityFilterBtn" type="button">Применить</button>
+                            <button class="btn-outline" id="resetAvailabilityFilterBtn" type="button">Сбросить</button>
+                        </div>
+                    </div>
+                </div>
                 <div class="container">
                     <div id="productsContainer" class="products"><div class="loading">Загрузка товаров...</div></div>
                     <div id="pagination" class="pagination"></div>
@@ -2086,6 +3443,7 @@
                 <footer>© Аренда вещей — умная аренда</footer>
             `;
             updateNavBar();
+            startNotificationPolling();
 
             document.getElementById('logoBtn')?.addEventListener('click', () => showMainPage());
             document.querySelectorAll('.cats-list li').forEach(cat => {
@@ -2097,6 +3455,31 @@
                 });
             });
 
+            document.querySelectorAll('[data-availability]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    availabilityFilterMode = btn.dataset.availability;
+                    document.querySelectorAll('[data-availability]').forEach(chip => chip.classList.toggle('active', chip === btn));
+                    if (availabilityFilterMode === 'today' || availabilityFilterMode === 'tomorrow' || availabilityFilterMode === 'all') {
+                        loadProducts(1);
+                    }
+                });
+            });
+
+            document.getElementById('applyAvailabilityFilterBtn')?.addEventListener('click', () => {
+                availabilityFilterMode = 'custom';
+                availabilityFilterStart = document.getElementById('availabilityStartDate')?.value || '';
+                availabilityFilterEnd = document.getElementById('availabilityEndDate')?.value || '';
+                document.querySelectorAll('[data-availability]').forEach(chip => chip.classList.toggle('active', chip.dataset.availability === 'custom'));
+                loadProducts(1);
+            });
+
+            document.getElementById('resetAvailabilityFilterBtn')?.addEventListener('click', () => {
+                availabilityFilterMode = 'all';
+                availabilityFilterStart = '';
+                availabilityFilterEnd = '';
+                showMainPage();
+            });
+
             loadProducts(1);
         }
 
@@ -2106,6 +3489,10 @@
         document.getElementById('confirmPaymentBtn')?.addEventListener('click', confirmBookingPayment);
         document.getElementById('rentModalOverlay')?.addEventListener('click', (e) => {
             if (e.target.id === 'rentModalOverlay') closeRentalModal();
+        });
+        document.getElementById('itemPreviewCloseBtn')?.addEventListener('click', closeItemPreview);
+        document.getElementById('itemPreviewOverlay')?.addEventListener('click', (e) => {
+            if (e.target.id === 'itemPreviewOverlay') closeItemPreview();
         });
 
         showMainPage();

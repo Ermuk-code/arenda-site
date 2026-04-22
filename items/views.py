@@ -4,19 +4,21 @@ from users.permissions import IsProfileCompleted
 from .models import Item
 from .permissions import IsOwner
 from .serializers import ItemSerializer
+from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from django.db import models
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import generics
-from .models import ItemImage
-from .serializers import ItemImageSerializer
+from .models import ItemImage, ItemVideo
+from .serializers import ItemImageSerializer, ItemVideoSerializer
 from .permissions import IsOwner
 
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from .models import Category
 from .serializers import CategorySerializer
+from rest_framework.response import Response
 
 class CategoryViewSet(ModelViewSet):
     queryset = Category.objects.all()
@@ -37,6 +39,10 @@ class ItemViewSet(viewsets.ModelViewSet):
             queryset = Item.objects.filter(status='available')
 
         min_rating = self.request.query_params.get('min_rating')
+        mine = self.request.query_params.get('mine')
+
+        if mine in ['1', 'true', 'True'] and user.is_authenticated:
+            queryset = queryset.filter(owner=user)
 
         if min_rating:
             queryset = queryset.filter(average_rating__gte=min_rating)
@@ -59,14 +65,51 @@ class ItemViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         serializer.save(owner=self.request.user)
+
     def get_permissions(self):
         if self.action in ['update', 'partial_update', 'destroy']:
             return [IsOwner(), IsProfileCompleted()]
         if self.action == 'create':
             return [IsAuthenticatedOrReadOnly(), IsProfileCompleted()]
         return []
+
+    @action(detail=True, methods=['get'])
+    def booked_ranges(self, request, pk=None):
+        item = self.get_object()
+        active_bookings = item.bookings.filter(status__in=['pending', 'confirmed']).order_by('start_date')
+        return Response(
+            [
+                {
+                    'start_date': booking.start_date.isoformat(),
+                    'end_date': booking.end_date.isoformat(),
+                }
+                for booking in active_bookings
+            ]
+        )
+
 class ItemImageUploadView(generics.CreateAPIView):
     serializer_class = ItemImageSerializer
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        item_id = self.request.data.get('item')
+        if not item_id:
+            raise ValidationError({'item': ['This field is required.']})
+
+        try:
+            item = Item.objects.get(id=item_id)
+        except Item.DoesNotExist:
+            raise ValidationError({'item': ['Invalid item id.']})
+
+        if item.owner != self.request.user:
+            raise PermissionDenied("You are not the owner of this item")
+
+        serializer.save(item=item)
+
+
+class ItemVideoUploadView(generics.CreateAPIView):
+    serializer_class = ItemVideoSerializer
     parser_classes = (MultiPartParser, FormParser)
     permission_classes = [IsAuthenticated]
 

@@ -10,6 +10,7 @@ class Notification(models.Model):
         ('booking_created', 'Booking Created'),
         ('booking_confirmed', 'Booking Confirmed'),
         ('booking_cancelled', 'Booking Cancelled'),
+        ('payment_confirmed', 'Payment Confirmed'),
         ('return_reminder', 'Return Reminder'),
         ('new_message', 'New Message'),
         ('new_review', 'New Review'),

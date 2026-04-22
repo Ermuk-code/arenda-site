@@ -12,6 +12,7 @@ from notifications.services import (
     notify_booking_cancelled,
     notify_booking_confirmed,
     notify_booking_created,
+    notify_payment_confirmed,
     notify_new_review,
 )
 
@@ -188,6 +189,7 @@ class Booking(models.Model):
         self.paid_at = now
         self.payment_expires_at = None
         self.save(update_fields=['payment_status', 'paid_at', 'payment_expires_at'])
+        notify_payment_confirmed(self)
 
     def get_sbp_payment_payload(self):
         if not self.payment_reference:
@@ -228,9 +230,15 @@ class Review(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def clean(self):
+        is_completed = self.booking.status == 'completed'
+        is_paid_finished = (
+            self.booking.status == 'confirmed' and
+            self.booking.payment_status == 'paid' and
+            self.booking.end_date <= timezone.localdate()
+        )
 
-        if self.booking.status != 'completed':
-            raise ValidationError("You can review only completed bookings")
+        if not (is_completed or is_paid_finished):
+            raise ValidationError("You can review only finished paid bookings")
 
         if not (1 <= self.rating <= 5):
             raise ValidationError("Rating must be between 1 and 5")

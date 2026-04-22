@@ -37,6 +37,14 @@ def notify_booking_confirmed(booking):
     return notification
 
 
+def notify_payment_confirmed(booking):
+    return create_notification(
+        user=booking.item.owner,
+        notification_type='payment_confirmed',
+        message=f"Payment for {booking.item.title} was confirmed",
+    )
+
+
 def notify_booking_cancelled(booking, cancelled_by):
     initiator_label = 'renter' if cancelled_by == booking.renter else 'owner'
 

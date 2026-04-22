@@ -2,6 +2,10 @@ from rest_framework import serializers
 from .models import Booking, Review
 
 class BookingSerializer(serializers.ModelSerializer):
+    item_title = serializers.CharField(source='item.title', read_only=True)
+    renter_username = serializers.CharField(source='renter.username', read_only=True)
+    renter_email = serializers.EmailField(source='renter.email', read_only=True)
+    has_review = serializers.SerializerMethodField()
 
     class Meta:
         model = Booking
@@ -16,6 +20,9 @@ class BookingSerializer(serializers.ModelSerializer):
             'payment_expires_at',
             'paid_at',
         ]
+
+    def get_has_review(self, obj):
+        return hasattr(obj, 'review')
 
 
 class BookingPaymentSerializer(serializers.Serializer):
