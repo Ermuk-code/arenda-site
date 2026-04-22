@@ -9,8 +9,38 @@ from channels.layers import get_channel_layer
 from notifications.services import notify_new_message
 from .models import Message, Chat
 from .serializers import MessageCreateSerializer, MessageSerializer, ChatSerializer
+from .utils import SUPPORT_FAQ
 
 User = get_user_model()
+
+
+def mark_chat_messages_read(chat, user):
+    unread_messages = list(
+        Message.objects.filter(chat=chat, is_read=False)
+        .exclude(sender=user)
+        .values_list('id', flat=True)
+    )
+    if unread_messages:
+        Message.objects.filter(id__in=unread_messages).update(is_read=True)
+    return unread_messages
+
+
+def broadcast_messages_read(chat_id, message_ids, read_by_user_id):
+    if not message_ids:
+        return
+
+    channel_layer = get_channel_layer()
+    if not channel_layer:
+        return
+
+    async_to_sync(channel_layer.group_send)(
+        f'chat_{chat_id}',
+        {
+            'type': 'messages_read',
+            'message_ids': message_ids,
+            'read_by_user_id': read_by_user_id,
+        }
+    )
 
 
 class ConversationListCreateView(APIView):
@@ -51,9 +81,8 @@ class ConversationDetailView(APIView):
         if not chat:
             return Response({'error': 'Not found'}, status=404)
 
-        Message.objects.filter(chat=chat, is_read=False).exclude(
-            sender=request.user
-        ).update(is_read=True)
+        read_message_ids = mark_chat_messages_read(chat, request.user)
+        broadcast_messages_read(chat.id, read_message_ids, request.user.id)
 
         messages = Message.objects.filter(chat=chat).order_by('created_at')
         other = chat.users.exclude(id=request.user.id).first()
@@ -103,7 +132,13 @@ class MarkReadView(APIView):
     def post(self, request, conversation_id):
         chat = Chat.objects.filter(id=conversation_id, users=request.user).first()
         if chat:
-            Message.objects.filter(chat=chat, is_read=False).exclude(
-                sender=request.user
-            ).update(is_read=True)
-        return Response({'status': 'ok'})
+            read_message_ids = mark_chat_messages_read(chat, request.user)
+            broadcast_messages_read(chat.id, read_message_ids, request.user.id)
+            return Response({'status': 'ok', 'message_ids': read_message_ids})
+        return Response({'status': 'ok', 'message_ids': []})
+
+
+class SupportFAQView(APIView):
+
+    def get(self, request):
+        return Response({'questions': SUPPORT_FAQ})

@@ -4,7 +4,7 @@ from django.conf import settings
 class Category(models.Model):
     name = models.CharField(max_length=100)
 
-    def str(self):
+    def __str__(self):
         return self.name
 class Item(models.Model):
 
@@ -45,7 +45,7 @@ class Item(models.Model):
     blank=True,
     related_name='items'
     )
-    def str(self):
+    def __str__(self):
         return self.title
 
 

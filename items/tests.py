@@ -15,8 +15,11 @@ class ItemModelTest(TestCase):
 
         self.user = User.objects.create_user(
             username="owner",
-            password="123"
+            password="123",
+            email="owner@example.com"
         )
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
 
     def test_create_item(self):
 
