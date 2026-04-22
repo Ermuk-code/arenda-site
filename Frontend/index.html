@@ -1838,9 +1838,28 @@
                     method: 'POST',
                     body: JSON.stringify(body)
                 });
-                if (response.ok) return await response.json();
-                return null;
-            } catch (error) { return null; }
+                if (response.ok) return { ok: true, data: await response.json() };
+
+                let errorData = {};
+                try {
+                    errorData = await response.json();
+                } catch (e) {}
+
+                const errorMessage =
+                    errorData.error ||
+                    errorData.detail ||
+                    `Ошибка ${response.status}`;
+
+                console.error('createConversation failed', {
+                    status: response.status,
+                    body,
+                    errorData
+                });
+                return { ok: false, error: errorMessage };
+            } catch (error) {
+                console.error('createConversation network error', error);
+                return { ok: false, error: error.message || 'Ошибка сети' };
+            }
         }
 
         async function getMessages(conversationId) {
@@ -2608,8 +2627,11 @@
                 return;
             }
             const conversation = await createConversation(otherUserId, itemId);
-            if (conversation) showChatPage(conversation.id);
-            else alert('Не удалось создать чат');
+            if (conversation?.ok && conversation.data) {
+                showChatPage(conversation.data.id);
+            } else {
+                alert(`Не удалось создать чат: ${conversation?.error || 'неизвестная ошибка'}`);
+            }
         }
 
         async function deleteItem(productId) {
