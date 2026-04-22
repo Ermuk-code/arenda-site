@@ -7,13 +7,13 @@ User = settings.AUTH_USER_MODEL
 class Notification(models.Model):
 
     NOTIFICATION_TYPES = (
-        ('booking_created', 'Booking Created'),
-        ('booking_confirmed', 'Booking Confirmed'),
-        ('booking_cancelled', 'Booking Cancelled'),
-        ('payment_confirmed', 'Payment Confirmed'),
-        ('return_reminder', 'Return Reminder'),
-        ('new_message', 'New Message'),
-        ('new_review', 'New Review'),
+        ('booking_created', 'Новая заявка на аренду'),
+        ('booking_confirmed', 'Бронирование подтверждено'),
+        ('booking_cancelled', 'Бронирование отменено'),
+        ('payment_confirmed', 'Оплата подтверждена'),
+        ('return_reminder', 'Напоминание о возврате'),
+        ('new_message', 'Новое сообщение'),
+        ('new_review', 'Новый отзыв'),
     )
 
     user = models.ForeignKey(
