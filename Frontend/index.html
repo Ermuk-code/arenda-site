@@ -529,8 +529,8 @@
         .site-toast-stack {
             position: fixed;
             right: 20px;
-            bottom: 20px;
-            z-index: 1200;
+            bottom: 108px;
+            z-index: 1250;
             display: flex;
             flex-direction: column;
             gap: 12px;
@@ -1068,6 +1068,12 @@
         @media (max-width: 920px) {
             .item-preview-layout { grid-template-columns: 1fr; }
             .item-preview-modal { padding: 20px; }
+            .site-toast-stack {
+                right: 12px;
+                left: 12px;
+                bottom: 88px;
+                width: auto;
+            }
             .support-chat-toggle {
                 right: 16px;
                 bottom: 16px;
@@ -2281,6 +2287,69 @@
             return `<span class="nav-badge ${kind === 'attention' ? 'attention' : ''}">${formatCompactCount(count)}</span>`;
         }
 
+        function getConversationDisplayTitle(conversation) {
+            if (conversation?.item?.title) return 'Чат по объявлению';
+            const otherUser = conversation?.other_user?.username || 'пользователем';
+            return `Чат с ${otherUser}`;
+        }
+
+        function getConversationDisplaySubtitle(conversation) {
+            const lastText = conversation?.last_message?.text || (conversation?.last_message?.image ? '[Изображение]' : 'Нет сообщений');
+            if (conversation?.item?.title) {
+                return `${conversation.item.title} • ${lastText}`;
+            }
+            return lastText;
+        }
+
+        function renderConversationListContent(conversations) {
+            if (!conversations.length) {
+                return '<div class="empty-message">📭 У вас пока нет чатов. Напишите продавцу на карточке товара!</div>';
+            }
+
+            return `
+                <ul class="conversation-list">
+                    ${conversations.map(conv => {
+                        const name = conv.other_user?.username || 'Пользователь';
+                        const initials = getInitials(name);
+                        const title = getConversationDisplayTitle(conv);
+                        const subtitle = getConversationDisplaySubtitle(conv);
+                        const date = conv.last_message?.created_at ? new Date(conv.last_message.created_at).toLocaleDateString() : '';
+                        const unread = conv.unread_count > 0 ? `<span class="unread-badge">${conv.unread_count}</span>` : '';
+                        return `
+                            <li class="conversation-item" data-id="${conv.id}">
+                                <div class="conversation-left">
+                                    <div class="avatar" aria-hidden="true">${initials}</div>
+                                    <div class="conversation-info">
+                                        <h4>${escapeHtml(title)}</h4>
+                                        <p>${escapeHtml(subtitle)}</p>
+                                    </div>
+                                </div>
+                                <div class="conversation-meta">
+                                    <div class="conversation-date">${date}</div>
+                                    ${unread}
+                                </div>
+                            </li>
+                        `;
+                    }).join('')}
+                </ul>
+            `;
+        }
+
+        function bindConversationListEvents() {
+            document.querySelectorAll('.conversation-item').forEach(item => {
+                item.addEventListener('click', () => showChatPage(item.dataset.id));
+            });
+        }
+
+        async function refreshChatsPageIfVisible() {
+            const chatsContent = document.getElementById('chatsContent');
+            if (!chatsContent) return;
+
+            const conversations = await getConversations();
+            chatsContent.innerHTML = renderConversationListContent(conversations);
+            bindConversationListEvents();
+        }
+
         async function refreshNavCounters() {
             if (!isAuthenticated()) {
                 navCounters = { chats: 0, bookings: 0 };
@@ -2439,6 +2508,7 @@
             }
 
             await refreshNavCounters();
+            await refreshChatsPageIfVisible();
         }
 
         async function submitReview(bookingId, rating, comment) {
@@ -3308,36 +3378,10 @@
                     <div class="back-button" id="backToMainFromChats">← Назад</div>
                     <div class="chats-title">💬 Мои чаты</div>
                     <div class="chats-sub">Общение с продавцами и покупателями</div>
-                    ${conversations.length === 0 ? '<div class="empty-message">📭 У вас пока нет чатов. Напишите продавцу на карточке товара!</div>' : `
-                        <ul class="conversation-list">
-                            ${conversations.map(conv => {
-                                const name = conv.other_user?.username || 'Пользователь';
-                                const initials = getInitials(name);
-                                const lastText = conv.last_message?.text || (conv.last_message?.image ? '[Изображение]' : 'Нет сообщений');
-                                const date = conv.last_message?.created_at ? new Date(conv.last_message.created_at).toLocaleDateString() : '';
-                                const unread = conv.unread_count > 0 ? `<span class="unread-badge">${conv.unread_count}</span>` : '';
-                                const itemHint = conv.item?.title ? ` • ${escapeHtml(conv.item.title)}` : '';
-                                return `
-                                    <li class="conversation-item" data-id="${conv.id}">
-                                        <div class="conversation-left">
-                                            <div class="avatar" aria-hidden="true">${initials}</div>
-                                            <div class="conversation-info">
-                                                <h4>${escapeHtml(name)}</h4>
-                                                <p>${escapeHtml(lastText)}${itemHint}</p>
-                                            </div>
-                                        </div>
-                                        <div class="conversation-meta">
-                                            <div class="conversation-date">${date}</div>
-                                            ${unread}
-                                        </div>
-                                    </li>
-                                `;
-                            }).join('')}
-                        </ul>
-                    `}
+                    <div id="chatsContent">${renderConversationListContent(conversations)}</div>
                 </div></div>
             `;
-            document.querySelectorAll('.conversation-item').forEach(item => item.addEventListener('click', () => showChatPage(item.dataset.id)));
+            bindConversationListEvents();
             document.getElementById('backToMainFromChats')?.addEventListener('click', () => showMainPage());
         }
 
@@ -3589,6 +3633,10 @@
             const peerName = conversationData.other_user?.username || 'пользователем';
             const peerInitials = getInitials(peerName);
             const itemTitle = conversationData.item?.title || '';
+            const chatTitle = itemTitle ? 'Чат по объявлению' : `Чат с ${peerName}`;
+            const chatSubtitle = itemTitle
+                ? `${itemTitle} • ${peerName} • Enter — отправить • Shift+Enter — новая строка`
+                : `${peerName} • Enter — отправить • Shift+Enter — новая строка`;
 
             document.getElementById('app').innerHTML = `
                 <div class="chat-page">
@@ -3599,8 +3647,8 @@
                                     <div class="chat-peer">
                                         <div class="avatar" aria-hidden="true">${peerInitials}</div>
                                         <div class="chat-peer-text">
-                                            <div class="chat-peer-name">Чат с ${escapeHtml(peerName)}</div>
-                                            <div class="chat-peer-sub">${itemTitle ? `По объявлению: ${escapeHtml(itemTitle)} • ` : ''}Enter — отправить • Shift+Enter — новая строка</div>
+                                            <div class="chat-peer-name">${escapeHtml(chatTitle)}</div>
+                                            <div class="chat-peer-sub">${escapeHtml(chatSubtitle)}</div>
                                         </div>
                                     </div>
                                     <div class="chat-actions">
@@ -3704,6 +3752,7 @@
                 const data = JSON.parse(event.data);
                 if (data.event === 'messages_read') {
                     applyMessagesRead(data.message_ids || []);
+                    refreshNavCounters();
                     return;
                 }
 
@@ -3711,6 +3760,7 @@
                     const message = data.message;
                     messagesContainer.insertAdjacentHTML('beforeend', renderSingleMessage(message, message.sender_id == localStorage.getItem('user_id')));
                     messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                    refreshNavCounters();
 
                     if (message.sender_id != localStorage.getItem('user_id') && canMarkActiveChatAsRead()) {
                         sendRealtimeMarkRead();
