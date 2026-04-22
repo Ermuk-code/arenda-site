@@ -1,9 +1,12 @@
-from django.test import TestCase
+import tempfile
+
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import TestCase, override_settings
 from django.contrib.auth import get_user_model
 from datetime import date
 from rest_framework.test import APIClient
 
-from .models import Category, Item
+from .models import Category, Item, ItemImage
 from bookings.models import Booking
 
 User = get_user_model()
@@ -33,6 +36,88 @@ class ItemModelTest(TestCase):
 
         self.assertEqual(item.title, "Camera")
         self.assertEqual(item.owner, self.user)
+
+
+@override_settings(MEDIA_ROOT=tempfile.gettempdir())
+class ItemEditApiTest(TestCase):
+
+    def setUp(self):
+        self.owner = User.objects.create_user(
+            username="owner_edit",
+            password="12345",
+            email="owner_edit@test.com",
+            profile_completed=True
+        )
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.owner)
+        self.item = Item.objects.create(
+            title="Old Camera",
+            description="Old description",
+            price_per_day=500,
+            owner=self.owner,
+            status="available"
+        )
+
+    def test_owner_can_patch_item_fields(self):
+        response = self.client.patch(
+            f'/api/items/{self.item.id}/',
+            {
+                'title': 'New Camera',
+                'description': 'Updated description',
+                'price_per_day': 700,
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.title, 'New Camera')
+        self.assertEqual(self.item.description, 'Updated description')
+        self.assertEqual(self.item.price_per_day, 700)
+
+    def test_owner_can_upload_new_image_for_existing_item(self):
+        image = SimpleUploadedFile(
+            "item.jpg",
+            (
+                b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00"
+                b"\xff\xdb\x00C\x00" + b"\x08" * 64 +
+                b"\xff\xc0\x00\x11\x08\x00\x01\x00\x01\x03\x01\x11\x00\x02\x11\x01\x03\x11\x01"
+                b"\xff\xc4\x00\x14\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08"
+                b"\xff\xc4\x00\x14\x10\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+                b"\xff\xda\x00\x0c\x03\x01\x00\x02\x11\x03\x11\x00?\x00\xd2\xcf \xff\xd9"
+            ),
+            content_type="image/jpeg",
+        )
+
+        response = self.client.post(
+            '/api/items/upload-image/',
+            {'item': self.item.id, 'image': image},
+            format='multipart'
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.images.count(), 1)
+
+    def test_owner_can_delete_existing_image(self):
+        image = SimpleUploadedFile(
+            "item-delete.jpg",
+            (
+                b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00"
+                b"\xff\xdb\x00C\x00" + b"\x08" * 64 +
+                b"\xff\xc0\x00\x11\x08\x00\x01\x00\x01\x03\x01\x11\x00\x02\x11\x01\x03\x11\x01"
+                b"\xff\xc4\x00\x14\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08"
+                b"\xff\xc4\x00\x14\x10\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+                b"\xff\xda\x00\x0c\x03\x01\x00\x02\x11\x03\x11\x00?\x00\xd2\xcf \xff\xd9"
+            ),
+            content_type="image/jpeg",
+        )
+        item_image = ItemImage.objects.create(item=self.item, image=image)
+
+        response = self.client.delete(f'/api/items/images/{item_image.id}/')
+
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(ItemImage.objects.filter(id=item_image.id).exists())
 
 
 class ItemApiBookingRangesTest(TestCase):

@@ -10,8 +10,8 @@ from rest_framework import filters
 from django.db import models
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import generics
-from .models import ItemImage, ItemVideo
-from .serializers import ItemImageSerializer, ItemVideoSerializer
+from .models import ItemImage
+from .serializers import ItemImageSerializer
 from .permissions import IsOwner
 
 from rest_framework.viewsets import ModelViewSet
@@ -110,22 +110,9 @@ class ItemImageUploadView(generics.CreateAPIView):
         serializer.save(item=item)
 
 
-class ItemVideoUploadView(generics.CreateAPIView):
-    serializer_class = ItemVideoSerializer
-    parser_classes = (MultiPartParser, FormParser)
+class ItemImageDeleteView(generics.DestroyAPIView):
+    serializer_class = ItemImageSerializer
     permission_classes = [IsAuthenticated]
 
-    def perform_create(self, serializer):
-        item_id = self.request.data.get('item')
-        if not item_id:
-            raise ValidationError({'item': ['This field is required.']})
-
-        try:
-            item = Item.objects.get(id=item_id)
-        except Item.DoesNotExist:
-            raise ValidationError({'item': ['Invalid item id.']})
-
-        if item.owner != self.request.user:
-            raise PermissionDenied("You are not the owner of this item")
-
-        serializer.save(item=item)
+    def get_queryset(self):
+        return ItemImage.objects.filter(item__owner=self.request.user)

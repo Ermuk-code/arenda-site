@@ -6,9 +6,10 @@ from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
 from bookings.models import Booking
+from chats.models import Chat, Message
 from items.models import Item
 from notifications.models import Notification
-from notifications.services import notify_return_reminder
+from notifications.services import notify_new_message, notify_payment_confirmed, notify_return_reminder
 
 User = get_user_model()
 
@@ -53,6 +54,12 @@ class NotificationTests(TestCase):
                 type='booking_created',
             ).exists()
         )
+        notification = Notification.objects.get(
+            user=self.owner,
+            type='booking_created',
+        )
+        self.assertEqual(notification.metadata.get('destination'), 'incoming_bookings')
+        self.assertEqual(notification.metadata.get('item_id'), self.item.id)
         send_booking_created_mock.assert_called_once()
 
     @patch('notifications.services.send_booking_confirmed')
@@ -73,6 +80,12 @@ class NotificationTests(TestCase):
                 type='booking_confirmed',
             ).exists()
         )
+        notification = Notification.objects.get(
+            user=self.renter,
+            type='booking_confirmed',
+        )
+        self.assertEqual(notification.metadata.get('destination'), 'rent_payment')
+        self.assertEqual(notification.metadata.get('item_id'), self.item.id)
         send_booking_confirmed_mock.assert_called_once()
 
     def test_mark_notification_read_endpoints(self):
@@ -106,3 +119,39 @@ class NotificationTests(TestCase):
             ).exists()
         )
         send_return_reminder_mock.assert_called_once()
+
+    def test_payment_confirmed_notification_points_to_my_items(self):
+        booking = Booking.objects.create(
+            item=self.item,
+            renter=self.renter,
+            start_date=date(2026, 5, 1),
+            end_date=date(2026, 5, 3),
+            status='confirmed',
+            payment_status='paid',
+        )
+
+        notify_payment_confirmed(booking)
+
+        notification = Notification.objects.get(
+            user=self.owner,
+            type='payment_confirmed',
+        )
+        self.assertEqual(notification.metadata.get('destination'), 'my_items')
+        self.assertEqual(notification.metadata.get('item_id'), self.item.id)
+
+    @patch('notifications.services.send_new_message')
+    def test_new_message_notification_contains_chat_metadata(self, send_new_message_mock):
+        chat = Chat.objects.create(item=self.item)
+        chat.users.add(self.owner, self.renter)
+        message = Message.objects.create(chat=chat, sender=self.renter, text='Здравствуйте')
+
+        notify_new_message(message)
+
+        notification = Notification.objects.get(
+            user=self.owner,
+            type='new_message',
+        )
+        self.assertEqual(notification.metadata.get('destination'), 'chat')
+        self.assertEqual(notification.metadata.get('chat_id'), chat.id)
+        self.assertEqual(notification.metadata.get('item_id'), self.item.id)
+        send_new_message_mock.assert_called_once()

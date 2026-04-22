@@ -61,6 +61,9 @@ class ItemImage(models.Model):
     def __str__(self):
         return f"Image for {self.item.title}"
 
+    class Meta:
+        ordering = ['-uploaded_at']
+
 
 class ItemVideo(models.Model):
     item = models.ForeignKey(
@@ -73,3 +76,6 @@ class ItemVideo(models.Model):
 
     def __str__(self):
         return f"Video for {self.item.title}"
+
+    class Meta:
+        ordering = ['-uploaded_at']

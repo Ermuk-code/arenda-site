@@ -547,6 +547,13 @@
             border: 1px solid rgba(255,255,255,0.08);
             animation: toast-in 0.25s ease-out;
         }
+        .site-toast.actionable {
+            cursor: pointer;
+        }
+        .site-toast.actionable:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 22px 42px rgba(18, 42, 50, 0.34);
+        }
         .site-toast-title {
             font-size: 0.95rem;
             font-weight: 800;
@@ -566,6 +573,21 @@
             padding: 8px 12px;
             cursor: pointer;
             font-weight: 700;
+        }
+        .site-toast-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .site-toast-open {
+            background: #ffffff;
+            color: #163a45;
+            border: none;
+            border-radius: 999px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-weight: 800;
         }
         @keyframes toast-in {
             from { opacity: 0; transform: translateY(12px); }
@@ -688,6 +710,7 @@
             margin-top: 12px;
         }
         .existing-media-card {
+            position: relative;
             width: 110px;
             height: 110px;
             border-radius: 18px;
@@ -695,12 +718,30 @@
             border: 1px solid #d9e5ec;
             background: #eef2f7;
         }
-        .existing-media-card img,
-        .existing-media-card video {
+        .existing-media-card img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             display: block;
+        }
+        .existing-media-delete {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(18, 47, 58, 0.82);
+            color: #fff;
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+            display: grid;
+            place-items: center;
+        }
+        .existing-media-delete:hover {
+            background: #b3261e;
         }
 
         .support-chat-toggle {
@@ -935,20 +976,6 @@
             border: 2px solid #e2e9ef;
             cursor: pointer;
             background: #eef2f7;
-        }
-        .item-gallery-thumb.video {
-            display: grid;
-            place-items: center;
-            background: linear-gradient(135deg, #163a45, #2b6a7c);
-            color: white;
-            font-weight: 800;
-            font-size: 0.85rem;
-        }
-        .item-preview-video {
-            width: 100%;
-            border-radius: 24px;
-            margin-top: 18px;
-            background: #000;
         }
         .item-preview-panel {
             background: linear-gradient(180deg, #fbfdff, #f6f9fd);
@@ -1564,7 +1591,7 @@
         }
 
         function getItemVideos(item) {
-            return Array.isArray(item?.videos) ? item.videos.map(video => video?.video).filter(Boolean) : [];
+            return [];
         }
 
         function getFreeDateLabels(bookedRanges) {
@@ -1632,7 +1659,6 @@
 
         function renderItemPreview(item, reviewBooking = null) {
             const images = getItemImages(item);
-            const videos = getItemVideos(item);
             const bookedRanges = Array.isArray(item?.booked_ranges) ? item.booked_ranges : [];
             const freeLabels = getFreeDateLabels(bookedRanges);
             const reviews = Array.isArray(item?.item_reviews) ? item.item_reviews : [];
@@ -1643,9 +1669,7 @@
                         <img class="item-gallery-main" id="itemPreviewMainImage" src="${images[0]}" alt="${escapeHtml(item.title || 'Объявление')}">
                         <div class="item-gallery-thumbs">
                             ${images.map(src => `<img class="item-gallery-thumb" src="${src}" data-preview-image="${src}" alt="Фото товара">`).join('')}
-                            ${videos.map(src => `<button class="item-gallery-thumb video" data-preview-video="${src}" type="button">Видео</button>`).join('')}
                         </div>
-                        ${videos.length ? `<video class="item-preview-video" id="itemPreviewVideo" controls src="${videos[0]}"></video>` : ''}
                     </div>
                     <div class="item-preview-panel">
                         <div class="item-preview-price">${formatPrice(item.price_per_day || 0)} / день</div>
@@ -1728,15 +1752,6 @@
                 img.addEventListener('click', () => {
                     const main = document.getElementById('itemPreviewMainImage');
                     if (main) main.src = img.dataset.previewImage;
-                });
-            });
-            document.querySelectorAll('[data-preview-video]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const video = document.getElementById('itemPreviewVideo');
-                    if (video) {
-                        video.src = btn.dataset.previewVideo;
-                        video.play().catch(() => {});
-                    }
                 });
             });
 
@@ -2229,15 +2244,29 @@
             }
         }
 
+        async function getItemById(itemId) {
+            if (!itemId) return null;
+
+            const existingItem = allProducts.find(item => String(item.id) === String(itemId));
+            if (existingItem) return existingItem;
+
+            try {
+                const response = await apiRequest(`/items/${itemId}/`);
+                if (response.ok) return await response.json();
+            } catch (error) {}
+
+            return null;
+        }
+
         function getNotificationMeta(notification) {
             const map = {
-                booking_created: { title: 'Новая заявка' },
-                booking_cancelled: { title: 'Бронирование отменено' },
-                booking_confirmed: { title: 'Бронирование подтверждено' },
-                payment_confirmed: { title: 'Оплата подтверждена' },
-                new_message: { title: 'Новое сообщение' },
-                return_reminder: { title: 'Напоминание о возврате' },
-                new_review: { title: 'Новый отзыв' },
+                booking_created: { title: 'Новая заявка', actionLabel: 'К заявкам' },
+                booking_cancelled: { title: 'Бронирование отменено', actionLabel: 'Открыть' },
+                booking_confirmed: { title: 'Бронирование подтверждено', actionLabel: 'Оплатить' },
+                payment_confirmed: { title: 'Оплата подтверждена', actionLabel: 'К моим объявлениям' },
+                new_message: { title: 'Новое сообщение', actionLabel: 'Открыть чат' },
+                return_reminder: { title: 'Напоминание о возврате', actionLabel: 'К объявлению' },
+                new_review: { title: 'Новый отзыв', actionLabel: 'К объявлению' },
             };
             return map[notification?.type] || null;
         }
@@ -2295,24 +2324,101 @@
             } catch (error) {}
         }
 
+        async function navigateFromNotification(notification) {
+            const type = notification?.type;
+            const metadata = notification?.metadata || {};
+            const destination = metadata.destination || '';
+
+            if (notification?.id) {
+                await markNotificationRead(notification.id);
+            }
+
+            if (destination === 'incoming_bookings' || type === 'booking_created') {
+                closeItemPreview();
+                await showIncomingBookingsPage();
+                return;
+            }
+
+            if (destination === 'my_items') {
+                closeItemPreview();
+                closeRentalModal();
+                await showMyItemsPage();
+                return;
+            }
+
+            if (destination === 'chat' || type === 'new_message') {
+                if (metadata.chat_id) {
+                    closeItemPreview();
+                    await showChatPage(metadata.chat_id);
+                    return;
+                }
+                await showChatsPage();
+                return;
+            }
+
+            if (destination === 'rent_payment') {
+                const item = await getItemById(metadata.item_id);
+                if (item) {
+                    closeItemPreview();
+                    closeRentalModal();
+                    await openRentalModal(item);
+                    if (currentBooking?.status === 'confirmed' && currentBooking?.payment_status !== 'paid') {
+                        await startBookingPayment();
+                    } else if (!currentBooking) {
+                        setRentModalMessage('info', 'Бронь не найдена. Проверьте раздел аренды для этого объявления.');
+                    }
+                    return;
+                }
+                await showMainPage();
+                return;
+            }
+
+            if (destination === 'item' || type === 'booking_confirmed' || type === 'return_reminder' || type === 'new_review') {
+                const item = await getItemById(metadata.item_id);
+                if (item) {
+                    await openItemPreview(item);
+                    return;
+                }
+                await showMainPage();
+                return;
+            }
+        }
+
         function showSiteToast(notification) {
             const stack = document.getElementById('siteToastStack');
             const meta = getNotificationMeta(notification);
             if (!stack || !meta) return;
 
             const toast = document.createElement('div');
-            toast.className = 'site-toast';
+            toast.className = `site-toast ${meta.actionLabel ? 'actionable' : ''}`;
             toast.innerHTML = `
                 <div class="site-toast-title">${escapeHtml(meta.title)}</div>
                 <div class="site-toast-body">${escapeHtml(notification.message || '')}</div>
-                <button class="site-toast-close" type="button">Закрыть</button>
+                <div class="site-toast-actions">
+                    ${meta.actionLabel ? `<button class="site-toast-open" type="button">${escapeHtml(meta.actionLabel)}</button>` : ''}
+                    <button class="site-toast-close" type="button">Закрыть</button>
+                </div>
             `;
 
             const closeToast = () => {
                 toast.remove();
             };
 
-            toast.querySelector('.site-toast-close')?.addEventListener('click', closeToast);
+            toast.querySelector('.site-toast-close')?.addEventListener('click', (event) => {
+                event.stopPropagation();
+                closeToast();
+            });
+            toast.querySelector('.site-toast-open')?.addEventListener('click', async (event) => {
+                event.stopPropagation();
+                closeToast();
+                await navigateFromNotification(notification);
+            });
+            if (meta.actionLabel) {
+                toast.addEventListener('click', async () => {
+                    closeToast();
+                    await navigateFromNotification(notification);
+                });
+            }
             stack.appendChild(toast);
             setTimeout(closeToast, 7000);
         }
@@ -2341,7 +2447,13 @@
                     method: 'POST',
                     body: JSON.stringify({ rating, comment })
                 });
-                const data = await response.json().catch(() => ({}));
+                const responseText = await response.text().catch(() => '');
+                let data = {};
+                try {
+                    data = responseText ? JSON.parse(responseText) : {};
+                } catch (e) {
+                    data = { detail: responseText || 'Не удалось отправить отзыв.' };
+                }
                 return { success: response.ok, data };
             } catch (error) {
                 return { success: false, data: { detail: 'Ошибка подключения при отправке отзыва.' } };
@@ -2896,12 +3008,11 @@
 
                 if (mediaFiles && mediaFiles.length > 0) {
                     for (const mediaFile of mediaFiles) {
-                        const isVideo = (mediaFile.type || '').startsWith('video/');
                         const uploadFormData = new FormData();
                         uploadFormData.append('item', item.id);
-                        uploadFormData.append(isVideo ? 'video' : 'image', mediaFile);
+                        uploadFormData.append('image', mediaFile);
 
-                        const uploadResp = await apiRequest(isVideo ? '/items/upload-video/' : '/items/upload-image/', {
+                        const uploadResp = await apiRequest('/items/upload-image/', {
                             method: 'POST',
                             headers: { 'Authorization': `Bearer ${token}` },
                             body: uploadFormData
@@ -2918,10 +3029,9 @@
 
                             const uploadMessage =
                                 uploadError.detail ||
-                                uploadError.video?.[0] ||
                                 uploadError.image?.[0] ||
                                 uploadError.item?.[0] ||
-                                (isVideo ? 'Не удалось загрузить видео' : 'Не удалось загрузить фото');
+                                'Не удалось загрузить фото';
 
                             mediaUploadErrors.push(`${mediaFile.name}: ${uploadMessage}`);
                             console.error('❌ Ошибка загрузки медиа:', uploadError);
@@ -2950,12 +3060,11 @@
             if (!mediaFiles || !mediaFiles.length) return mediaUploadErrors;
 
             for (const mediaFile of mediaFiles) {
-                const isVideo = (mediaFile.type || '').startsWith('video/');
                 const uploadFormData = new FormData();
                 uploadFormData.append('item', itemId);
-                uploadFormData.append(isVideo ? 'video' : 'image', mediaFile);
+                uploadFormData.append('image', mediaFile);
 
-                const uploadResp = await apiRequest(isVideo ? '/items/upload-video/' : '/items/upload-image/', {
+                const uploadResp = await apiRequest('/items/upload-image/', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` },
                     body: uploadFormData
@@ -2972,10 +3081,9 @@
 
                     const uploadMessage =
                         uploadError.detail ||
-                        uploadError.video?.[0] ||
                         uploadError.image?.[0] ||
                         uploadError.item?.[0] ||
-                        (isVideo ? 'Не удалось загрузить видео' : 'Не удалось загрузить фото');
+                        'Не удалось загрузить фото';
 
                     mediaUploadErrors.push(`${mediaFile.name}: ${uploadMessage}`);
                     console.error('❌ Ошибка загрузки медиа:', uploadError);
@@ -2983,6 +3091,28 @@
             }
 
             return mediaUploadErrors;
+        }
+
+        async function deleteExistingItemImage(imageId) {
+            const token = getAccessToken();
+            const response = await apiRequest(`/items/images/${imageId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                const responseText = await response.text().catch(() => '');
+                let error = {};
+                try {
+                    error = responseText ? JSON.parse(responseText) : {};
+                } catch (e) {
+                    error = { detail: responseText || 'Не удалось удалить фото' };
+                }
+
+                throw new Error(error.detail || 'Не удалось удалить фото');
+            }
         }
 
         async function updateItemWithMedia(itemId, formData, mediaFiles) {
@@ -3026,6 +3156,7 @@
                     alert('✅ Объявление обновлено!');
                 }
 
+                selectedMediaFiles = [];
                 await showMyItemsPage();
                 return true;
             } catch (error) {
@@ -3811,9 +3942,9 @@
                         <div class="form-group"><label>Категория</label>
                             <select id="itemCategory">${categoryOptions}</select>
                         </div>
-                        <div class="form-group"><label>Фото и видео</label>
-                            <label class="file-input-label">🎞 Выбрать медиа<input type="file" id="itemMedia" accept="image/*,video/*" multiple></label>
-                            <div class="media-picker-note">Можно добавить несколько фото и видео.</div>
+                        <div class="form-group"><label>Фотографии</label>
+                            <label class="file-input-label">🖼 Выбрать фото<input type="file" id="itemMedia" accept="image/*" multiple></label>
+                            <div class="media-picker-note">Можно добавить несколько фотографий.</div>
                             <div id="imagePreview" class="image-preview"></div>
                         </div>
                         <div class="form-actions">
@@ -3850,38 +3981,49 @@
         async function showEditItemPage(item) {
             if (!isAuthenticated()) { alert('Пожалуйста, войдите в систему'); showLoginPage(); return; }
             selectedMediaFiles = [];
+            let editItem = item;
+
+            try {
+                const refreshed = await apiRequest(`/items/${item.id}/`);
+                if (refreshed.ok) {
+                    editItem = await refreshed.json();
+                }
+            } catch (error) {}
 
             const categories = await ensureServerCategoriesLoaded();
             const categoryOptions = categories.length
-                ? (`<option value="">Без категории</option>` + categories.map(c => `<option value="${c.id}" ${String(c.id) === String(item.category || '') ? 'selected' : ''}>${escapeHtml(c.name)}</option>`).join(''))
+                ? (`<option value="">Без категории</option>` + categories.map(c => `<option value="${c.id}" ${String(c.id) === String(editItem.category || '') ? 'selected' : ''}>${escapeHtml(c.name)}</option>`).join(''))
                 : (`<option value="">Без категории</option><option value="" disabled>— Категории не загрузились —</option>`);
 
-            const existingImages = Array.isArray(item.images) ? item.images : [];
-            const existingVideos = Array.isArray(item.videos) ? item.videos : [];
+            const existingImages = Array.isArray(editItem.images) ? editItem.images : [];
 
             document.getElementById('app').innerHTML = `
                 <div class="create-page"><div class="create-card">
                     <div class="back-button" id="backToMyItemsFromEdit">← Назад</div>
                     <div class="create-title">✏️ Редактирование объявления</div>
-                    <div class="create-sub">Обновите описание, цену и добавьте новые фото или видео</div>
+                    <div class="create-sub">Обновите описание, цену, добавьте новые фото или удалите лишние</div>
                     <form id="editItemForm">
-                        <div class="form-group"><label>Название товара *</label><input type="text" id="editItemName" value="${escapeHtml(item.title || '')}" placeholder="Например: Дрель Makita" required></div>
-                        <div class="form-group"><label>Описание</label><textarea id="editItemDesc" rows="4" placeholder="Опишите состояние, характеристики...">${escapeHtml(item.description || '')}</textarea></div>
-                        <div class="form-group"><label>Цена за день (₽) *</label><input type="number" id="editItemPrice" value="${Number(item.price_per_day || 0)}" placeholder="500" required></div>
+                        <div class="form-group"><label>Название товара *</label><input type="text" id="editItemName" value="${escapeHtml(editItem.title || '')}" placeholder="Например: Дрель Makita" required></div>
+                        <div class="form-group"><label>Описание</label><textarea id="editItemDesc" rows="4" placeholder="Опишите состояние, характеристики...">${escapeHtml(editItem.description || '')}</textarea></div>
+                        <div class="form-group"><label>Цена за день (₽) *</label><input type="number" id="editItemPrice" value="${Number(editItem.price_per_day || 0)}" placeholder="500" required></div>
                         <div class="form-group"><label>Категория</label>
                             <select id="editItemCategory">${categoryOptions}</select>
                         </div>
                         <div class="form-group">
-                            <label>Текущие медиа</label>
+                            <label>Текущие фото</label>
                             <div class="existing-media-grid">
-                                ${existingImages.map(image => `<div class="existing-media-card"><img src="${image.image}" alt="Фото объявления"></div>`).join('')}
-                                ${existingVideos.map(video => `<div class="existing-media-card"><video src="${video.video}" muted controls></video></div>`).join('')}
-                                ${(!existingImages.length && !existingVideos.length) ? '<div class="empty-message" style="padding:20px;">Медиа пока нет</div>' : ''}
+                                ${existingImages.map(image => `
+                                    <div class="existing-media-card">
+                                        <img src="${image.image}" alt="Фото объявления">
+                                        <button class="existing-media-delete" type="button" data-action="delete-existing-image" data-image-id="${image.id}" aria-label="Удалить фото">×</button>
+                                    </div>
+                                `).join('')}
+                                ${!existingImages.length ? '<div class="empty-message" style="padding:20px;">Фотографий пока нет</div>' : ''}
                             </div>
                         </div>
-                        <div class="form-group"><label>Добавить ещё фото и видео</label>
-                            <label class="file-input-label">🎞 Выбрать медиа<input type="file" id="editItemMedia" accept="image/*,video/*" multiple></label>
-                            <div class="media-picker-note">Новые файлы будут добавлены к существующим.</div>
+                        <div class="form-group"><label>Добавить ещё фото</label>
+                            <label class="file-input-label">🖼 Выбрать фото<input type="file" id="editItemMedia" accept="image/*" multiple></label>
+                            <div class="media-picker-note">Новые фотографии будут добавлены к существующим.</div>
                             <div id="imagePreview" class="image-preview"></div>
                         </div>
                         <div class="form-actions">
@@ -3909,7 +4051,21 @@
                     alert('Заполните название и цену');
                     return;
                 }
-                await updateItemWithMedia(item.id, formData, selectedMediaFiles);
+                await updateItemWithMedia(editItem.id, formData, selectedMediaFiles);
+            });
+
+            document.querySelectorAll('[data-action="delete-existing-image"]').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const imageId = button.dataset.imageId;
+                    if (!imageId) return;
+
+                    try {
+                        await deleteExistingItemImage(imageId);
+                        await showEditItemPage(editItem);
+                    } catch (error) {
+                        alert(`❌ ${error.message || 'Не удалось удалить фото'}`);
+                    }
+                });
             });
 
             document.getElementById('backToMyItemsFromEdit')?.addEventListener('click', () => showMyItemsPage());
@@ -3922,21 +4078,15 @@
             selectedMediaFiles.forEach((file, index) => {
                 const div = document.createElement('div');
                 div.className = 'preview-item';
-
-                if ((file.type || '').startsWith('video/')) {
-                    const url = URL.createObjectURL(file);
-                    div.innerHTML = `<video src="${url}" muted playsinline style="width:100%;height:100%;object-fit:cover;"></video><button class="remove-image" data-index="${index}">×</button>`;
-                } else {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        div.innerHTML = `<img src="${e.target.result}" alt="preview"><button class="remove-image" data-index="${index}">×</button>`;
-                        div.querySelector('.remove-image').addEventListener('click', () => {
-                            selectedMediaFiles.splice(index, 1);
-                            updateImagePreview();
-                        });
-                    };
-                    reader.readAsDataURL(file);
-                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    div.innerHTML = `<img src="${e.target.result}" alt="preview"><button class="remove-image" data-index="${index}">×</button>`;
+                    div.querySelector('.remove-image').addEventListener('click', () => {
+                        selectedMediaFiles.splice(index, 1);
+                        updateImagePreview();
+                    });
+                };
+                reader.readAsDataURL(file);
 
                 container.appendChild(div);
                 div.querySelector('.remove-image')?.addEventListener('click', () => {

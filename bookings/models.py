@@ -246,7 +246,14 @@ class Review(models.Model):
         item = self.booking.item
         owner = item.owner
         if self.booking.status == 'confirmed':
-            Chat.objects.get_or_create(booking=self)
+            existing_chat = (
+                Chat.objects.filter(item=item, users=self.booking.renter)
+                .filter(users=owner)
+                .first()
+            )
+            if not existing_chat:
+                existing_chat = Chat.objects.create(item=item)
+                existing_chat.users.add(self.booking.renter, owner)
 
         item_reviews = Review.objects.filter(
             booking__item=item
