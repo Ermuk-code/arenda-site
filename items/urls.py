@@ -3,8 +3,8 @@ from .views import ItemViewSet, ItemImageUploadView, ItemVideoUploadView, Catego
 from django.urls import path
 
 router = DefaultRouter()
-router.register(r'', ItemViewSet, basename='items')
 router.register(r'categories', CategoryViewSet, basename='categories')
+router.register(r'', ItemViewSet, basename='items')
 
 urlpatterns = [
     path('upload-image/', ItemImageUploadView.as_view(), name='upload-image'),

@@ -1174,12 +1174,7 @@
         const WS_BASE = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws`;
 
         const CATEGORIES = [
-            { id: 'all', name: 'Все' },
-            { id: 'electronics', name: 'Электроника' },
-            { id: 'tools', name: 'Инструменты' },
-            { id: 'sport', name: 'Спорт' },
-            { id: 'clothing', name: 'Одежда' },
-            { id: 'home', name: 'Дом и сад' }
+            { id: 'all', name: 'Все' }
         ];
 
         let selectedMediaFiles = [];
@@ -1642,6 +1637,11 @@
                 serverCategories = [];
             }
             return serverCategories;
+        }
+
+        async function getDisplayCategories() {
+            const categories = await ensureServerCategoriesLoaded();
+            return [CATEGORIES[0], ...categories];
         }
 
         function resetChatAttachmentPreview() {
@@ -2484,7 +2484,12 @@
             currentPage = page;
 
             try {
-                const response = await apiRequest(`/items/?page=${page}`);
+                const params = new URLSearchParams({ page: String(page) });
+                if (currentCategory !== 'all') {
+                    params.set('category', String(currentCategory));
+                }
+
+                const response = await apiRequest(`/items/?${params.toString()}`);
                 if (!response.ok) throw new Error();
 
                 const data = await response.json();
@@ -3882,8 +3887,14 @@
             document.getElementById('backToMainFromLogin')?.addEventListener('click', () => showMainPage());
         }
 
-        function showMainPage() {
+        async function showMainPage() {
             closeActiveChatConnection();
+            const categories = await getDisplayCategories();
+            const categoryIds = new Set(categories.map(cat => String(cat.id)));
+            if (!categoryIds.has(String(currentCategory))) {
+                currentCategory = 'all';
+            }
+
             document.getElementById('app').innerHTML = `
                 <div class="header">
                     <div class="container header-inner">
@@ -3894,7 +3905,7 @@
                 <div class="categories">
                     <div class="container">
                         <ul class="cats-list" id="categoriesList">
-                            ${CATEGORIES.map(cat => `<li data-category="${cat.id}" class="${cat.id === 'all' ? 'active' : ''}">${cat.name}</li>`).join('')}
+                            ${categories.map(cat => `<li data-category="${cat.id}" class="${String(cat.id) === String(currentCategory) ? 'active' : ''}">${escapeHtml(cat.name)}</li>`).join('')}
                         </ul>
                     </div>
                 </div>

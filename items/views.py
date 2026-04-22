@@ -23,7 +23,7 @@ from .serializers import CategorySerializer
 from rest_framework.response import Response
 
 class CategoryViewSet(ModelViewSet):
-    queryset = Category.objects.all()
+    queryset = Category.objects.order_by('name')
     serializer_class = CategorySerializer
 
 class ItemViewSet(viewsets.ModelViewSet):
@@ -49,10 +49,10 @@ class ItemViewSet(viewsets.ModelViewSet):
         if min_rating:
             queryset = queryset.filter(average_rating__gte=min_rating)
 
-        return queryset
+        return queryset.select_related('owner', 'category').distinct()
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
 
-    filterset_fields = ['status']
+    filterset_fields = ['status', 'category']
     search_fields = ['title', 'description']
     ordering_fields = ['price_per_day', 'created_at', 'average_rating']
     ordering = ['-created_at']

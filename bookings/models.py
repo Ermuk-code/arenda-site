@@ -1,24 +1,23 @@
 import uuid
 from datetime import timedelta
 
-from django.db import models
 from django.conf import settings
-from django.utils import timezone
-from items.models import Item
 from django.core.exceptions import ValidationError
-from django.db.models import Q
-from django.db.models import Avg
+from django.db import models
+from django.db.models import Avg, Q
+from django.utils import timezone
+
+from items.models import Item
 from notifications.services import (
     notify_booking_cancelled,
     notify_booking_confirmed,
     notify_booking_created,
-    notify_payment_confirmed,
     notify_new_review,
+    notify_payment_confirmed,
 )
 
 
 class Booking(models.Model):
-
     STATUS_CHOICES = (
         ('pending', 'Pending'),
         ('confirmed', 'Confirmed'),
@@ -40,21 +39,18 @@ class Booking(models.Model):
         on_delete=models.CASCADE,
         related_name='bookings'
     )
-
     renter = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='bookings'
     )
-
     start_date = models.DateField()
     end_date = models.DateField()
-
     total_price = models.DecimalField(
-    max_digits=10,
-    decimal_places=2,
-    blank=True,
-    null=True
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True
     )
     status = models.CharField(
         max_length=20,
@@ -78,19 +74,15 @@ class Booking(models.Model):
     )
     payment_expires_at = models.DateTimeField(null=True, blank=True)
     paid_at = models.DateTimeField(null=True, blank=True)
-
     created_at = models.DateTimeField(auto_now_add=True)
-    def clean(self):
 
-        # Нельзя бронировать свой товар
+    def clean(self):
         if self.item.owner == self.renter:
             raise ValidationError("You cannot book your own item")
 
-        # Дата окончания должна быть позже начала
         if self.start_date >= self.end_date:
             raise ValidationError("End date must be after start date")
 
-        # Проверка пересечения дат
         overlapping = Booking.objects.filter(
             item=self.item,
             status__in=['pending', 'confirmed']
@@ -101,21 +93,23 @@ class Booking(models.Model):
 
         if overlapping.exists():
             raise ValidationError("This item is already booked for selected dates")
+
     def save(self, *args, **kwargs):
         is_new = self.pk is None
 
         self.clean()
 
-        # Расчёт количества дней
-        days = (self.end_date - self.start_date).days
+        # Freeze booking price on creation so later item price changes
+        # do not affect already created bookings or payment flows.
+        if is_new or self.total_price is None:
+            days = (self.end_date - self.start_date).days
+            self.total_price = days * self.item.price_per_day
 
-        # Умножаем на цену товара
-        self.total_price = days * self.item.price_per_day
         super().save(*args, **kwargs)
         if is_new:
             notify_booking_created(self)
-    def change_status(self, new_status):
 
+    def change_status(self, new_status):
         allowed_transitions = {
             'pending': ['confirmed', 'cancelled'],
             'confirmed': ['completed', 'cancelled'],
@@ -216,17 +210,16 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"{self.item.title} - {self.renter.username}"
-class Review(models.Model):
 
+
+class Review(models.Model):
     booking = models.OneToOneField(
         Booking,
         on_delete=models.CASCADE,
         related_name='review'
     )
-
     rating = models.IntegerField()
     comment = models.TextField(blank=True)
-
     created_at = models.DateTimeField(auto_now_add=True)
 
     def clean(self):
@@ -245,6 +238,7 @@ class Review(models.Model):
 
     def save(self, *args, **kwargs):
         from chats.models import Chat
+
         is_new = self.pk is None
         self.clean()
         super().save(*args, **kwargs)
@@ -253,7 +247,7 @@ class Review(models.Model):
         owner = item.owner
         if self.booking.status == 'confirmed':
             Chat.objects.get_or_create(booking=self)
-        # ---- рейтинг товара ----
+
         item_reviews = Review.objects.filter(
             booking__item=item
         )
@@ -266,7 +260,6 @@ class Review(models.Model):
         item.reviews_count = item_reviews.count()
         item.save()
 
-        # ---- рейтинг владельца ----
         owner_reviews = Review.objects.filter(
             booking__item__owner=owner
         )

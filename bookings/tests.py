@@ -1,17 +1,17 @@
-from django.test import TestCase
-from django.test import override_settings
-from django.contrib.auth import get_user_model
 from datetime import date
+
+from django.contrib.auth import get_user_model
+from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
 from items.models import Item
-from .models import Booking
-from .models import Review
+
+from .models import Booking, Review
 
 User = get_user_model()
 
-class BookingModelTest(TestCase):
 
+class BookingModelTest(TestCase):
     def setUp(self):
         self.owner = User.objects.create_user(
             username='owner',
@@ -19,14 +19,12 @@ class BookingModelTest(TestCase):
             email='owner_model@test.com',
             profile_completed=True
         )
-
         self.renter = User.objects.create_user(
             username='renter',
             password='12345',
             email='renter_model@test.com',
             profile_completed=True
         )
-
         self.item = Item.objects.create(
             title="Drill",
             description="Power drill",
@@ -36,7 +34,6 @@ class BookingModelTest(TestCase):
         )
 
     def test_booking_total_price_calculation(self):
-
         booking = Booking.objects.create(
             item=self.item,
             renter=self.renter,
@@ -45,8 +42,8 @@ class BookingModelTest(TestCase):
         )
 
         self.assertEqual(booking.total_price, 3000)
-    def test_cannot_book_own_item(self):
 
+    def test_cannot_book_own_item(self):
         with self.assertRaises(Exception):
             Booking.objects.create(
                 item=self.item,
@@ -54,8 +51,8 @@ class BookingModelTest(TestCase):
                 start_date=date(2025, 6, 1),
                 end_date=date(2025, 6, 3)
             )
-    def test_booking_date_overlap(self):
 
+    def test_booking_date_overlap(self):
         Booking.objects.create(
             item=self.item,
             renter=self.renter,
@@ -70,13 +67,13 @@ class BookingModelTest(TestCase):
                 start_date=date(2025, 6, 3),
                 end_date=date(2025, 6, 7)
             )
-    def test_create_review(self):
 
+    def test_create_review(self):
         booking = Booking.objects.create(
             item=self.item,
             renter=self.renter,
-            start_date=date(2026,1,1),
-            end_date=date(2026,1,3),
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 1, 3),
             status="completed"
         )
 
@@ -88,10 +85,26 @@ class BookingModelTest(TestCase):
 
         self.assertEqual(review.rating, 5)
 
+    def test_total_price_is_fixed_after_item_price_change(self):
+        booking = Booking.objects.create(
+            item=self.item,
+            renter=self.renter,
+            start_date=date(2026, 6, 1),
+            end_date=date(2026, 6, 4)
+        )
+
+        self.item.price_per_day = 2000
+        self.item.save()
+
+        booking.status = 'confirmed'
+        booking.save()
+        booking.refresh_from_db()
+
+        self.assertEqual(booking.total_price, 3000)
+
 
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
 class BookingApiTest(TestCase):
-
     def setUp(self):
         self.owner = User.objects.create_user(
             username='owner_api',
@@ -242,3 +255,20 @@ class BookingApiTest(TestCase):
         self.assertEqual(response.status_code, 400)
         booking.refresh_from_db()
         self.assertEqual(booking.status, 'confirmed')
+
+    def test_payment_amount_keeps_original_booking_price_after_item_update(self):
+        booking = self.create_booking()
+        original_total_price = booking.total_price
+
+        self.item.price_per_day = 3000
+        self.item.save()
+
+        booking._status_changed_by = self.owner
+        booking.change_status('confirmed')
+
+        response = self.renter_client.post(f'/api/bookings/{booking.id}/start_payment/')
+
+        self.assertEqual(response.status_code, 200)
+        booking.refresh_from_db()
+        self.assertEqual(booking.total_price, original_total_price)
+        self.assertEqual(response.data['amount'], str(booking.total_price))
