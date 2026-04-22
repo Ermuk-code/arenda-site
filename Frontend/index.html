@@ -1408,7 +1408,7 @@
             const addFieldError = (field, label, fallback) => {
                 if (!responseData || !responseData[field]) return;
                 const raw = Array.isArray(responseData[field]) ? responseData[field].join(', ') : String(responseData[field]);
-                let message = raw;
+                let message = translateServerMessage(raw, fallback);
 
                 if (/255 characters/i.test(raw) || /no more than 255/i.test(raw) || /at most 255/i.test(raw)) {
                     message = fallback;
@@ -1431,7 +1431,7 @@
             addFieldError('kpp', 'КПП', 'Проверьте значение');
 
             if (responseData?.detail) {
-                errors.push(`• ${responseData.detail}`);
+                errors.push(`• ${translateServerMessage(responseData.detail, 'Проверьте введённые данные.')}`);
             }
 
             if (!errors.length) {
@@ -1439,6 +1439,92 @@
             }
 
             return `Ошибка регистрации:\n${errors.join('\n')}`;
+        }
+
+        function translateServerMessage(message, fallback = 'Произошла ошибка.') {
+            const raw = String(message || '').trim();
+            if (!raw) return fallback;
+
+            const exactMap = {
+                'This field is required.': 'Это поле обязательно.',
+                'This field may not be blank.': 'Поле не должно быть пустым.',
+                'This field may not be null.': 'Поле не должно быть пустым.',
+                'Not found.': 'Ничего не найдено.',
+                'Unsupported media type': 'Неподдерживаемый тип файла.',
+                'Invalid token.': 'Недействительный токен.',
+                'Token is invalid or expired': 'Сессия истекла. Войдите снова.',
+                'No active account found with the given credentials': 'Неверный логин или пароль.',
+                'A user with that username already exists.': 'Пользователь с таким именем уже существует.',
+                'user with this email already exists.': 'Пользователь с таким email уже существует.'
+            };
+
+            if (exactMap[raw]) return exactMap[raw];
+
+            let match = raw.match(/^Ensure this field has no more than (\d+) characters\.?$/i)
+                || raw.match(/^Ensure this field has at most (\d+) characters\.?$/i);
+            if (match) return `Максимум ${match[1]} символов.`;
+
+            match = raw.match(/^Ensure this field has at least (\d+) characters\.?$/i);
+            if (match) return `Минимум ${match[1]} символов.`;
+
+            if (/invalid email/i.test(raw)) return 'Некорректный email.';
+            if (/already exists/i.test(raw)) return 'Такая запись уже существует.';
+            if (/may not be blank/i.test(raw)) return 'Поле не должно быть пустым.';
+            if (/required/i.test(raw)) return 'Это поле обязательно.';
+            if (/not found/i.test(raw)) return 'Ничего не найдено.';
+
+            return raw;
+        }
+
+        function extractApiErrorMessage(data, fallback = 'Произошла ошибка.') {
+            if (!data) return fallback;
+
+            if (typeof data === 'string') {
+                return translateServerMessage(data, fallback);
+            }
+
+            if (Array.isArray(data)) {
+                return translateServerMessage(data[0], fallback);
+            }
+
+            const priorityKeys = ['detail', 'error', 'message', 'non_field_errors'];
+            for (const key of priorityKeys) {
+                if (!data[key]) continue;
+                const value = Array.isArray(data[key]) ? data[key][0] : data[key];
+                return translateServerMessage(value, fallback);
+            }
+
+            const fieldLabels = {
+                username: 'Имя пользователя',
+                email: 'Email',
+                password: 'Пароль',
+                user_type: 'Тип пользователя',
+                full_name: 'ФИО',
+                entrepreneur_name: 'Наименование ИП',
+                company_name: 'Наименование организации',
+                passport_series: 'Серия паспорта',
+                passport_number: 'Номер паспорта',
+                inn: 'ИНН',
+                ogrnip: 'ОГРНИП',
+                kpp: 'КПП',
+                owner: 'Владелец',
+                title: 'Название',
+                description: 'Описание',
+                price_per_day: 'Цена за день',
+                category: 'Категория',
+                image: 'Изображение',
+                video: 'Видео',
+                item: 'Товар'
+            };
+
+            for (const [key, value] of Object.entries(data)) {
+                if (value == null) continue;
+                const label = fieldLabels[key] || key;
+                const normalized = Array.isArray(value) ? value[0] : value;
+                return `${label}: ${translateServerMessage(normalized, fallback)}`;
+            }
+
+            return fallback;
         }
 
         function formatPrice(value) {
@@ -1703,6 +1789,16 @@
                 failed: 'Ошибка оплаты'
             };
             return map[status] || '—';
+        }
+
+        function formatItemStatus(status) {
+            const map = {
+                available: 'Доступно',
+                unavailable: 'Недоступно',
+                blocked: 'Заблокировано',
+                archived: 'В архиве'
+            };
+            return map[status] || 'Неизвестно';
         }
 
         async function ensureServerCategoriesLoaded() {
