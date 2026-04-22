@@ -15,6 +15,8 @@ from .permissions import IsOwner
 
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from .models import Category
 from .serializers import CategorySerializer
 
@@ -59,12 +61,26 @@ class ItemViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         serializer.save(owner=self.request.user)
+
     def get_permissions(self):
         if self.action in ['update', 'partial_update', 'destroy']:
             return [IsOwner(), IsProfileCompleted()]
         if self.action == 'create':
             return [IsAuthenticatedOrReadOnly(), IsProfileCompleted()]
         return []
+
+    @action(detail=True, methods=['get'])
+    def booked_ranges(self, request, pk=None):
+        item = self.get_object()
+        bookings = item.bookings.filter(status__in=['pending', 'confirmed']).values('start_date', 'end_date')
+        return Response([
+            {
+                'from': booking['start_date'].isoformat(),
+                'to': booking['end_date'].isoformat(),
+            }
+            for booking in bookings
+        ])
+
 class ItemImageUploadView(generics.CreateAPIView):
     serializer_class = ItemImageSerializer
     parser_classes = (MultiPartParser, FormParser)

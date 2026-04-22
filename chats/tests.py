@@ -60,3 +60,23 @@ class ChatTest(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(Message.objects.count(), 0)
+
+    def test_support_faq_is_available_without_auth(self):
+        self.client.force_authenticate(user=None)
+
+        response = self.client.get("/api/chats/support-faq/")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertIn("questions", payload)
+        self.assertGreaterEqual(len(payload["questions"]), 5)
+
+    def test_mark_read_returns_updated_message_ids(self):
+        unread_message = Message.objects.create(chat=self.chat, sender=self.owner, text="Unread")
+
+        response = self.client.post(f"/api/chats/conversations/{self.chat.id}/mark_read/")
+
+        self.assertEqual(response.status_code, 200)
+        unread_message.refresh_from_db()
+        self.assertTrue(unread_message.is_read)
+        self.assertEqual(response.json()["message_ids"], [unread_message.id])

@@ -66,6 +66,8 @@ class RegisterSerializer(serializers.ModelSerializer):
 # ===== PROFILE =====
 
 class ProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(required=False)
+    email = serializers.EmailField(required=False)
 
     inn = serializers.CharField(required=False, validators=[validate_inn])
     kpp = serializers.CharField(required=False, validators=[validate_kpp])
@@ -77,6 +79,8 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
+            'username',
+            'email',
             'user_type',
             'passport_series',
             'passport_number',
@@ -86,7 +90,15 @@ class ProfileSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, data):
-        user_type = data.get('user_type')
+        user_type = data.get('user_type', getattr(self.instance, 'user_type', None))
+        email = data.get('email')
+
+        if email:
+            qs = User.objects.filter(email=email)
+            if self.instance:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise serializers.ValidationError({'email': 'Email already exists'})
 
         # 👤 Физ лицо
         if user_type == 'individual':
