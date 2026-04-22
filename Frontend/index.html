@@ -18,6 +18,27 @@
         .btn-outline:hover { background: #2b6a7c10; }
         .btn-primary { background: #2b6a7c; border: none; padding: 8px 24px; border-radius: 40px; font-weight: 600; color: white; cursor: pointer; text-decoration: none; display: inline-block; transition: 0.2s; }
         .btn-primary:hover { background: #1e5668; transform: translateY(-1px); }
+        .nav-btn { position: relative; }
+        .nav-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 22px;
+            height: 22px;
+            margin-left: 8px;
+            padding: 0 7px;
+            border-radius: 999px;
+            background: #1f8a6b;
+            color: #fff;
+            font-size: 0.76rem;
+            font-weight: 800;
+            line-height: 1;
+            box-shadow: 0 10px 16px rgba(31,138,107,0.18);
+        }
+        .nav-badge.attention {
+            background: #d35454;
+            box-shadow: 0 10px 16px rgba(211,84,84,0.18);
+        }
         .categories { background: white; border-bottom: 1px solid #eef2f6; padding: 14px 0; }
         .cats-list { display: flex; gap: 28px; flex-wrap: wrap; justify-content: center; list-style: none; }
         .cats-list li { font-weight: 500; color: #2f4f5f; cursor: pointer; transition: 0.2s; padding: 5px 0; }
@@ -1175,6 +1196,7 @@
         let bookedDateRanges = [];
         let notificationPollInterval = null;
         let shownNotificationIds = new Set();
+        let navCounters = { chats: 0, bookings: 0 };
 
         let currentPage = 1;
         let totalPages = 1;
@@ -1835,6 +1857,7 @@
                 if (response.ok) {
                     const data = await response.json().catch(() => ({}));
                     applyMessagesRead(data.message_ids || []);
+                    refreshNavCounters();
                 }
             } catch (error) {}
         }
@@ -2014,12 +2037,59 @@
 
         function getNotificationMeta(notification) {
             const map = {
+                booking_created: { title: 'Новая заявка' },
                 booking_cancelled: { title: 'Бронирование отменено' },
                 booking_confirmed: { title: 'Бронирование подтверждено' },
                 payment_confirmed: { title: 'Оплата подтверждена' },
                 new_message: { title: 'Новое сообщение' },
+                return_reminder: { title: 'Напоминание о возврате' },
+                new_review: { title: 'Новый отзыв' },
             };
             return map[notification?.type] || null;
+        }
+
+        function formatCompactCount(value) {
+            if (value > 99) return '99+';
+            return String(value);
+        }
+
+        function renderNavBadge(count, kind = 'default') {
+            if (!count) return '';
+            return `<span class="nav-badge ${kind === 'attention' ? 'attention' : ''}">${formatCompactCount(count)}</span>`;
+        }
+
+        async function refreshNavCounters() {
+            if (!isAuthenticated()) {
+                navCounters = { chats: 0, bookings: 0 };
+                return navCounters;
+            }
+
+            try {
+                const [conversations, incomingBookings] = await Promise.all([
+                    getConversations(),
+                    getIncomingBookings()
+                ]);
+
+                navCounters = {
+                    chats: (conversations || []).reduce((sum, conversation) => sum + Number(conversation.unread_count || 0), 0),
+                    bookings: (incomingBookings || []).filter((booking) => booking.status === 'pending').length,
+                };
+            } catch (error) {
+                navCounters = { chats: 0, bookings: 0 };
+            }
+
+            const chatsBadge = document.getElementById('chatsNavBadge');
+            if (chatsBadge) {
+                chatsBadge.textContent = formatCompactCount(navCounters.chats);
+                chatsBadge.style.display = navCounters.chats ? '' : 'none';
+            }
+            const bookingsBadge = document.getElementById('bookingsNavBadge');
+            if (bookingsBadge) {
+                bookingsBadge.textContent = formatCompactCount(navCounters.bookings);
+                bookingsBadge.style.display = navCounters.bookings ? '' : 'none';
+            }
+
+            return navCounters;
         }
 
         async function markNotificationRead(notificationId) {
@@ -2067,6 +2137,8 @@
                 showSiteToast(notification);
                 markNotificationRead(notification.id);
             }
+
+            await refreshNavCounters();
         }
 
         async function submitReview(bookingId, rating, comment) {
@@ -2869,9 +2941,9 @@
                 authSection.innerHTML = `
                     <div class="user-info">
                         <span>👤 ${localStorage.getItem('username') || 'Пользователь'}</span>
-                        <button class="btn-outline" id="myItemsNavBtn">📦 Мои объявления</button>
-                        <button class="btn-outline" id="bookingsNavBtn">📥 Заявки</button>
-                        <button class="btn-outline" id="chatsNavBtn">💬 Чаты</button>
+                        <button class="btn-outline nav-btn" id="myItemsNavBtn">📦 Мои объявления</button>
+                        <button class="btn-outline nav-btn" id="bookingsNavBtn">📥 Заявки<span class="nav-badge attention" id="bookingsNavBadge" style="${navCounters.bookings ? '' : 'display:none;'}">${formatCompactCount(navCounters.bookings)}</span></button>
+                        <button class="btn-outline nav-btn" id="chatsNavBtn">💬 Чаты<span class="nav-badge" id="chatsNavBadge" style="${navCounters.chats ? '' : 'display:none;'}">${formatCompactCount(navCounters.chats)}</span></button>
                         <button class="btn-outline" id="profileNavBtn">👤 Профиль</button>
                         <button class="btn-outline" id="createItemNavBtn">+ Объявление</button>
                         <button class="btn-outline" id="logoutNavBtn">Выйти</button>
@@ -2883,6 +2955,18 @@
                 document.getElementById('profileNavBtn')?.addEventListener('click', () => showProfilePage());
                 document.getElementById('createItemNavBtn')?.addEventListener('click', () => showCreatePage());
                 document.getElementById('logoutNavBtn')?.addEventListener('click', logout);
+                refreshNavCounters().then((counters) => {
+                    const chatsBadge = document.getElementById('chatsNavBadge');
+                    if (chatsBadge) {
+                        chatsBadge.style.display = counters.chats ? '' : 'none';
+                        chatsBadge.textContent = formatCompactCount(counters.chats);
+                    }
+                    const bookingsBadge = document.getElementById('bookingsNavBadge');
+                    if (bookingsBadge) {
+                        bookingsBadge.style.display = counters.bookings ? '' : 'none';
+                        bookingsBadge.textContent = formatCompactCount(counters.bookings);
+                    }
+                });
             } else {
                 authSection.innerHTML = `<a href="#" class="btn-outline" id="loginNavBtn">Войти</a><a href="#" class="btn-primary" id="registerNavBtn">Регистрация</a>`;
                 document.getElementById('loginNavBtn')?.addEventListener('click', (e) => { e.preventDefault(); showLoginPage(); });
@@ -2907,13 +2991,14 @@
                                 const lastText = conv.last_message?.text || (conv.last_message?.image ? '[Изображение]' : 'Нет сообщений');
                                 const date = conv.last_message?.created_at ? new Date(conv.last_message.created_at).toLocaleDateString() : '';
                                 const unread = conv.unread_count > 0 ? `<span class="unread-badge">${conv.unread_count}</span>` : '';
+                                const itemHint = conv.item?.title ? ` • ${escapeHtml(conv.item.title)}` : '';
                                 return `
                                     <li class="conversation-item" data-id="${conv.id}">
                                         <div class="conversation-left">
                                             <div class="avatar" aria-hidden="true">${initials}</div>
                                             <div class="conversation-info">
                                                 <h4>${escapeHtml(name)}</h4>
-                                                <p>${escapeHtml(lastText)}</p>
+                                                <p>${escapeHtml(lastText)}${itemHint}</p>
                                             </div>
                                         </div>
                                         <div class="conversation-meta">
@@ -3178,6 +3263,7 @@
 
             const peerName = conversationData.other_user?.username || 'пользователем';
             const peerInitials = getInitials(peerName);
+            const itemTitle = conversationData.item?.title || '';
 
             document.getElementById('app').innerHTML = `
                 <div class="chat-page">
@@ -3189,7 +3275,7 @@
                                         <div class="avatar" aria-hidden="true">${peerInitials}</div>
                                         <div class="chat-peer-text">
                                             <div class="chat-peer-name">Чат с ${escapeHtml(peerName)}</div>
-                                            <div class="chat-peer-sub">Enter — отправить • Shift+Enter — новая строка</div>
+                                            <div class="chat-peer-sub">${itemTitle ? `По объявлению: ${escapeHtml(itemTitle)} • ` : ''}Enter — отправить • Shift+Enter — новая строка</div>
                                         </div>
                                     </div>
                                     <div class="chat-actions">

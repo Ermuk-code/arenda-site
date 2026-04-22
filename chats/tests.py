@@ -1,9 +1,12 @@
 import tempfile
+from datetime import timedelta
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from rest_framework.test import APIClient
 from .models import Chat, Message
+from items.models import Item
 
 User = get_user_model()
 
@@ -14,6 +17,13 @@ class ChatTest(TestCase):
     def setUp(self):
         self.owner = User.objects.create_user(username="owner", password="123", email="owner@test.com")
         self.renter = User.objects.create_user(username="renter", password="123", email="renter@test.com")
+        self.item = Item.objects.create(
+            title="Drill",
+            description="Tool",
+            price_per_day=100,
+            owner=self.owner,
+            status="available",
+        )
         self.chat = Chat.objects.create()
         self.chat.users.add(self.owner, self.renter)
         self.client = APIClient()
@@ -80,3 +90,54 @@ class ChatTest(TestCase):
         unread_message.refresh_from_db()
         self.assertTrue(unread_message.is_read)
         self.assertEqual(response.json()["message_ids"], [unread_message.id])
+
+    def test_create_conversation_is_separated_by_item(self):
+        second_item = Item.objects.create(
+            title="Saw",
+            description="Another tool",
+            price_per_day=200,
+            owner=self.owner,
+            status="available",
+        )
+
+        first_response = self.client.post(
+            "/api/chats/conversations/",
+            {"participant_id": self.owner.id, "item_id": self.item.id},
+            format="json",
+        )
+        second_response = self.client.post(
+            "/api/chats/conversations/",
+            {"participant_id": self.owner.id, "item_id": second_item.id},
+            format="json",
+        )
+
+        self.assertEqual(first_response.status_code, 201)
+        self.assertEqual(second_response.status_code, 201)
+        self.assertNotEqual(first_response.json()["id"], second_response.json()["id"])
+
+    def test_conversations_are_sorted_by_last_message(self):
+        older_chat = Chat.objects.create(item=self.item)
+        older_chat.users.add(self.owner, self.renter)
+
+        newer_item = Item.objects.create(
+            title="Camera",
+            description="Photo",
+            price_per_day=300,
+            owner=self.owner,
+            status="available",
+        )
+        newer_chat = Chat.objects.create(item=newer_item)
+        newer_chat.users.add(self.owner, self.renter)
+
+        old_message = Message.objects.create(chat=older_chat, sender=self.owner, text="Old")
+        new_message = Message.objects.create(chat=newer_chat, sender=self.owner, text="New")
+
+        Message.objects.filter(id=old_message.id).update(created_at=timezone.now() - timedelta(days=1))
+        Message.objects.filter(id=new_message.id).update(created_at=timezone.now())
+
+        response = self.client.get("/api/chats/conversations/")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        ids = [item["id"] for item in payload]
+        self.assertLess(ids.index(newer_chat.id), ids.index(older_chat.id))

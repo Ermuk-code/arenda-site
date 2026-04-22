@@ -36,10 +36,11 @@ class ChatSerializer(serializers.ModelSerializer):
     other_user = serializers.SerializerMethodField()
     unread_count = serializers.SerializerMethodField()
     last_message = serializers.SerializerMethodField()
+    item = serializers.SerializerMethodField()
 
     class Meta:
         model = Chat
-        fields = ['id', 'other_user', 'created_at', 'unread_count', 'last_message']
+        fields = ['id', 'other_user', 'item', 'created_at', 'unread_count', 'last_message']
 
     def get_other_user(self, obj):
         request = self.context.get('request')
@@ -64,3 +65,11 @@ class ChatSerializer(serializers.ModelSerializer):
                 'sender': msg.sender.username
             }
         return None
+
+    def get_item(self, obj):
+        if not obj.item:
+            return None
+        return {
+            'id': obj.item_id,
+            'title': obj.item.title,
+        }

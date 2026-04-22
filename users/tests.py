@@ -49,6 +49,7 @@ class UserModelTest(TestCase):
                 "username": "updated_user",
                 "email": "updated@example.com",
                 "user_type": "individual",
+                "full_name": "Иван Петров",
                 "passport_series": "1234",
                 "passport_number": "123456",
                 "inn": "123456789012"

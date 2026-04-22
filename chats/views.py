@@ -4,12 +4,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
+from django.db.models import Max
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from notifications.services import notify_new_message
 from .models import Message, Chat
 from .serializers import MessageCreateSerializer, MessageSerializer, ChatSerializer
 from .utils import SUPPORT_FAQ
+from items.models import Item
 
 User = get_user_model()
 
@@ -47,12 +49,19 @@ class ConversationListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        chats = Chat.objects.filter(users=request.user).order_by('-created_at')
+        chats = (
+            Chat.objects.filter(users=request.user)
+            .select_related('item')
+            .prefetch_related('users')
+            .annotate(last_message_at=Max('messages__created_at'))
+            .order_by('-last_message_at', '-created_at')
+        )
         serializer = ChatSerializer(chats, many=True, context={'request': request})
         return Response(serializer.data)
 
     def post(self, request):
         participant_id = request.data.get('participant_id')
+        item_id = request.data.get('item_id')
         if not participant_id:
             return Response({'error': 'participant_id required'}, status=400)
         try:
@@ -62,11 +71,25 @@ class ConversationListCreateView(APIView):
         if other_user == request.user:
             return Response({'error': 'Cannot chat with yourself'}, status=400)
 
+        item = None
+        if item_id:
+            try:
+                item = Item.objects.get(id=item_id)
+            except Item.DoesNotExist:
+                return Response({'error': 'Item not found'}, status=404)
+
+            if item.owner_id != other_user.id:
+                return Response({'error': 'Item does not belong to selected participant'}, status=400)
+
         existing = Chat.objects.filter(users=request.user).filter(users=other_user)
+        if item:
+            existing = existing.filter(item=item)
+        else:
+            existing = existing.filter(item__isnull=True)
         if existing.exists():
             chat = existing.first()
         else:
-            chat = Chat.objects.create()
+            chat = Chat.objects.create(item=item)
             chat.users.add(request.user, other_user)
 
         serializer = ChatSerializer(chat, context={'request': request})
@@ -90,6 +113,7 @@ class ConversationDetailView(APIView):
         return Response({
             'id': chat.id,
             'other_user': {'id': other.id, 'username': other.username} if other else None,
+            'item': {'id': chat.item_id, 'title': chat.item.title} if chat.item else None,
             'messages': MessageSerializer(messages, many=True, context={'request': request}).data,
         })
 
