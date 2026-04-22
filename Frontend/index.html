@@ -130,6 +130,26 @@
         .input-group { margin-bottom: 24px; }
         .input-group label { display: block; font-weight: 500; margin-bottom: 8px; color: #2c6072; }
         .input-group input, .input-group select { width: 100%; padding: 14px 18px; border-radius: 60px; border: 1.5px solid #e2e9ef; font-size: 1rem; }
+        .password-field { position: relative; }
+        .password-field input { padding-right: 52px; }
+        .password-toggle-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 50%;
+            background: #eef2f7;
+            color: #2b6a7c;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            font-size: 16px;
+            z-index: 2;
+        }
+        .password-toggle-btn:hover { background: #e2e9f0; }
         .auth-btn { width: 100%; background: #2b6a7c; color: white; border: none; padding: 14px; border-radius: 60px; font-weight: 700; font-size: 1.1rem; cursor: pointer; }
         .auth-footer { margin-top: 28px; text-align: center; }
         .auth-footer a { color: #2b6a7c; text-decoration: none; font-weight: 600; }
@@ -1360,6 +1380,65 @@
             let n = bytes;
             while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
             return `${n.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+        }
+
+        function normalizeWhitespace(value) {
+            return String(value || '').replace(/\s+/g, ' ').trim();
+        }
+
+        function isValidRussianFullName(value) {
+            return /^[А-ЯЁа-яё]+(?: [А-ЯЁа-яё]+){2,}$/.test(normalizeWhitespace(value));
+        }
+
+        function attachPasswordToggle(buttonId, inputId) {
+            const button = document.getElementById(buttonId);
+            const input = document.getElementById(inputId);
+            if (!button || !input) return;
+
+            button.addEventListener('click', () => {
+                const isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+                button.textContent = isPassword ? '🙈' : '👁';
+                button.setAttribute('aria-label', isPassword ? 'Скрыть пароль' : 'Показать пароль');
+            });
+        }
+
+        function getReadableRegistrationError(responseData) {
+            const errors = [];
+            const addFieldError = (field, label, fallback) => {
+                if (!responseData || !responseData[field]) return;
+                const raw = Array.isArray(responseData[field]) ? responseData[field].join(', ') : String(responseData[field]);
+                let message = raw;
+
+                if (/255 characters/i.test(raw) || /no more than 255/i.test(raw) || /at most 255/i.test(raw)) {
+                    message = fallback;
+                }
+
+                errors.push(`• ${label}: ${message}`);
+            };
+
+            addFieldError('username', 'Имя пользователя', 'Проверьте значение');
+            addFieldError('email', 'Email', 'Проверьте значение');
+            addFieldError('password', 'Пароль', 'Проверьте значение');
+            addFieldError('user_type', 'Тип пользователя', 'Проверьте значение');
+            addFieldError('full_name', 'ФИО', 'Введите минимум 3 слова русскими буквами');
+            addFieldError('entrepreneur_name', 'Наименование ИП', 'Слишком длинное название. Максимум 255 символов.');
+            addFieldError('company_name', 'Наименование организации', 'Слишком длинное название. Максимум 255 символов.');
+            addFieldError('passport_series', 'Серия паспорта', 'Проверьте значение');
+            addFieldError('passport_number', 'Номер паспорта', 'Проверьте значение');
+            addFieldError('inn', 'ИНН', 'Проверьте значение');
+            addFieldError('ogrnip', 'ОГРНИП', 'Проверьте значение');
+            addFieldError('kpp', 'КПП', 'Проверьте значение');
+
+            if (responseData?.detail) {
+                errors.push(`• ${responseData.detail}`);
+            }
+
+            if (!errors.length) {
+                return 'Ошибка регистрации. Проверьте введённые данные.';
+            }
+
+            return `Ошибка регистрации:\n${errors.join('\n')}`;
         }
 
         function formatPrice(value) {
@@ -2878,15 +2957,7 @@
                         return true;
                     }
                 } else {
-                    let errorMessage = 'Ошибка регистрации:\n';
-                    if (responseData.username) errorMessage += `• Имя пользователя: ${Array.isArray(responseData.username) ? responseData.username.join(', ') : responseData.username}\n`;
-                    if (responseData.email) errorMessage += `• Email: ${Array.isArray(responseData.email) ? responseData.email.join(', ') : responseData.email}\n`;
-                    if (responseData.password) errorMessage += `• Пароль: ${Array.isArray(responseData.password) ? responseData.password.join(', ') : responseData.password}\n`;
-                    if (responseData.user_type) errorMessage += `• Тип пользователя: ${Array.isArray(responseData.user_type) ? responseData.user_type.join(', ') : responseData.user_type}\n`;
-                    if (responseData.detail) errorMessage += `• ${responseData.detail}\n`;
-                    if (errorMessage === 'Ошибка регистрации:\n') errorMessage += `• ${JSON.stringify(responseData)}`;
-
-                    alert(errorMessage);
+                    alert(getReadableRegistrationError(responseData));
                     return false;
                 }
             } catch (error) {
@@ -3763,12 +3834,24 @@
                 <div class="auth-page"><div class="auth-card">
                     <div class="back-button" id="backToMainFromRegister">← Назад</div>
                     <div class="auth-title">Регистрация</div>
-                    <div class="auth-sub">Создайте новый аккаунт. Данные профиля можно заполнить сразу или позже.</div>
+                    <div class="auth-sub">Создайте новый аккаунт и заполните обязательные данные для выбранного типа пользователя.</div>
                     <form id="registerForm">
                         <div class="input-group"><label>Имя пользователя *</label><input type="text" id="regUsername" required></div>
                         <div class="input-group"><label>Email *</label><input type="email" id="regEmail" required></div>
-                        <div class="input-group"><label>Пароль *</label><input type="password" id="regPassword" required></div>
-                        <div class="input-group"><label>Подтверждение пароля *</label><input type="password" id="regPassword2" required></div>
+                        <div class="input-group">
+                            <label>Пароль *</label>
+                            <div class="password-field">
+                                <input type="password" id="regPassword" required>
+                                <button type="button" class="password-toggle-btn" id="toggleRegPassword" aria-label="Показать пароль">👁</button>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Подтверждение пароля *</label>
+                            <div class="password-field">
+                                <input type="password" id="regPassword2" required>
+                                <button type="button" class="password-toggle-btn" id="toggleRegPassword2" aria-label="Показать пароль">👁</button>
+                            </div>
+                        </div>
                         <div class="input-group"><label>Тип пользователя *</label>
                             <select id="regUserType" required>
                                 <option value="individual">🏠 Физическое лицо (паспорт + ИНН)</option>
@@ -3792,7 +3875,7 @@
                     box.innerHTML = `
                         <div class="user-type-info">
                             <h4>📄 Профиль физического лица</h4>
-                            <div class="input-group"><label>ФИО</label><input type="text" id="regFullName" placeholder="Иванов Иван Иванович"></div>
+                            <div class="input-group"><label>ФИО *</label><input type="text" id="regFullName" maxlength="255" placeholder="Иванов Иван Иванович"></div>
                             <div class="input-group"><label>Серия паспорта</label><input type="text" id="regPassportSeries" placeholder="Необязательно на этом шаге"></div>
                             <div class="input-group"><label>Номер паспорта</label><input type="text" id="regPassportNumber" placeholder="Необязательно на этом шаге"></div>
                             <div class="input-group"><label>ИНН</label><input type="text" id="regInn" placeholder="Необязательно на этом шаге"></div>
@@ -3802,7 +3885,7 @@
                     box.innerHTML = `
                         <div class="user-type-info">
                             <h4>🏢 Профиль ИП</h4>
-                            <div class="input-group"><label>Наименование ИП</label><input type="text" id="regEntrepreneurName" placeholder="ИП Иванов Иван Иванович"></div>
+                            <div class="input-group"><label>Наименование ИП</label><input type="text" id="regEntrepreneurName" maxlength="255" placeholder="ИП Иванов Иван Иванович"></div>
                             <div class="input-group"><label>ИНН</label><input type="text" id="regInn" placeholder="Необязательно на этом шаге"></div>
                             <div class="input-group"><label>ОГРНИП</label><input type="text" id="regOgrnip" placeholder="Необязательно на этом шаге"></div>
                         </div>
@@ -3811,7 +3894,7 @@
                     box.innerHTML = `
                         <div class="user-type-info">
                             <h4>🏛️ Профиль юридического лица</h4>
-                            <div class="input-group"><label>Наименование ООО</label><input type="text" id="regCompanyName" placeholder="ООО Ромашка"></div>
+                            <div class="input-group"><label>Наименование организации</label><input type="text" id="regCompanyName" maxlength="255" placeholder="ООО Ромашка"></div>
                             <div class="input-group"><label>ИНН</label><input type="text" id="regInn" placeholder="Необязательно на этом шаге"></div>
                             <div class="input-group"><label>КПП</label><input type="text" id="regKpp" placeholder="Необязательно на этом шаге"></div>
                         </div>
@@ -3821,6 +3904,8 @@
 
             renderRegisterExtraFields();
             document.getElementById('regUserType')?.addEventListener('change', renderRegisterExtraFields);
+            attachPasswordToggle('toggleRegPassword', 'regPassword');
+            attachPasswordToggle('toggleRegPassword2', 'regPassword2');
 
             document.getElementById('registerForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -3832,15 +3917,37 @@
                 }
                 const userType = document.getElementById('regUserType').value;
                 const extraProfileData = {
-                    full_name: document.getElementById('regFullName')?.value || '',
-                    entrepreneur_name: document.getElementById('regEntrepreneurName')?.value || '',
-                    company_name: document.getElementById('regCompanyName')?.value || '',
+                    full_name: normalizeWhitespace(document.getElementById('regFullName')?.value || ''),
+                    entrepreneur_name: normalizeWhitespace(document.getElementById('regEntrepreneurName')?.value || ''),
+                    company_name: normalizeWhitespace(document.getElementById('regCompanyName')?.value || ''),
                     passport_series: document.getElementById('regPassportSeries')?.value || '',
                     passport_number: document.getElementById('regPassportNumber')?.value || '',
                     inn: document.getElementById('regInn')?.value || '',
                     ogrnip: document.getElementById('regOgrnip')?.value || '',
                     kpp: document.getElementById('regKpp')?.value || ''
                 };
+
+                if (userType === 'individual') {
+                    if (!extraProfileData.full_name) {
+                        alert('❌ Укажите ФИО.');
+                        return;
+                    }
+                    if (!isValidRussianFullName(extraProfileData.full_name)) {
+                        alert('❌ ФИО должно содержать минимум 3 слова через пробелы и только русские буквы.');
+                        return;
+                    }
+                }
+
+                if (extraProfileData.entrepreneur_name.length > 255) {
+                    alert('❌ Наименование ИП слишком длинное. Максимум 255 символов.');
+                    return;
+                }
+
+                if (extraProfileData.company_name.length > 255) {
+                    alert('❌ Наименование организации слишком длинное. Максимум 255 символов.');
+                    return;
+                }
+
                 const success = await register(
                     document.getElementById('regUsername').value,
                     document.getElementById('regEmail').value,
