@@ -768,7 +768,7 @@
             right: 24px;
             bottom: 108px;
             width: min(380px, calc(100vw - 32px));
-            max-height: min(76vh, 720px);
+            max-height: min(calc(100vh - 132px), 720px);
             border-radius: 28px;
             background:
                 radial-gradient(120% 120% at 100% 0%, rgba(31, 138, 107, 0.12), transparent 48%),
@@ -779,7 +779,7 @@
             z-index: 1199;
             display: none;
         }
-        .support-chat-panel.open { display: block; }
+        .support-chat-panel.open { display: flex; flex-direction: column; }
         .support-chat-header {
             padding: 18px 20px 16px;
             background: linear-gradient(135deg, #1e3c4c, #2b6a7c);
@@ -808,10 +808,15 @@
             display: flex;
             flex-direction: column;
             gap: 14px;
+            min-height: 0;
+            flex: 1 1 auto;
+            overflow: hidden;
         }
         .support-chat-messages {
-            max-height: 340px;
-            overflow: auto;
+            flex: 1 1 auto;
+            min-height: 120px;
+            max-height: none;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -845,7 +850,9 @@
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
-            max-height: 152px;
+            flex: 0 1 168px;
+            min-height: 88px;
+            max-height: 168px;
             overflow-y: auto;
             padding-right: 4px;
             align-content: flex-start;
@@ -867,31 +874,6 @@
             background: #2b6a7c;
             border-color: #2b6a7c;
             color: white;
-        }
-        .support-chat-input-lock {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            background: #f3f7fa;
-            border: 1px solid #e2ebf1;
-            border-radius: 20px;
-            padding: 10px;
-        }
-        .support-chat-input-lock input {
-            flex: 1;
-            border: none;
-            background: transparent;
-            color: #88a0ad;
-            outline: none;
-        }
-        .support-chat-input-lock button {
-            border: none;
-            border-radius: 14px;
-            padding: 10px 14px;
-            background: #d6e2e8;
-            color: #6c8793;
-            cursor: not-allowed;
-            font-weight: 700;
         }
         .support-chat-note {
             color: #7a919d;
@@ -1085,6 +1067,37 @@
                 left: 12px;
                 bottom: 90px;
                 width: auto;
+                max-height: calc(100vh - 108px);
+            }
+            .support-chat-body {
+                padding: 14px;
+                gap: 12px;
+            }
+            .support-chat-messages {
+                min-height: 96px;
+            }
+            .support-questions {
+                flex-basis: 144px;
+                min-height: 72px;
+                max-height: 144px;
+            }
+        }
+
+        @media (max-height: 820px) {
+            .support-chat-panel {
+                max-height: calc(100vh - 108px);
+            }
+            .support-chat-body {
+                padding: 14px;
+                gap: 12px;
+            }
+            .support-chat-messages {
+                min-height: 96px;
+            }
+            .support-questions {
+                flex-basis: 132px;
+                min-height: 72px;
+                max-height: 132px;
             }
         }
     </style>
@@ -1201,17 +1214,13 @@
                 <div class="support-chat-title">Помощник аренды</div>
                 <button class="support-chat-close" id="supportChatCloseBtn" type="button" aria-label="Закрыть чат">×</button>
             </div>
-            <div class="support-chat-subtitle">Быстрые ответы по ключевым сценариям сайта без ручного ввода текста.</div>
+            <div class="support-chat-subtitle">Быстрые ответы по ключевым функциям сайта.</div>
         </div>
         <div class="support-chat-body">
             <div class="support-chat-messages" id="supportChatMessages"></div>
             <div class="support-questions-label">Частые вопросы</div>
             <div class="support-questions" id="supportQuestions"></div>
-            <div class="support-chat-input-lock">
-                <input type="text" value="Свободный ввод пока отключён" disabled>
-                <button type="button" disabled>Отправить</button>
-            </div>
-            <div class="support-chat-note">Выберите готовый вопрос ниже, и бот покажет пошаговую инструкцию.</div>
+            <div class="support-chat-note">Выберите готовый вопрос выше, и бот покажет пошаговую инструкцию.</div>
         </div>
     </div>
 
