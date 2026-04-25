@@ -1371,6 +1371,59 @@
             return div.innerHTML;
         }
 
+        function ensureSiteToastStack() {
+            let stack = document.getElementById('siteToastStack');
+            if (stack) return stack;
+
+            stack = document.createElement('div');
+            stack.id = 'siteToastStack';
+            stack.className = 'site-toast-stack';
+            document.body.appendChild(stack);
+            return stack;
+        }
+
+        function showQuickToast(message, { title, timeoutMs } = {}) {
+            const stack = ensureSiteToastStack();
+            const text = (message ?? '').toString();
+
+            let derivedTitle = title;
+            let derivedTimeout = timeoutMs;
+
+            if (!derivedTitle) {
+                if (text.trim().startsWith('❌')) derivedTitle = 'Ошибка';
+                else if (text.trim().startsWith('✅')) derivedTitle = 'Готово';
+                else derivedTitle = 'Сообщение';
+            }
+
+            if (!Number.isFinite(derivedTimeout)) {
+                if (text.trim().startsWith('❌')) derivedTimeout = 5500;
+                else if (text.trim().startsWith('✅')) derivedTimeout = 3500;
+                else derivedTimeout = 4500;
+            }
+
+            const toast = document.createElement('div');
+            toast.className = 'site-toast';
+            toast.innerHTML = `
+                <div class="site-toast-title">${escapeHtml(derivedTitle)}</div>
+                <div class="site-toast-body">${escapeHtml(text)}</div>
+                <div class="site-toast-actions">
+                    <button class="site-toast-close" type="button">Закрыть</button>
+                </div>
+            `;
+
+            const closeToast = () => toast.remove();
+            toast.querySelector('.site-toast-close')?.addEventListener('click', (event) => {
+                event.stopPropagation();
+                closeToast();
+            });
+
+            stack.appendChild(toast);
+            window.setTimeout(closeToast, derivedTimeout);
+        }
+
+        // Replace blocking browser alerts with non-blocking toasts (auto-close).
+        window.alert = (message) => showQuickToast(message);
+
         function closeActiveChatConnection() {
             if (wsConnection) {
                 wsConnection.close();
