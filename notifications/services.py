@@ -1,21 +1,45 @@
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from notifications.email import (
     send_booking_cancelled,
     send_booking_confirmed,
     send_booking_created,
     send_new_message,
+    send_payment_confirmed,
     send_new_review,
     send_return_reminder,
 )
 from notifications.models import Notification
+from notifications.serializers import NotificationSerializer
 
 
 def create_notification(user, notification_type, message, metadata=None):
-    return Notification.objects.create(
+    notification = Notification.objects.create(
         user=user,
         type=notification_type,
         message=message,
         metadata=metadata or {},
     )
+    broadcast_notification(notification)
+    return notification
+
+
+def broadcast_notification(notification):
+    channel_layer = get_channel_layer()
+    if not channel_layer:
+        return
+
+    try:
+        async_to_sync(channel_layer.group_send)(
+            f'notifications_{notification.user_id}',
+            {
+                'type': 'notification_created',
+                'notification': NotificationSerializer(notification).data,
+            }
+        )
+    except Exception:
+        # Realtime delivery is optional; notification creation must still succeed.
+        return
 
 
 def notify_booking_created(booking):
@@ -49,7 +73,7 @@ def notify_booking_confirmed(booking):
 
 
 def notify_payment_confirmed(booking):
-    return create_notification(
+    notification = create_notification(
         user=booking.item.owner,
         notification_type='payment_confirmed',
         message=f'Оплата за товар «{booking.item.title}» подтверждена',
@@ -59,6 +83,8 @@ def notify_payment_confirmed(booking):
             'item_id': booking.item_id,
         },
     )
+    send_payment_confirmed(booking)
+    return notification
 
 
 def notify_booking_cancelled(booking, cancelled_by):

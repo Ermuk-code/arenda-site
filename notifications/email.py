@@ -54,6 +54,24 @@ def send_booking_confirmed(booking):
     )
 
 
+def send_payment_confirmed(booking):
+    """Арендодателю: оплата по подтвержденной аренде прошла"""
+    owner = booking.item.owner
+    renter = booking.renter
+    _send(
+        to_email=owner.email,
+        subject=f"Оплата подтверждена: {booking.item.title}",
+        message=(
+            f"Здравствуйте, {owner.username}!\n\n"
+            f"Пользователь {renter.username} оплатил аренду «{booking.item.title}».\n"
+            f"Даты: {booking.start_date} — {booking.end_date}\n"
+            f"Сумма: {booking.total_price} руб.\n\n"
+            f"Войдите на сайт, чтобы посмотреть детали бронирования.\n\n"
+            f"С уважением, команда Mokitoki"
+        )
+    )
+
+
 def send_booking_cancelled(booking, cancelled_by):
     """Обеим сторонам: бронирование отменено"""
     owner = booking.item.owner

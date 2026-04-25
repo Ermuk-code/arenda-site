@@ -1,13 +1,15 @@
-from datetime import date
+from datetime import date, timedelta
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from bookings.models import Booking
 from chats.models import Chat, Message
 from items.models import Item
+from notifications.management.commands import Command as LegacyReturnReminderCommand
 from notifications.models import Notification
 from notifications.services import notify_new_message, notify_payment_confirmed, notify_return_reminder
 
@@ -139,6 +141,21 @@ class NotificationTests(TestCase):
         self.assertEqual(notification.metadata.get('destination'), 'my_items')
         self.assertEqual(notification.metadata.get('item_id'), self.item.id)
 
+    @patch('notifications.services.send_payment_confirmed')
+    def test_payment_confirmed_sends_email(self, send_payment_confirmed_mock):
+        booking = Booking.objects.create(
+            item=self.item,
+            renter=self.renter,
+            start_date=date(2026, 5, 1),
+            end_date=date(2026, 5, 3),
+            status='confirmed',
+            payment_status='paid',
+        )
+
+        notify_payment_confirmed(booking)
+
+        send_payment_confirmed_mock.assert_called_once_with(booking)
+
     @patch('notifications.services.send_new_message')
     def test_new_message_notification_contains_chat_metadata(self, send_new_message_mock):
         chat = Chat.objects.create(item=self.item)
@@ -155,3 +172,22 @@ class NotificationTests(TestCase):
         self.assertEqual(notification.metadata.get('chat_id'), chat.id)
         self.assertEqual(notification.metadata.get('item_id'), self.item.id)
         send_new_message_mock.assert_called_once()
+
+    @patch('notifications.services.send_return_reminder')
+    def test_legacy_return_reminder_command_creates_correct_notification(self, send_return_reminder_mock):
+        tomorrow = timezone.now().date() + timedelta(days=1)
+        booking = Booking.objects.create(
+            item=self.item,
+            renter=self.renter,
+            start_date=date(2026, 4, 20),
+            end_date=tomorrow,
+            status='confirmed',
+        )
+
+        LegacyReturnReminderCommand().handle()
+
+        notification = Notification.objects.get(user=self.renter, type='return_reminder')
+        self.assertEqual(notification.metadata.get('destination'), 'item')
+        self.assertEqual(notification.metadata.get('booking_id'), booking.id)
+        self.assertEqual(notification.metadata.get('item_id'), self.item.id)
+        send_return_reminder_mock.assert_called_once_with(booking)

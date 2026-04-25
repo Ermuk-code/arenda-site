@@ -2,8 +2,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 from datetime import timedelta
 from bookings.models import Booking
-from notifications.email import send_return_reminder
-from notifications.models import Notification
+from notifications.services import notify_return_reminder
 
 
 class Command(BaseCommand):
@@ -17,12 +16,7 @@ class Command(BaseCommand):
         )
         count = 0
         for booking in bookings:
-            Notification.objects.create(
-                user=booking.renter,
-                type='booking_created',  # используем существующий тип
-                message=f"Reminder: return '{booking.item.title}' tomorrow"
-            )
-            send_return_reminder(booking)
+            notify_return_reminder(booking)
             count += 1
 
         self.stdout.write(

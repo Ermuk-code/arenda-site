@@ -1241,6 +1241,8 @@
 
         let selectedMediaFiles = [];
         let wsConnection = null;
+        let notificationsWsConnection = null;
+        let notificationSocketReconnectTimer = null;
         let serverCategories = null;
         let chatSelectedImageFile = null;
         let chatSelectedImagePreviewUrl = null;
@@ -1252,6 +1254,7 @@
         let rentEndPicker = null;
         let bookedDateRanges = [];
         let notificationPollInterval = null;
+        let notificationSocketConnected = false;
         let shownNotificationIds = new Set();
         let navCounters = { chats: 0, bookings: 0 };
 
@@ -1947,7 +1950,7 @@
         async function sendChatMessageWithOptionalImage(conversationId, text) {
             const hasText = !!(text || '').trim();
             const hasImage = !!chatSelectedImageFile;
-            if (!hasText && !hasImage) return;
+            if (!hasText && !hasImage) return { ok: false };
 
             if (hasImage) {
                 const token = getAccessToken();
@@ -1965,19 +1968,43 @@
                 if (!resp.ok) {
                     console.error('❌ chat image upload failed', resp.status, respText);
                     alert(`❌ Не удалось отправить изображение (${resp.status})`);
-                    return;
+                    return { ok: false };
                 }
 
+                let data = null;
+                try {
+                    data = respText ? JSON.parse(respText) : null;
+                } catch (error) {}
+
                 resetChatAttachmentPreview();
-                return;
+                return {
+                    ok: true,
+                    message: data,
+                    shouldRenderLocally: !(wsConnection && wsConnection.readyState === WebSocket.OPEN),
+                };
             }
 
             if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
                 wsConnection.send(JSON.stringify({ message: (text || '').trim() }));
-                return;
+                return { ok: true, shouldRenderLocally: false };
             }
 
-            alert('Нет соединения с сервером');
+            try {
+                const response = await apiRequest(`/chats/conversations/${conversationId}/messages/`, {
+                    method: 'POST',
+                    body: JSON.stringify({ text: (text || '').trim() })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    alert(data.detail || data.error || '❌ Не удалось отправить сообщение');
+                    return { ok: false };
+                }
+
+                return { ok: true, message: data, shouldRenderLocally: true };
+            } catch (error) {
+                alert('❌ Нет соединения с сервером');
+                return { ok: false };
+            }
         }
 
         async function getConversations() {
@@ -2448,10 +2475,13 @@
 
         async function markNotificationRead(notificationId) {
             try {
-                await apiRequest(`/notifications/${notificationId}/mark_read/`, {
+                const response = await apiRequest(`/notifications/${notificationId}/mark_read/`, {
                     method: 'POST',
                     body: JSON.stringify({})
                 });
+                if (response.ok) {
+                    await refreshNavCounters();
+                }
             } catch (error) {}
         }
 
@@ -2554,23 +2584,29 @@
             setTimeout(closeToast, 7000);
         }
 
+        async function handleIncomingNotification(notification, { fromSocket = false } = {}) {
+            const meta = getNotificationMeta(notification);
+            if (!meta || !notification?.id) return;
+
+            if (shownNotificationIds.has(notification.id)) return;
+
+            shownNotificationIds.add(notification.id);
+            if (!notification.is_read) {
+                showSiteToast(notification);
+            }
+
+            await refreshNavCounters();
+            await refreshChatsPageIfVisible();
+        }
+
         async function checkSiteNotifications() {
             if (!isAuthenticated()) return;
 
             const notifications = await getRecentNotifications();
             for (const notification of notifications) {
-                const meta = getNotificationMeta(notification);
-                if (!meta) continue;
                 if (notification.is_read) continue;
-                if (shownNotificationIds.has(notification.id)) continue;
-
-                shownNotificationIds.add(notification.id);
-                showSiteToast(notification);
-                markNotificationRead(notification.id);
+                await handleIncomingNotification(notification);
             }
-
-            await refreshNavCounters();
-            await refreshChatsPageIfVisible();
         }
 
         async function submitReview(bookingId, rating, comment) {
@@ -2597,7 +2633,11 @@
             if (!isAuthenticated()) return;
 
             checkSiteNotifications();
-            notificationPollInterval = setInterval(checkSiteNotifications, 10000);
+            notificationPollInterval = setInterval(() => {
+                if (!notificationSocketConnected) {
+                    checkSiteNotifications();
+                }
+            }, 10000);
         }
 
         function stopNotificationPolling() {
@@ -2605,6 +2645,64 @@
                 clearInterval(notificationPollInterval);
                 notificationPollInterval = null;
             }
+        }
+
+        function scheduleNotificationSocketReconnect() {
+            if (notificationSocketReconnectTimer || !isAuthenticated()) return;
+            notificationSocketReconnectTimer = setTimeout(() => {
+                notificationSocketReconnectTimer = null;
+                connectNotificationsSocket();
+            }, 3000);
+        }
+
+        function closeNotificationsSocket() {
+            notificationSocketConnected = false;
+            if (notificationSocketReconnectTimer) {
+                clearTimeout(notificationSocketReconnectTimer);
+                notificationSocketReconnectTimer = null;
+            }
+            if (notificationsWsConnection) {
+                notificationsWsConnection.onclose = null;
+                notificationsWsConnection.close();
+                notificationsWsConnection = null;
+            }
+        }
+
+        function connectNotificationsSocket() {
+            if (!isAuthenticated()) return;
+            if (notificationsWsConnection && (
+                notificationsWsConnection.readyState === WebSocket.OPEN ||
+                notificationsWsConnection.readyState === WebSocket.CONNECTING
+            )) {
+                return;
+            }
+
+            const token = getAccessToken();
+            if (!token) return;
+
+            const wsUrl = `${WS_BASE}/notifications/?token=${token}`;
+            notificationsWsConnection = new WebSocket(wsUrl);
+
+            notificationsWsConnection.onopen = () => {
+                notificationSocketConnected = true;
+            };
+
+            notificationsWsConnection.onmessage = async (event) => {
+                const data = JSON.parse(event.data);
+                if (data.event === 'notification_created' && data.notification) {
+                    await handleIncomingNotification(data.notification, { fromSocket: true });
+                }
+            };
+
+            notificationsWsConnection.onclose = () => {
+                notificationSocketConnected = false;
+                notificationsWsConnection = null;
+                scheduleNotificationSocketReconnect();
+            };
+
+            notificationsWsConnection.onerror = () => {
+                notificationSocketConnected = false;
+            };
         }
 
         async function getMyItems() {
@@ -3382,6 +3480,7 @@
 
         function logout() {
             if (wsConnection) { wsConnection.close(); wsConnection = null; }
+            closeNotificationsSocket();
             stopNotificationPolling();
             shownNotificationIds = new Set();
             clearTokens();
@@ -3395,6 +3494,7 @@
             if (!authSection) return;
 
             if (isAuthenticated()) {
+                connectNotificationsSocket();
                 authSection.innerHTML = `
                     <div class="user-info">
                         <span>👤 ${localStorage.getItem('username') || 'Пользователь'}</span>
@@ -3425,6 +3525,7 @@
                     }
                 });
             } else {
+                closeNotificationsSocket();
                 authSection.innerHTML = `<a href="#" class="btn-outline" id="loginNavBtn">Войти</a><a href="#" class="btn-primary" id="registerNavBtn">Регистрация</a>`;
                 document.getElementById('loginNavBtn')?.addEventListener('click', (e) => { e.preventDefault(); showLoginPage(); });
                 document.getElementById('registerNavBtn')?.addEventListener('click', (e) => { e.preventDefault(); showRegisterPage(); });
@@ -3786,7 +3887,13 @@
 
             window.sendMessage = async () => {
                 const text = input.value;
-                await sendChatMessageWithOptionalImage(conversationId, text);
+                const result = await sendChatMessageWithOptionalImage(conversationId, text);
+                if (!result?.ok) return;
+
+                if (result.shouldRenderLocally && result.message) {
+                    appendMessageToChat(result.message, messagesContainer);
+                }
+
                 input.value = '';
                 autosizeTextarea(input);
                 input.focus();
@@ -3850,6 +3957,15 @@
         function renderMessages(messages) {
             const currentUser = localStorage.getItem('user_id');
             return messages.map(msg => renderSingleMessage(msg, msg.sender_id == currentUser)).join('');
+        }
+
+        function appendMessageToChat(message, messagesContainer) {
+            if (!message || !messagesContainer) return;
+            const currentUserId = localStorage.getItem('user_id');
+            messagesContainer.insertAdjacentHTML('beforeend', renderSingleMessage(message, String(message.sender_id) === String(currentUserId)));
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            refreshNavCounters();
+            refreshChatsPageIfVisible();
         }
 
         function renderSingleMessage(message, isMyMessage) {

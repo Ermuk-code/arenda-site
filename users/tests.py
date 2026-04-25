@@ -62,3 +62,26 @@ class UserModelTest(TestCase):
         self.assertEqual(user.username, "updated_user")
         self.assertEqual(user.email, "updated@example.com")
         self.assertTrue(user.profile_completed)
+
+    def test_profile_validation_errors_are_returned_by_field(self):
+        user = User.objects.create_user(
+            username="field_error_user",
+            password="testpass123",
+            email="field_error@example.com",
+            user_type="individual"
+        )
+        self.client.force_authenticate(user=user)
+
+        response = self.client.put(
+            "/api/users/profile/",
+            {
+                "user_type": "individual",
+                "full_name": "Иван Петров",
+                "passport_number": "123456",
+                "inn": "123456789012"
+            },
+            format="json"
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("passport_series", response.json())

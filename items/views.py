@@ -1,26 +1,18 @@
-from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
-from users.permissions import IsProfileCompleted
-from .models import Item
-from .permissions import IsOwner
-from .serializers import ItemSerializer
-from rest_framework.decorators import action
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters
 from django.db import models
-from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework import generics
-from .models import ItemImage
-from .serializers import ItemImageSerializer
-from .permissions import IsOwner
-
-from rest_framework.viewsets import ModelViewSet
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, generics, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
-from .models import Category
-from .serializers import CategorySerializer
-from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
+
+from users.permissions import IsProfileCompleted
+
+from .models import Category, Item, ItemImage
+from .permissions import IsOwner
+from .serializers import CategorySerializer, ItemImageSerializer, ItemSerializer
 
 class CategoryViewSet(ModelViewSet):
     queryset = Category.objects.order_by('name')
@@ -29,6 +21,7 @@ class CategoryViewSet(ModelViewSet):
 class ItemViewSet(viewsets.ModelViewSet):
 
     serializer_class = ItemSerializer
+
     def get_queryset(self):
 
         user = self.request.user
@@ -56,11 +49,6 @@ class ItemViewSet(viewsets.ModelViewSet):
     search_fields = ['title', 'description']
     ordering_fields = ['price_per_day', 'created_at', 'average_rating']
     ordering = ['-created_at']
-
-    def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsAuthenticatedOrReadOnly(), IsProfileCompleted()]
-        return []
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)

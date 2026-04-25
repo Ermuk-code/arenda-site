@@ -139,6 +139,10 @@ class ProfileSerializer(BaseUserDataMixin, serializers.ModelSerializer):
             'ogrnip',
         ]
 
+    @staticmethod
+    def _field_error(field, message):
+        raise serializers.ValidationError({field: message})
+
     def validate(self, data):
         user_type = data.get('user_type', getattr(self.instance, 'user_type', None))
         merged = {}
@@ -157,29 +161,29 @@ class ProfileSerializer(BaseUserDataMixin, serializers.ModelSerializer):
 
         if user_type == 'individual':
             if not merged.get('full_name'):
-                raise serializers.ValidationError({"full_name": "Full name required"})
+                self._field_error('full_name', 'Full name required')
             if not merged.get('passport_series'):
-                raise serializers.ValidationError("Passport series required")
+                self._field_error('passport_series', 'Passport series required')
             if not merged.get('passport_number'):
-                raise serializers.ValidationError("Passport number required")
+                self._field_error('passport_number', 'Passport number required')
             if not merged.get('inn'):
-                raise serializers.ValidationError("INN required")
+                self._field_error('inn', 'INN required')
 
         if user_type == 'entrepreneur':
             if not merged.get('entrepreneur_name'):
-                raise serializers.ValidationError({"entrepreneur_name": "Entrepreneur name required"})
+                self._field_error('entrepreneur_name', 'Entrepreneur name required')
             if not merged.get('inn'):
-                raise serializers.ValidationError("INN required")
+                self._field_error('inn', 'INN required')
             if not merged.get('ogrnip'):
-                raise serializers.ValidationError("OGRNIP required")
+                self._field_error('ogrnip', 'OGRNIP required')
 
         if user_type == 'legal':
             if not merged.get('company_name'):
-                raise serializers.ValidationError({"company_name": "Company name required"})
+                self._field_error('company_name', 'Company name required')
             if not merged.get('inn'):
-                raise serializers.ValidationError("INN required")
+                self._field_error('inn', 'INN required')
             if not merged.get('kpp'):
-                raise serializers.ValidationError("KPP required")
+                self._field_error('kpp', 'KPP required')
 
         return data
 
