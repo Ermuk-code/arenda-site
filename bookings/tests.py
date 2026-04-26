@@ -211,13 +211,13 @@ class BookingApiTest(TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertTrue(Review.objects.filter(booking=booking).exists())
 
-    def test_renter_can_leave_review_for_paid_finished_confirmed_booking(self):
+    def test_renter_can_leave_review_immediately_after_payment_for_confirmed_booking(self):
         today = timezone.localdate()
         booking = Booking.objects.create(
             item=self.item,
             renter=self.renter,
-            start_date=today - timedelta(days=3),
-            end_date=today - timedelta(days=1),
+            start_date=today,
+            end_date=today + timedelta(days=2),
         )
         booking._status_changed_by = self.owner
         booking.change_status('confirmed')
@@ -226,7 +226,7 @@ class BookingApiTest(TestCase):
 
         response = self.renter_client.post(
             f'/api/bookings/{booking.id}/review/',
-            {'rating': 5, 'comment': 'Paid and finished'},
+            {'rating': 5, 'comment': 'Paid and reviewed immediately'},
             format='json'
         )
 
@@ -237,6 +237,49 @@ class BookingApiTest(TestCase):
             .filter(users=self.renter)
             .exists()
         )
+
+    def test_owner_cannot_leave_review_for_someone_else_booking(self):
+        booking = self.create_booking()
+        booking._status_changed_by = self.owner
+        booking.change_status('confirmed')
+        booking.start_sbp_payment()
+        booking.confirm_sbp_payment()
+        booking._status_changed_by = self.owner
+        booking.change_status('completed')
+
+        response = self.owner_client.post(
+            f'/api/bookings/{booking.id}/review/',
+            {'rating': 5, 'comment': 'Fake owner review'},
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(Review.objects.filter(booking=booking).exists())
+
+    def test_renter_cannot_leave_duplicate_review(self):
+        booking = self.create_booking()
+        booking._status_changed_by = self.owner
+        booking.change_status('confirmed')
+        booking.start_sbp_payment()
+        booking.confirm_sbp_payment()
+        booking._status_changed_by = self.owner
+        booking.change_status('completed')
+
+        first_response = self.renter_client.post(
+            f'/api/bookings/{booking.id}/review/',
+            {'rating': 5, 'comment': 'First review'},
+            format='json'
+        )
+        second_response = self.renter_client.post(
+            f'/api/bookings/{booking.id}/review/',
+            {'rating': 1, 'comment': 'Trying to change rating'},
+            format='json'
+        )
+
+        self.assertEqual(first_response.status_code, 201)
+        self.assertEqual(second_response.status_code, 400)
+        review = Review.objects.get(booking=booking)
+        self.assertEqual(review.rating, 5)
 
     def test_renter_can_start_sbp_payment(self):
         booking = self.create_booking()
