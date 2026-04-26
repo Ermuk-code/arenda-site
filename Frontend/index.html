@@ -115,6 +115,32 @@
         .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 14px 18px; border-radius: 16px; border: 1.5px solid #e2e9ef; font-size: 1rem; transition: 0.2s; }
         .form-group input:focus, .form-group textarea:focus, .form-group select:focus { outline: none; border-color: #2b6a7c; }
         .form-actions { display: flex; gap: 12px; margin-top: 32px; }
+        .form-actions.wrap { flex-wrap: wrap; }
+        .btn-danger { background: #c0392b; border: none; padding: 8px 24px; border-radius: 40px; font-weight: 600; color: white; cursor: pointer; text-decoration: none; display: inline-block; transition: 0.2s; }
+        .btn-danger:hover { background: #a93226; transform: translateY(-1px); }
+        .danger-note { margin-top: 10px; color: #8a5a5a; font-size: 0.92rem; line-height: 1.45; }
+        .confirm-delete-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(14, 27, 34, 0.58);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            z-index: 1250;
+        }
+        .confirm-delete-overlay.active { display: flex; }
+        .confirm-delete-modal {
+            width: min(100%, 460px);
+            background: #fff;
+            border-radius: 28px;
+            box-shadow: 0 28px 60px rgba(18, 42, 50, 0.28);
+            border: 1px solid #e7d9d7;
+            padding: 24px;
+        }
+        .confirm-delete-title { font-size: 1.35rem; font-weight: 800; color: #163a45; }
+        .confirm-delete-text { margin-top: 12px; color: #5f7a88; line-height: 1.55; }
+        .confirm-delete-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
 
         .image-preview { margin-top: 16px; display: flex; gap: 16px; flex-wrap: wrap; }
         .preview-item { position: relative; width: 100px; height: 100px; border-radius: 16px; overflow: hidden; border: 2px solid #e2e9ef; }
@@ -965,6 +991,12 @@
             border-radius: 28px;
             padding: 20px;
         }
+        .item-preview-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 18px 0 6px;
+        }
         .item-preview-price {
             font-size: 1.8rem;
             font-weight: 900;
@@ -1733,6 +1765,14 @@
             const bookedRanges = Array.isArray(item?.booked_ranges) ? item.booked_ranges : [];
             const freeLabels = getFreeDateLabels(bookedRanges);
             const reviews = Array.isArray(item?.item_reviews) ? item.item_reviews : [];
+            const currentUserId = String(localStorage.getItem('user_id') || '');
+            const isOwner = currentUserId && String(item?.owner || '') === currentUserId;
+            const actionButtons = !isOwner ? `
+                <div class="item-preview-actions">
+                    <button class="btn-primary" id="itemPreviewRentBtn" type="button">Арендовать</button>
+                    <button class="btn-outline" id="itemPreviewChatBtn" type="button">Написать продавцу</button>
+                </div>
+            ` : '';
 
             return `
                 <div class="item-preview-layout">
@@ -1744,6 +1784,7 @@
                     </div>
                     <div class="item-preview-panel">
                         <div class="item-preview-price">${formatPrice(item.price_per_day || 0)} / день</div>
+                        ${actionButtons}
                         <div class="item-preview-meta">
                             <div><strong>Владелец:</strong> ${escapeHtml(item.owner_username || 'Не указан')}</div>
                             <div><strong>Рейтинг продавца:</strong> ${Number(item.owner_rating || 0).toFixed(1)} / 5 (${item.owner_reviews_count || 0} отзывов)</div>
@@ -1824,6 +1865,28 @@
                     const main = document.getElementById('itemPreviewMainImage');
                     if (main) main.src = img.dataset.previewImage;
                 });
+            });
+
+            document.getElementById('itemPreviewChatBtn')?.addEventListener('click', async () => {
+                if (!isAuthenticated()) {
+                    alert('Пожалуйста, войдите в систему');
+                    showLoginPage();
+                    return;
+                }
+
+                closeItemPreview();
+                await startChat(item.owner, item.id);
+            });
+
+            document.getElementById('itemPreviewRentBtn')?.addEventListener('click', async () => {
+                if (!isAuthenticated()) {
+                    alert('Пожалуйста, войдите в систему');
+                    showLoginPage();
+                    return;
+                }
+
+                closeItemPreview();
+                await openRentalModal(item);
             });
 
             document.getElementById('toggleReviewFormBtn')?.addEventListener('click', () => {
@@ -3151,18 +3214,24 @@
             }
         }
 
-        async function deleteItem(productId) {
+        async function deleteItem(productId, options = {}) {
             try {
                 const response = await apiRequest(`/items/${productId}/`, { method: 'DELETE' });
                 if (response.ok) {
-                    alert('✅ Объявление удалено');
-                    loadProducts(currentPage);
+                    alert(options.successMessage || '✅ Объявление удалено');
+                    if (typeof options.onSuccess === 'function') {
+                        await options.onSuccess();
+                    } else {
+                        loadProducts(currentPage);
+                    }
+                    return true;
                 } else {
-                    alert('❌ Ошибка при удалении');
+                    alert(options.errorMessage || '❌ Ошибка при удалении');
                 }
             } catch (error) {
-                alert('❌ Ошибка подключения');
+                alert(options.networkErrorMessage || '❌ Ошибка подключения');
             }
+            return false;
         }
 
         function renderPagination() {
@@ -4184,8 +4253,9 @@
 
             const fileInput = document.getElementById('itemMedia');
             fileInput.addEventListener('change', (e) => {
-                selectedMediaFiles = Array.from(e.target.files);
+                appendSelectedMediaFiles(e.target.files);
                 updateImagePreview();
+                fileInput.value = '';
             });
 
             document.getElementById('createItemForm').addEventListener('submit', async (e) => {
@@ -4254,17 +4324,33 @@
                             <div class="media-picker-note">Новые фотографии будут добавлены к существующим.</div>
                             <div id="imagePreview" class="image-preview"></div>
                         </div>
-                        <div class="form-actions">
+                        <div class="form-actions wrap">
                             <button type="submit" class="btn-primary">💾 Сохранить изменения</button>
+                            <button type="button" class="btn-danger" id="deleteItemFromEditBtn">🗑 Удалить объявление</button>
                         </div>
+                        <div class="danger-note">Удаление объявления необратимо. Все фото и история по этому лоту будут скрыты из каталога.</div>
                     </form>
+                    <div class="confirm-delete-overlay" id="confirmDeleteOverlay">
+                        <div class="confirm-delete-modal">
+                            <div class="confirm-delete-title">Удалить объявление?</div>
+                            <div class="confirm-delete-text">
+                                Вы собираетесь удалить объявление <strong>${escapeHtml(editItem.title || 'без названия')}</strong>.
+                                Это дополнительное подтверждение перед окончательным удалением.
+                            </div>
+                            <div class="confirm-delete-actions">
+                                <button type="button" class="btn-danger" id="confirmDeleteItemBtn">Да, удалить</button>
+                                <button type="button" class="btn-outline" id="cancelDeleteItemBtn">Отмена</button>
+                            </div>
+                        </div>
+                    </div>
                 </div></div>
             `;
 
             const fileInput = document.getElementById('editItemMedia');
             fileInput.addEventListener('change', (e) => {
-                selectedMediaFiles = Array.from(e.target.files);
+                appendSelectedMediaFiles(e.target.files);
                 updateImagePreview();
+                fileInput.value = '';
             });
 
             document.getElementById('editItemForm').addEventListener('submit', async (e) => {
@@ -4296,7 +4382,50 @@
                 });
             });
 
+            const confirmDeleteOverlay = document.getElementById('confirmDeleteOverlay');
+            const openDeleteConfirm = () => confirmDeleteOverlay?.classList.add('active');
+            const closeDeleteConfirm = () => confirmDeleteOverlay?.classList.remove('active');
+
+            document.getElementById('deleteItemFromEditBtn')?.addEventListener('click', openDeleteConfirm);
+            document.getElementById('cancelDeleteItemBtn')?.addEventListener('click', closeDeleteConfirm);
+            document.getElementById('confirmDeleteItemBtn')?.addEventListener('click', async () => {
+                const deleted = await deleteItem(editItem.id, {
+                    successMessage: '✅ Объявление удалено',
+                    onSuccess: async () => {
+                        closeDeleteConfirm();
+                        await showMyItemsPage();
+                    },
+                    errorMessage: '❌ Ошибка при удалении объявления',
+                });
+
+                if (!deleted) {
+                    closeDeleteConfirm();
+                }
+            });
+            confirmDeleteOverlay?.addEventListener('click', (event) => {
+                if (event.target?.id === 'confirmDeleteOverlay') {
+                    closeDeleteConfirm();
+                }
+            });
+
             document.getElementById('backToMyItemsFromEdit')?.addEventListener('click', () => showMyItemsPage());
+        }
+
+        function appendSelectedMediaFiles(fileList) {
+            const newFiles = Array.from(fileList || []).filter(file => (file.type || '').startsWith('image/'));
+            if (!newFiles.length) return;
+
+            const existingKeys = new Set(
+                selectedMediaFiles.map(file => `${file.name}:${file.size}:${file.lastModified}`)
+            );
+
+            for (const file of newFiles) {
+                const fileKey = `${file.name}:${file.size}:${file.lastModified}`;
+                if (!existingKeys.has(fileKey)) {
+                    selectedMediaFiles.push(file);
+                    existingKeys.add(fileKey);
+                }
+            }
         }
 
         function updateImagePreview() {
