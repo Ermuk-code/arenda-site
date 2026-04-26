@@ -1,3 +1,15 @@
+<<<<<<< Updated upstream
+=======
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from users.permissions import IsProfileCompleted
+from .models import Item, ItemReview
+from .permissions import IsOwner
+from .serializers import ItemSerializer, ItemReviewSerializer
+from rest_framework.decorators import action
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
+>>>>>>> Stashed changes
 from django.db import models
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, viewsets
@@ -76,6 +88,34 @@ class ItemViewSet(viewsets.ModelViewSet):
                 for booking in active_bookings
             ]
         )
+
+    @action(detail=True, methods=['get', 'post'], permission_classes=[IsAuthenticatedOrReadOnly])
+    def reviews(self, request, pk=None):
+        item = self.get_object()
+
+        if request.method.lower() == 'get':
+            qs = ItemReview.objects.filter(item=item).select_related('author').order_by('-created_at')
+            page = self.paginate_queryset(qs)
+            serializer = ItemReviewSerializer(page if page is not None else qs, many=True)
+            if page is not None:
+                return self.get_paginated_response(serializer.data)
+            return Response(serializer.data)
+
+        # POST
+        if not request.user.is_authenticated:
+            raise PermissionDenied("Authentication required")
+        if item.owner_id == request.user.id:
+            raise PermissionDenied("Owner cannot review their own item")
+
+        serializer = ItemReviewSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        review = ItemReview.objects.create(
+            item=item,
+            author=request.user,
+            rating=serializer.validated_data['rating'],
+            comment=serializer.validated_data.get('comment', ''),
+        )
+        return Response(ItemReviewSerializer(review).data, status=201)
 
 class ItemImageUploadView(generics.CreateAPIView):
     serializer_class = ItemImageSerializer

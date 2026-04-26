@@ -1,5 +1,7 @@
 from django.db import models
 from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db.models import Avg
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -79,3 +81,48 @@ class ItemVideo(models.Model):
 
     class Meta:
         ordering = ['-uploaded_at']
+
+
+class ItemReview(models.Model):
+    item = models.ForeignKey(
+        Item,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+    )
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='item_reviews',
+    )
+    rating = models.IntegerField(
+        validators=[MinValueValidator(0), MaxValueValidator(5)],
+    )
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['item', '-created_at']),
+            models.Index(fields=['author', '-created_at']),
+        ]
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        if is_new:
+            self.update_item_rating_counters(item=self.item)
+
+    def delete(self, *args, **kwargs):
+        item = self.item
+        super().delete(*args, **kwargs)
+        self.update_item_rating_counters(item=item)
+
+    @staticmethod
+    def update_item_rating_counters(*, item=None):
+        if item is None:
+            return
+        qs = ItemReview.objects.filter(item=item)
+        item.average_rating = qs.aggregate(avg=Avg('rating'))['avg'] or 0
+        item.reviews_count = qs.count()
+        item.save(update_fields=['average_rating', 'reviews_count'])
