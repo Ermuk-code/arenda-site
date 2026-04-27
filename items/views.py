@@ -1,5 +1,3 @@
-<<<<<<< Updated upstream
-=======
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from users.permissions import IsProfileCompleted
@@ -9,7 +7,6 @@ from .serializers import ItemSerializer, ItemReviewSerializer
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
->>>>>>> Stashed changes
 from django.db import models
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, viewsets
