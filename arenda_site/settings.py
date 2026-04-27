@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'users',
     'items',
     'bookings',
+    'contracts',
     'channels',
     'chats',
     'notifications',

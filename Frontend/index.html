@@ -537,6 +537,11 @@
             margin-top: 12px;
             text-decoration: none;
         }
+        .payment-link:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none;
+        }
         .payment-code {
             margin-top: 12px;
             padding: 12px;
@@ -551,6 +556,214 @@
         .payment-confirm-btn {
             margin-top: 12px;
             width: 100%;
+        }
+        .sbp-demo-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(14, 27, 34, 0.62);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            z-index: 1260;
+        }
+        .sbp-demo-overlay.active { display: flex; }
+        .sbp-demo-modal {
+            width: min(100%, 430px);
+            background: #fff;
+            border-radius: 30px;
+            box-shadow: 0 30px 60px rgba(18, 42, 50, 0.32);
+            overflow: hidden;
+        }
+        .sbp-demo-header {
+            padding: 22px 24px 18px;
+            background: linear-gradient(135deg, #1f8a6b, #2b6a7c);
+            color: white;
+        }
+        .sbp-demo-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+        }
+        .sbp-demo-subtitle {
+            margin-top: 8px;
+            color: rgba(255,255,255,0.86);
+            line-height: 1.45;
+            font-size: 0.93rem;
+        }
+        .sbp-demo-body {
+            padding: 22px 24px 24px;
+        }
+        .sbp-demo-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: #eef8f4;
+            color: #1f8a6b;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+        .sbp-demo-grid {
+            display: grid;
+            gap: 12px;
+        }
+        .sbp-demo-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            color: #35515d;
+            font-size: 0.96rem;
+        }
+        .sbp-demo-row strong {
+            color: #163a45;
+        }
+        .sbp-demo-qr {
+            margin-top: 16px;
+            padding: 14px;
+            border-radius: 18px;
+            background: linear-gradient(180deg, #f7fbff, #eef5fb);
+            border: 1px solid #dbe7f1;
+            color: #244756;
+            font-size: 0.83rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .sbp-demo-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .sbp-demo-actions button {
+            flex: 1;
+        }
+        .sbp-demo-message {
+            margin-top: 14px;
+        }
+        .contract-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(14, 27, 34, 0.66);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            z-index: 1270;
+        }
+        .contract-modal-overlay.active { display: flex; }
+        .contract-modal {
+            width: min(960px, 100%);
+            max-height: min(90vh, 940px);
+            overflow: auto;
+            background: #fff;
+            border-radius: 32px;
+            box-shadow: 0 30px 68px rgba(18, 42, 50, 0.3);
+            padding: 26px;
+        }
+        .contract-modal-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: flex-start;
+            margin-bottom: 18px;
+        }
+        .contract-modal-title {
+            font-size: 1.55rem;
+            font-weight: 800;
+            color: #163a45;
+        }
+        .contract-modal-subtitle {
+            margin-top: 6px;
+            color: #6b8b9c;
+            line-height: 1.45;
+        }
+        .contract-status-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: #eef5fb;
+            color: #2b6a7c;
+            font-weight: 800;
+            font-size: 0.86rem;
+        }
+        .contract-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+            gap: 20px;
+        }
+        .contract-document {
+            border: 1px solid #e3ecf2;
+            border-radius: 24px;
+            padding: 20px;
+            background: linear-gradient(180deg, #fbfdff, #f7fbff);
+        }
+        .contract-document-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #163a45;
+            margin-bottom: 12px;
+        }
+        .contract-document-body {
+            white-space: pre-wrap;
+            color: #35515d;
+            line-height: 1.62;
+            font-size: 0.95rem;
+        }
+        .contract-side-panel {
+            border: 1px solid #e3ecf2;
+            border-radius: 24px;
+            padding: 20px;
+            background: #fff;
+        }
+        .contract-side-title {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #163a45;
+            margin-bottom: 12px;
+        }
+        .contract-summary-grid {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+        .contract-summary-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            color: #35515d;
+            font-size: 0.94rem;
+        }
+        .contract-summary-row strong { color: #163a45; }
+        .contract-sign-state {
+            border-radius: 18px;
+            padding: 14px;
+            background: #f7fafc;
+            border: 1px solid #e2ebf1;
+            margin-bottom: 12px;
+        }
+        .contract-sign-state strong {
+            display: block;
+            color: #163a45;
+            margin-bottom: 6px;
+        }
+        .contract-sign-meta {
+            color: #5f7a88;
+            line-height: 1.5;
+            font-size: 0.9rem;
+        }
+        .contract-sign-form {
+            margin-top: 18px;
+        }
+        .contract-sign-message {
+            margin-top: 14px;
+        }
+        .contract-download-link {
+            margin-top: 14px;
+            width: 100%;
+            text-align: center;
         }
         .site-toast-stack {
             position: fixed;
@@ -1236,16 +1449,56 @@
                     <span id="paymentExpires">—</span>
                 </div>
 
-                <a class="btn-primary payment-link" id="paymentLinkBtn" href="#" target="_blank" rel="noopener">Открыть оплату через СБП</a>
+                <button class="btn-primary payment-link" id="paymentLinkBtn" type="button" disabled>Открыть демо-оплату СБП</button>
 
                 <div class="payment-code" id="paymentQrPayload"></div>
-
-                <button class="btn-outline payment-confirm-btn" id="confirmPaymentBtn" type="button">Я оплатил, подтвердить оплату</button>
             </div>
 
             <div class="rent-note">
-                По текущему API оплата доступна только после подтверждения брони владельцем. Поэтому кнопка оплаты сработает после создания и подтверждения заявки.
+                Это учебный демо-сценарий: после подтверждения брони откроется муляж оплаты по СБП без перехода во внешний банк.
             </div>
+        </div>
+    </div>
+
+    <div class="sbp-demo-overlay" id="sbpDemoOverlay">
+        <div class="sbp-demo-modal">
+            <div class="sbp-demo-header">
+                <div class="sbp-demo-title">Оплата через СБП</div>
+                <div class="sbp-demo-subtitle">Демо-экран оплаты. Здесь мы имитируем переход в банковское приложение прямо внутри сайта.</div>
+            </div>
+            <div class="sbp-demo-body">
+                <div class="sbp-demo-badge">СБП Demo</div>
+                <div class="sbp-demo-grid">
+                    <div class="sbp-demo-row">
+                        <strong>Банк</strong>
+                        <span id="sbpDemoBank">—</span>
+                    </div>
+                    <div class="sbp-demo-row">
+                        <strong>Получатель</strong>
+                        <span id="sbpDemoRecipient">—</span>
+                    </div>
+                    <div class="sbp-demo-row">
+                        <strong>Телефон</strong>
+                        <span id="sbpDemoPhone">—</span>
+                    </div>
+                    <div class="sbp-demo-row">
+                        <strong>Сумма</strong>
+                        <span id="sbpDemoAmount">—</span>
+                    </div>
+                </div>
+                <div class="sbp-demo-qr" id="sbpDemoQrPayload"></div>
+                <div class="sbp-demo-message" id="sbpDemoMessage"></div>
+                <div class="sbp-demo-actions">
+                    <button class="btn-primary" id="sbpDemoPayBtn" type="button">Оплатить</button>
+                    <button class="btn-outline" id="sbpDemoCancelBtn" type="button">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="contract-modal-overlay" id="contractModalOverlay">
+        <div class="contract-modal">
+            <div id="contractModalContent"></div>
         </div>
     </div>
 
@@ -1291,6 +1544,7 @@
         let currentRentalItem = null;
         let currentBooking = null;
         let currentPaymentPayload = null;
+        let currentContractData = null;
         let rentStartPicker = null;
         let rentEndPicker = null;
         let bookedDateRanges = [];
@@ -2943,7 +3197,9 @@
             document.getElementById('paymentExpires').textContent = '—';
             document.getElementById('paymentQrPayload').textContent = '';
             const paymentLinkBtn = document.getElementById('paymentLinkBtn');
-            paymentLinkBtn.href = '#';
+            if (paymentLinkBtn) {
+                paymentLinkBtn.disabled = true;
+            }
         }
 
         function fillPaymentBox(payload) {
@@ -2958,9 +3214,37 @@
             document.getElementById('paymentStatus').textContent = formatPaymentStatus(payload.payment_status);
             document.getElementById('paymentExpires').textContent = payload.expires_at ? new Date(payload.expires_at).toLocaleString('ru-RU') : '—';
             document.getElementById('paymentQrPayload').textContent = payload.qr_payload || '';
-            document.getElementById('paymentLinkBtn').href = payload.deeplink || '#';
+            const paymentLinkBtn = document.getElementById('paymentLinkBtn');
+            if (paymentLinkBtn) {
+                paymentLinkBtn.disabled = false;
+            }
 
             box.classList.add('active');
+        }
+
+        function closeSbpDemoModal() {
+            document.getElementById('sbpDemoOverlay')?.classList.remove('active');
+            const messageBox = document.getElementById('sbpDemoMessage');
+            if (messageBox) messageBox.innerHTML = '';
+            const payButton = document.getElementById('sbpDemoPayBtn');
+            if (payButton) {
+                payButton.disabled = false;
+                payButton.textContent = 'Оплатить';
+            }
+        }
+
+        function openSbpDemoModal() {
+            if (!currentPaymentPayload) {
+                setRentModalMessage('error', 'Сначала создайте платёжную сессию.');
+                return;
+            }
+
+            document.getElementById('sbpDemoBank').textContent = currentPaymentPayload.bank_name || '—';
+            document.getElementById('sbpDemoRecipient').textContent = currentPaymentPayload.recipient || '—';
+            document.getElementById('sbpDemoPhone').textContent = currentPaymentPayload.phone_number || '—';
+            document.getElementById('sbpDemoAmount').textContent = `${currentPaymentPayload.amount || '0'} ${currentPaymentPayload.currency || 'RUB'}`;
+            document.getElementById('sbpDemoQrPayload').textContent = currentPaymentPayload.qr_payload || 'QR payload недоступен';
+            document.getElementById('sbpDemoOverlay')?.classList.add('active');
         }
 
         function closeRentalModal() {
@@ -2969,6 +3253,7 @@
             currentBooking = null;
             currentPaymentPayload = null;
             bookedDateRanges = [];
+            closeSbpDemoModal();
             setRentModalMessage('', '');
             resetPaymentBox();
             document.getElementById('rentModalOverlay')?.classList.remove('active');
@@ -3111,7 +3396,8 @@
                 }
 
                 fillPaymentBox(data);
-                setRentModalMessage('success', 'Платёжная сессия создана. Откройте оплату по кнопке ниже, затем подтвердите её.');
+                setRentModalMessage('success', 'Открылось демо-окно СБП. Нажмите "Оплатить", чтобы завершить оплату.');
+                openSbpDemoModal();
             } catch (error) {
                 setRentModalMessage('error', 'Ошибка подключения при запуске оплаты.');
             }
@@ -3119,9 +3405,18 @@
 
         async function confirmBookingPayment() {
             const booking = await refreshCurrentBookingState();
+            const demoMessageBox = document.getElementById('sbpDemoMessage');
+            const demoPayButton = document.getElementById('sbpDemoPayBtn');
 
             if (!booking) {
                 setRentModalMessage('error', 'Бронь не найдена.');
+                if (demoMessageBox) {
+                    demoMessageBox.innerHTML = '<div class="rent-error">Бронь не найдена. Обновите окно аренды и попробуйте снова.</div>';
+                }
+                if (demoPayButton) {
+                    demoPayButton.disabled = false;
+                    demoPayButton.textContent = 'Оплатить';
+                }
                 return;
             }
 
@@ -3136,19 +3431,34 @@
                 if (!response.ok) {
                     const message = data.detail || data.error || data.non_field_errors?.[0] || 'Не удалось подтвердить оплату.';
                     setRentModalMessage('error', message);
+                    if (demoMessageBox) {
+                        demoMessageBox.innerHTML = `<div class="rent-error">${escapeHtml(message)}</div>`;
+                    }
+                    if (demoPayButton) {
+                        demoPayButton.disabled = false;
+                        demoPayButton.textContent = 'Оплатить';
+                    }
                     return;
                 }
 
                 currentBooking = data;
                 updateRentalSummary();
                 resetPaymentBox();
-                setRentModalMessage('success', 'Оплата подтверждена. Обновляем список объявлений.');
+                closeSbpDemoModal();
+                setRentModalMessage('success', 'Оплата подтверждена. Бронь оплачена.');
                 setTimeout(() => {
                     closeRentalModal();
                     loadProducts(currentPage);
                 }, 1200);
             } catch (error) {
                 setRentModalMessage('error', 'Ошибка подключения при подтверждении оплаты.');
+                if (demoMessageBox) {
+                    demoMessageBox.innerHTML = '<div class="rent-error">Ошибка подключения при подтверждении оплаты.</div>';
+                }
+                if (demoPayButton) {
+                    demoPayButton.disabled = false;
+                    demoPayButton.textContent = 'Оплатить';
+                }
             }
         }
 
@@ -3730,6 +4040,11 @@
                                             <button class="btn-outline" data-action="cancel-booking" data-id="${booking.id}">Отклонить</button>
                                         </div>
                                     ` : ''}
+                                    ${canUseContractForBooking(booking) ? `
+                                        <div class="booking-request-actions">
+                                            <button class="btn-outline" data-action="open-contract" data-id="${booking.id}" data-scope="incoming">Договор / ЭЦП</button>
+                                        </div>
+                                    ` : ''}
                                 </div>
                             `).join('')}
                         </div>
@@ -3754,6 +4069,7 @@
                                     </div>
                                     <div class="booking-request-actions">
                                         <button class="btn-outline" data-action="open-rental-item" data-id="${booking.id}">Открыть объявление</button>
+                                        ${canUseContractForBooking(booking) ? `<button class="btn-outline" data-action="open-contract" data-id="${booking.id}" data-scope="outgoing">Договор / ЭЦП</button>` : ''}
                                         ${canLeaveReviewForBooking(booking) ? `<button class="btn-primary" data-action="leave-review" data-id="${booking.id}">Оставить отзыв</button>` : ''}
                                     </div>
                                 </div>
@@ -3806,6 +4122,18 @@
                     }
                 });
             });
+
+            document.querySelectorAll('[data-action="open-contract"]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const bookingId = String(btn.dataset.id);
+                    const scope = btn.dataset.scope;
+                    const sourceList = scope === 'incoming' ? incomingBookings : outgoingBookings;
+                    const booking = sourceList.find(entry => String(entry.id) === bookingId);
+                    if (booking) {
+                        await openContractFlowForBooking(booking);
+                    }
+                });
+            });
         }
 
         function getBookingSortDate(booking) {
@@ -3845,6 +4173,194 @@
                     <div style="margin-top:6px;">${safeComment}</div>
                 </div>
             `;
+        }
+
+        function canUseContractForBooking(booking) {
+            return ['confirmed', 'completed'].includes(booking?.status);
+        }
+
+        function formatContractStatus(status) {
+            const map = {
+                draft: 'Черновик договора',
+                partially_signed: 'Подписан одной стороной',
+                signed: 'Подписан обеими сторонами',
+            };
+            return map[status] || 'Договор';
+        }
+
+        function renderContractSignState(title, signerName, signedAt, signatureCode) {
+            if (!signedAt) {
+                return `
+                    <div class="contract-sign-state">
+                        <strong>${escapeHtml(title)}</strong>
+                        <div class="contract-sign-meta">Подпись ЭЦП пока не поставлена.</div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="contract-sign-state">
+                    <strong>${escapeHtml(title)}</strong>
+                    <div class="contract-sign-meta">
+                        Подписант: ${escapeHtml(signerName || 'Не указан')}<br>
+                        Дата подписи: ${escapeHtml(formatDateRu(signedAt))}<br>
+                        Код ЭЦП: ${escapeHtml(signatureCode || '—')}
+                    </div>
+                </div>
+            `;
+        }
+
+        async function getContractByBooking(bookingId) {
+            try {
+                const response = await apiRequest(`/contracts/by-booking/${bookingId}/`);
+                const data = await response.json().catch(() => ({}));
+                return { success: response.ok, data };
+            } catch (error) {
+                return { success: false, data: { error: 'Ошибка подключения при загрузке договора.' } };
+            }
+        }
+
+        async function signContractWithDemoEds(contractId, signerName, certificatePin) {
+            try {
+                const response = await apiRequest(`/contracts/${contractId}/sign/`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        signer_name: signerName,
+                        certificate_pin: certificatePin,
+                    })
+                });
+                const data = await response.json().catch(() => ({}));
+                return { success: response.ok, data };
+            } catch (error) {
+                return { success: false, data: { error: 'Ошибка подключения при подписании договора.' } };
+            }
+        }
+
+        function closeContractModal() {
+            currentContractData = null;
+            document.getElementById('contractModalOverlay')?.classList.remove('active');
+            const container = document.getElementById('contractModalContent');
+            if (container) container.innerHTML = '';
+        }
+
+        function renderContractModal(contract) {
+            const container = document.getElementById('contractModalContent');
+            if (!container) return;
+
+            const myRoleLabel = contract.my_role === 'owner' ? 'арендодатель' : 'арендатор';
+            const myPartyTitle = contract.my_role === 'owner' ? 'Подпись арендодателя' : 'Подпись арендатора';
+            const otherPartyTitle = contract.my_role === 'owner' ? 'Подпись арендатора' : 'Подпись арендодателя';
+            const mySigned = !!contract.my_signed;
+            const signatureForm = mySigned || contract.is_signed ? `
+                <div class="rent-success contract-sign-message">
+                    ${contract.is_signed
+                        ? 'Договор полностью подписан обеими сторонами.'
+                        : 'Ваша подпись ЭЦП уже сохранена. Ожидаем вторую сторону.'}
+                </div>
+            ` : `
+                <div class="contract-sign-form">
+                    <div class="form-group">
+                        <label for="contractSignerName">ФИО подписанта</label>
+                        <input type="text" id="contractSignerName" placeholder="Например: Иванов Иван Иванович">
+                    </div>
+                    <div class="form-group">
+                        <label for="contractSignerPin">PIN демонстрационного сертификата</label>
+                        <input type="password" id="contractSignerPin" placeholder="Минимум 4 символа">
+                    </div>
+                    <div class="contract-sign-message" id="contractSignMessage"></div>
+                    <button class="btn-primary" id="contractSignBtn" type="button">Подписать ЭЦП</button>
+                </div>
+            `;
+
+            container.innerHTML = `
+                <div class="contract-modal-header">
+                    <div>
+                        <div class="contract-modal-title">Договор аренды № ${escapeHtml(contract.document_number || '—')}</div>
+                        <div class="contract-modal-subtitle">Демо-экран ЭЦП. Подписание выполняется прямо на сайте и сохраняет учебный код электронной подписи.</div>
+                    </div>
+                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                        <span class="contract-status-badge">${escapeHtml(formatContractStatus(contract.status))}</span>
+                        <button class="rent-close-btn" id="contractModalCloseBtn" type="button">×</button>
+                    </div>
+                </div>
+                <div class="contract-layout">
+                    <div class="contract-document">
+                        <div class="contract-document-title">Текст договора</div>
+                        <div class="contract-document-body">${escapeHtml(contract.preview_text || '')}</div>
+                    </div>
+                    <div class="contract-side-panel">
+                        <div class="contract-side-title">Сводка</div>
+                        <div class="contract-summary-grid">
+                            <div class="contract-summary-row"><strong>Товар</strong><span>${escapeHtml(contract.item_title || '—')}</span></div>
+                            <div class="contract-summary-row"><strong>Период</strong><span>${escapeHtml(contract.start_date || '—')} — ${escapeHtml(contract.end_date || '—')}</span></div>
+                            <div class="contract-summary-row"><strong>Сумма</strong><span>${formatPrice(contract.total_price || 0)}</span></div>
+                            <div class="contract-summary-row"><strong>Вы</strong><span>${escapeHtml(myRoleLabel)}</span></div>
+                        </div>
+                        ${renderContractSignState(
+                            myPartyTitle,
+                            contract.my_role === 'owner' ? contract.owner_signer_name : contract.renter_signer_name,
+                            contract.my_role === 'owner' ? contract.owner_signed_at : contract.renter_signed_at,
+                            contract.my_role === 'owner' ? contract.owner_signature_code : contract.renter_signature_code
+                        )}
+                        ${renderContractSignState(
+                            otherPartyTitle,
+                            contract.my_role === 'owner' ? contract.renter_signer_name : contract.owner_signer_name,
+                            contract.my_role === 'owner' ? contract.renter_signed_at : contract.owner_signed_at,
+                            contract.my_role === 'owner' ? contract.renter_signature_code : contract.owner_signature_code
+                        )}
+                        ${contract.file_url ? `<a class="btn-outline contract-download-link" href="${contract.file_url}" target="_blank" rel="noopener">Открыть текст договора</a>` : ''}
+                        ${signatureForm}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('contractModalCloseBtn')?.addEventListener('click', closeContractModal);
+            document.getElementById('contractSignBtn')?.addEventListener('click', async () => {
+                const signerName = document.getElementById('contractSignerName')?.value || '';
+                const signerPin = document.getElementById('contractSignerPin')?.value || '';
+                const messageBox = document.getElementById('contractSignMessage');
+                const signButton = document.getElementById('contractSignBtn');
+
+                if (signButton) {
+                    signButton.disabled = true;
+                    signButton.textContent = 'Подписываем...';
+                }
+                if (messageBox) {
+                    messageBox.innerHTML = '<div class="rent-info">Имитируем применение ЭЦП и регистрацию подписи...</div>';
+                }
+
+                const result = await signContractWithDemoEds(contract.id, signerName, signerPin);
+                if (!result.success) {
+                    if (messageBox) {
+                        messageBox.innerHTML = `<div class="rent-error">❌ ${escapeHtml(result.data?.error || result.data?.detail || 'Не удалось подписать договор.')}</div>`;
+                    }
+                    if (signButton) {
+                        signButton.disabled = false;
+                        signButton.textContent = 'Подписать ЭЦП';
+                    }
+                    return;
+                }
+
+                currentContractData = result.data;
+                renderContractModal(currentContractData);
+            });
+        }
+
+        async function openContractFlowForBooking(booking) {
+            if (!booking?.id) {
+                alert('❌ Не удалось определить бронирование для договора');
+                return;
+            }
+
+            const result = await getContractByBooking(booking.id);
+            if (!result.success) {
+                alert(`❌ ${result.data?.error || result.data?.detail || 'Не удалось загрузить договор'}`);
+                return;
+            }
+
+            currentContractData = result.data;
+            renderContractModal(currentContractData);
+            document.getElementById('contractModalOverlay')?.classList.add('active');
         }
 
         async function openReviewFlowForBooking(booking) {
@@ -3969,6 +4485,11 @@
                                         </div>
                                         <div class="booking-request-status">${formatBookingStatus(booking.status)}</div>
                                     </div>
+                                    ${canUseContractForBooking(booking) ? `
+                                        <div class="booking-request-actions">
+                                            <button class="btn-outline" type="button" data-action="open-owner-contract" data-id="${booking.id}">Договор / ЭЦП</button>
+                                        </div>
+                                    ` : ''}
                                 </div>
                             `).join('')}
                         </div>
@@ -3991,6 +4512,11 @@
                                         </div>
                                         <div class="booking-request-status">${formatBookingStatus(booking.status)}</div>
                                     </div>
+                                    ${canUseContractForBooking(booking) ? `
+                                        <div class="booking-request-actions">
+                                            <button class="btn-outline" type="button" data-action="open-owner-contract" data-id="${booking.id}">Договор / ЭЦП</button>
+                                        </div>
+                                    ` : ''}
                                 </div>
                             `).join('')}
                         </div>
@@ -4003,6 +4529,16 @@
                 btn.addEventListener('click', () => {
                     const item = items.find(entry => String(entry.id) === String(btn.dataset.id));
                     if (item) showEditItemPage(item);
+                });
+            });
+
+            document.querySelectorAll('[data-action="open-owner-contract"]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const bookingId = String(btn.dataset.id);
+                    const booking = bookings.find(entry => String(entry.id) === bookingId);
+                    if (booking) {
+                        await openContractFlowForBooking(booking);
+                    }
                 });
             });
         }
@@ -4860,9 +5396,30 @@
         document.getElementById('rentModalCloseBtn')?.addEventListener('click', closeRentalModal);
         document.getElementById('createBookingBtn')?.addEventListener('click', createBookingRequest);
         document.getElementById('startPaymentBtn')?.addEventListener('click', startBookingPayment);
-        document.getElementById('confirmPaymentBtn')?.addEventListener('click', confirmBookingPayment);
+        document.getElementById('paymentLinkBtn')?.addEventListener('click', openSbpDemoModal);
         document.getElementById('rentModalOverlay')?.addEventListener('click', (e) => {
             if (e.target.id === 'rentModalOverlay') closeRentalModal();
+        });
+        document.getElementById('sbpDemoCancelBtn')?.addEventListener('click', closeSbpDemoModal);
+        document.getElementById('sbpDemoPayBtn')?.addEventListener('click', async () => {
+            const payButton = document.getElementById('sbpDemoPayBtn');
+            const messageBox = document.getElementById('sbpDemoMessage');
+
+            if (payButton) {
+                payButton.disabled = true;
+                payButton.textContent = 'Проводим оплату...';
+            }
+            if (messageBox) {
+                messageBox.innerHTML = '<div class="rent-info">Имитируем подтверждение оплаты через СБП...</div>';
+            }
+
+            await confirmBookingPayment();
+        });
+        document.getElementById('sbpDemoOverlay')?.addEventListener('click', (e) => {
+            if (e.target.id === 'sbpDemoOverlay') closeSbpDemoModal();
+        });
+        document.getElementById('contractModalOverlay')?.addEventListener('click', (e) => {
+            if (e.target.id === 'contractModalOverlay') closeContractModal();
         });
         document.getElementById('itemPreviewCloseBtn')?.addEventListener('click', closeItemPreview);
         document.getElementById('itemPreviewOverlay')?.addEventListener('click', (e) => {
