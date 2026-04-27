@@ -151,6 +151,16 @@ class BookingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        can_leave_review = booking.status == 'completed' or (
+            booking.status == 'confirmed' and
+            booking.payment_status == 'paid'
+        )
+        if not can_leave_review:
+            return Response(
+                {"error": "You can review only paid bookings"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         serializer = ReviewSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 

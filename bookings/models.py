@@ -224,14 +224,13 @@ class Review(models.Model):
 
     def clean(self):
         is_completed = self.booking.status == 'completed'
-        is_paid_finished = (
+        is_paid_booking = (
             self.booking.status == 'confirmed' and
-            self.booking.payment_status == 'paid' and
-            self.booking.end_date <= timezone.localdate()
+            self.booking.payment_status == 'paid'
         )
 
-        if not (is_completed or is_paid_finished):
-            raise ValidationError("You can review only finished paid bookings")
+        if not (is_completed or is_paid_booking):
+            raise ValidationError("You can review only paid bookings")
 
         if not (1 <= self.rating <= 5):
             raise ValidationError("Rating must be between 1 and 5")

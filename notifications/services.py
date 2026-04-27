@@ -1,12 +1,13 @@
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+
 from notifications.email import (
     send_booking_cancelled,
     send_booking_confirmed,
     send_booking_created,
     send_new_message,
-    send_payment_confirmed,
     send_new_review,
+    send_payment_confirmed,
     send_return_reminder,
 )
 from notifications.models import Notification
@@ -154,14 +155,21 @@ def notify_new_message(message):
 
 
 def notify_new_review(review):
+    review_message = f'Вы получили новый отзыв о товаре «{review.booking.item.title}». Оценка: {review.rating}/5'
+    if review.comment:
+        review_message += f'. Комментарий: {review.comment}'
+
     notification = create_notification(
         user=review.booking.item.owner,
         notification_type='new_review',
-        message=f'Вы получили новый отзыв о товаре «{review.booking.item.title}»',
+        message=review_message,
         metadata={
             'destination': 'item',
             'booking_id': review.booking_id,
             'item_id': review.booking.item_id,
+            'review_id': review.id,
+            'rating': review.rating,
+            'comment': review.comment,
         },
     )
     send_new_review(review.booking)

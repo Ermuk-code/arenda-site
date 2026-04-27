@@ -589,6 +589,7 @@
             font-size: 0.9rem;
             line-height: 1.4;
             color: rgba(255,255,255,0.9);
+            white-space: pre-wrap;
         }
         .site-toast-close {
             margin-top: 10px;
@@ -1054,6 +1055,14 @@
             padding: 18px;
             background: #fbfdff;
         }
+        .booking-review-note {
+            margin-top: 12px;
+            padding: 12px 14px;
+            border-radius: 16px;
+            background: #f7fafc;
+            border: 1px solid #e2e9ef;
+            color: #35515d;
+        }
         .review-form textarea, .review-form select {
             width: 100%;
             margin-top: 10px;
@@ -1297,6 +1306,7 @@
         let availabilityFilterStart = '';
         let availabilityFilterEnd = '';
         let allProducts = [];
+        let activePreviewItemId = null;
         let activeChatConversationId = null;
         let activeChatFocusHandler = null;
         let activeChatVisibilityHandler = null;
@@ -1320,6 +1330,33 @@
 
         function getAccessToken() { return localStorage.getItem('access_token'); }
         function getRefreshToken() { return localStorage.getItem('refresh_token'); }
+        function getSeenNotificationsStorageKey() {
+            const userId = localStorage.getItem('user_id');
+            return userId ? `seen_notifications_${userId}` : 'seen_notifications_guest';
+        }
+        function loadSeenNotificationIds() {
+            try {
+                const raw = localStorage.getItem(getSeenNotificationsStorageKey());
+                const parsed = raw ? JSON.parse(raw) : [];
+                return new Set(Array.isArray(parsed) ? parsed.map(String) : []);
+            } catch (e) {
+                return new Set();
+            }
+        }
+        function persistSeenNotificationIds() {
+            try {
+                const ids = Array.from(shownNotificationIds).slice(-300);
+                localStorage.setItem(getSeenNotificationsStorageKey(), JSON.stringify(ids));
+            } catch (e) {}
+        }
+        function rememberNotificationShown(notificationId) {
+            if (notificationId === undefined || notificationId === null) return;
+            shownNotificationIds.add(String(notificationId));
+            persistSeenNotificationIds();
+        }
+        function hasShownNotification(notificationId) {
+            return shownNotificationIds.has(String(notificationId));
+        }
 
         function setTokens(access, refresh, userId, username, email, userType, profileData) {
             localStorage.setItem('access_token', access);
@@ -1828,7 +1865,7 @@
                         <button class="btn-primary" id="toggleReviewFormBtn" type="button">Оставить отзыв</button>
                         <div id="reviewFormFields" style="display:none; margin-top:14px;">
                             <div class="preview-section-title" style="margin-top:0;">Ваш отзыв</div>
-                            <div class="item-preview-subtitle">Вы завершили аренду этого товара. Поделитесь впечатлением.</div>
+                            <div class="item-preview-subtitle">Оплата прошла успешно. Поделитесь впечатлением об аренде и объявлении.</div>
                             <select id="reviewRatingInput">
                                 <option value="5">5 звезд</option>
                                 <option value="4">4 звезды</option>
@@ -1846,6 +1883,7 @@
         }
 
         async function openItemPreview(item) {
+            activePreviewItemId = item?.id || null;
             let reviewBooking = null;
             if (isAuthenticated()) {
                 const outgoingBookings = await getOutgoingBookings();
@@ -1910,12 +1948,14 @@
                         setTimeout(() => openItemPreview(updatedItem), 400);
                     }
                 } else if (messageBox) {
-                    messageBox.innerHTML = `<div class="error-message-box">❌ ${escapeHtml(result.data?.detail || result.data?.error || 'Не удалось отправить отзыв.')}</div>`;
+                    const errorMessage = extractApiErrorMessage(result.data, 'Не удалось отправить отзыв.');
+                    messageBox.innerHTML = `<div class="error-message-box">❌ ${escapeHtml(errorMessage)}</div>`;
                 }
             });
         }
 
         function closeItemPreview() {
+            activePreviewItemId = null;
             document.getElementById('itemPreviewOverlay')?.classList.remove('active');
             document.getElementById('itemPreviewContent').innerHTML = '';
         }
@@ -2608,6 +2648,27 @@
             }
         }
 
+        function getNotificationBody(notification) {
+            if (!notification) return '';
+
+            const base = notification.message || '';
+            if (notification.type !== 'new_review') return base;
+
+            const metadata = notification.metadata || {};
+            const parts = [base];
+            const rating = metadata.rating;
+            const comment = (metadata.comment || '').trim();
+
+            if (rating && !base.includes('/5')) {
+                parts.push(`Оценка: ${rating}/5`);
+            }
+            if (comment && !base.includes(comment)) {
+                parts.push(`Комментарий: ${comment}`);
+            }
+
+            return parts.join('\n');
+        }
+
         function showSiteToast(notification) {
             const stack = document.getElementById('siteToastStack');
             const meta = getNotificationMeta(notification);
@@ -2617,7 +2678,7 @@
             toast.className = `site-toast ${meta.actionLabel ? 'actionable' : ''}`;
             toast.innerHTML = `
                 <div class="site-toast-title">${escapeHtml(meta.title)}</div>
-                <div class="site-toast-body">${escapeHtml(notification.message || '')}</div>
+                <div class="site-toast-body">${escapeHtml(getNotificationBody(notification))}</div>
                 <div class="site-toast-actions">
                     ${meta.actionLabel ? `<button class="site-toast-open" type="button">${escapeHtml(meta.actionLabel)}</button>` : ''}
                     <button class="site-toast-close" type="button">Закрыть</button>
@@ -2651,11 +2712,25 @@
             const meta = getNotificationMeta(notification);
             if (!meta || !notification?.id) return;
 
-            if (shownNotificationIds.has(notification.id)) return;
+            if (hasShownNotification(notification.id)) return;
 
-            shownNotificationIds.add(notification.id);
+            rememberNotificationShown(notification.id);
             if (!notification.is_read) {
                 showSiteToast(notification);
+            }
+
+            if (notification.type === 'new_review') {
+                const metadata = notification.metadata || {};
+                if (
+                    activePreviewItemId &&
+                    metadata.item_id &&
+                    String(activePreviewItemId) === String(metadata.item_id)
+                ) {
+                    const refreshedItem = await getItemById(metadata.item_id);
+                    if (refreshedItem) {
+                        await openItemPreview(refreshedItem);
+                    }
+                }
             }
 
             await refreshNavCounters();
@@ -2694,6 +2769,7 @@
         function startNotificationPolling() {
             stopNotificationPolling();
             if (!isAuthenticated()) return;
+            shownNotificationIds = loadSeenNotificationIds();
 
             checkSiteNotifications();
             notificationPollInterval = setInterval(() => {
@@ -3620,17 +3696,21 @@
         async function showIncomingBookingsPage(flashMessage = '') {
             if (!isAuthenticated()) { alert('Пожалуйста, войдите в систему'); showLoginPage(); return; }
 
-            const bookings = await getIncomingBookings();
+            const [incomingBookings, outgoingBookings] = await Promise.all([
+                getIncomingBookings(),
+                getOutgoingBookings()
+            ]);
 
             document.getElementById('app').innerHTML = `
                 <div class="bookings-page"><div class="bookings-card">
                     <div class="back-button" id="backToMainFromBookings">← Назад</div>
-                    <div class="bookings-title">📥 Входящие заявки</div>
-                    <div class="bookings-sub">Здесь владелец объявления видит новые бронирования и может их подтвердить.</div>
+                    <div class="bookings-title">📥 Заявки и мои аренды</div>
+                    <div class="bookings-sub">Здесь владелец видит входящие бронирования, а арендатор может открыть завершённую аренду и оставить отзыв.</div>
                     <div id="bookingsMessage">${flashMessage}</div>
-                    ${bookings.length === 0 ? '<div class="empty-message">Пока нет входящих заявок на ваши объявления.</div>' : `
+                    <div class="section-title">Входящие заявки</div>
+                    ${incomingBookings.length === 0 ? '<div class="empty-message">Пока нет входящих заявок на ваши объявления.</div>' : `
                         <div class="bookings-list">
-                            ${bookings.map(booking => `
+                            ${incomingBookings.map(booking => `
                                 <div class="booking-request" data-booking-id="${booking.id}">
                                     <div class="booking-request-head">
                                         <div>
@@ -3650,6 +3730,32 @@
                                             <button class="btn-outline" data-action="cancel-booking" data-id="${booking.id}">Отклонить</button>
                                         </div>
                                     ` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    `}
+
+                    <div class="section-title">Мои аренды</div>
+                    ${outgoingBookings.length === 0 ? '<div class="empty-message">У вас пока нет аренд.</div>' : `
+                        <div class="bookings-list">
+                            ${outgoingBookings.map(booking => `
+                                <div class="booking-request" data-outgoing-booking-id="${booking.id}">
+                                    <div class="booking-request-head">
+                                        <div>
+                                            <div class="booking-request-title">${escapeHtml(getBookingItemTitle(booking))}</div>
+                                            <div class="booking-request-meta">
+                                                <div>Период: ${escapeHtml(booking.start_date || '—')} — ${escapeHtml(booking.end_date || '—')}</div>
+                                                <div>Сумма: ${formatPrice(booking.total_price || 0)}</div>
+                                                <div>Оплата: ${formatPaymentStatus(booking.payment_status || 'unpaid')}</div>
+                                            </div>
+                                            ${getReviewSummaryMarkup(booking)}
+                                        </div>
+                                        <div class="booking-request-status">${formatBookingStatus(booking.status)}</div>
+                                    </div>
+                                    <div class="booking-request-actions">
+                                        <button class="btn-outline" data-action="open-rental-item" data-id="${booking.id}">Открыть объявление</button>
+                                        ${canLeaveReviewForBooking(booking) ? `<button class="btn-primary" data-action="leave-review" data-id="${booking.id}">Оставить отзыв</button>` : ''}
+                                    </div>
                                 </div>
                             `).join('')}
                         </div>
@@ -3682,6 +3788,24 @@
                     }
                 });
             });
+
+            document.querySelectorAll('[data-action="open-rental-item"]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const booking = outgoingBookings.find(entry => String(entry.id) === String(btn.dataset.id));
+                    if (booking) {
+                        await openReviewFlowForBooking(booking);
+                    }
+                });
+            });
+
+            document.querySelectorAll('[data-action="leave-review"]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const booking = outgoingBookings.find(entry => String(entry.id) === String(btn.dataset.id));
+                    if (booking) {
+                        await openReviewFlowForBooking(booking);
+                    }
+                });
+            });
         }
 
         function getBookingSortDate(booking) {
@@ -3697,15 +3821,46 @@
         }
 
         function canLeaveReviewForBooking(booking) {
-            const today = getTodayDateString();
+            if (booking?.can_leave_review !== undefined) return !!booking.can_leave_review;
             return !!booking && !booking.has_review && (
                 booking.status === 'completed' ||
                 (
                     booking.status === 'confirmed' &&
-                    booking.payment_status === 'paid' &&
-                    booking.end_date <= today
+                    booking.payment_status === 'paid'
                 )
             );
+        }
+
+        function getReviewSummaryMarkup(booking) {
+            const review = booking?.review;
+            if (!review) return '';
+
+            const safeComment = review.comment
+                ? escapeHtml(review.comment)
+                : 'Вы поставили оценку без текста.';
+
+            return `
+                <div class="booking-review-note">
+                    <strong>Ваш отзыв:</strong> ${'★'.repeat(Number(review.rating || 0))}${'☆'.repeat(Math.max(0, 5 - Number(review.rating || 0)))}
+                    <div style="margin-top:6px;">${safeComment}</div>
+                </div>
+            `;
+        }
+
+        async function openReviewFlowForBooking(booking) {
+            const itemId = booking?.item?.id || booking?.item;
+            if (!itemId) {
+                alert('❌ Не удалось определить объявление для отзыва');
+                return;
+            }
+
+            const item = await getItemById(itemId);
+            if (!item) {
+                alert('❌ Не удалось загрузить объявление для отзыва');
+                return;
+            }
+
+            await openItemPreview(item);
         }
 
         function getOwnerDashboardStats(items, bookings) {
