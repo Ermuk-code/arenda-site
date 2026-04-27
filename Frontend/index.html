@@ -757,6 +757,19 @@
         .contract-sign-form {
             margin-top: 18px;
         }
+        .contract-consent {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-top: 14px;
+            color: #35515d;
+            line-height: 1.45;
+            font-size: 0.92rem;
+        }
+        .contract-consent input {
+            margin-top: 3px;
+            flex: 0 0 auto;
+        }
         .contract-sign-message {
             margin-top: 14px;
         }
@@ -764,6 +777,9 @@
             margin-top: 14px;
             width: 100%;
             text-align: center;
+        }
+        .is-hidden {
+            display: none !important;
         }
         .site-toast-stack {
             position: fixed;
@@ -1378,7 +1394,7 @@
             <div class="rent-modal-header">
                 <div>
                     <div class="rent-modal-title" id="rentModalTitle">Оформление аренды</div>
-                    <div class="rent-modal-subtitle">Выберите даты аренды и способ оплаты</div>
+                    <div class="rent-modal-subtitle">Выберите даты аренды, подпишите договор и только после этого переходите к оплате</div>
                 </div>
                 <button class="rent-close-btn" id="rentModalCloseBtn" type="button">×</button>
             </div>
@@ -1420,7 +1436,8 @@
 
             <div class="rent-payment-actions">
                 <button class="btn-outline" id="createBookingBtn" type="button">Отправить заявку</button>
-                <button class="btn-primary" id="startPaymentBtn" type="button">Перейти к оплате</button>
+                <button class="btn-primary" id="openContractBtn" type="button">Подписать документ с помощью ЭЦП</button>
+                <button class="btn-primary is-hidden" id="startPaymentBtn" type="button">Перейти к оплате по СБП</button>
             </div>
 
             <div class="payment-box" id="paymentBox">
@@ -1455,7 +1472,7 @@
             </div>
 
             <div class="rent-note">
-                Это учебный демо-сценарий: после подтверждения брони откроется муляж оплаты по СБП без перехода во внешний банк.
+                Это учебный демо-сценарий: после подтверждения брони арендатор сначала подписывает договор демо-ЭЦП, а затем открывает муляж оплаты по СБП.
             </div>
         </div>
     </div>
@@ -1545,6 +1562,7 @@
         let currentBooking = null;
         let currentPaymentPayload = null;
         let currentContractData = null;
+        let currentBookingContract = null;
         let rentStartPicker = null;
         let rentEndPicker = null;
         let bookedDateRanges = [];
@@ -2199,6 +2217,7 @@
                     const refreshed = await apiRequest(`/items/${item.id}/`);
                     if (refreshed.ok) {
                         const updatedItem = await refreshed.json();
+                        upsertCachedItem(updatedItem);
                         setTimeout(() => openItemPreview(updatedItem), 400);
                     }
                 } else if (messageBox) {
@@ -2696,15 +2715,32 @@
             }
         }
 
-        async function getItemById(itemId) {
-            if (!itemId) return null;
+        function upsertCachedItem(item) {
+            if (!item?.id || !Array.isArray(allProducts)) return;
+            const index = allProducts.findIndex(entry => String(entry.id) === String(item.id));
+            if (index >= 0) {
+                allProducts[index] = item;
+            } else {
+                allProducts.push(item);
+            }
+        }
 
-            const existingItem = allProducts.find(item => String(item.id) === String(itemId));
-            if (existingItem) return existingItem;
+        async function getItemById(itemId, options = {}) {
+            if (!itemId) return null;
+            const { preferFresh = false } = options;
+
+            if (!preferFresh) {
+                const existingItem = allProducts.find(item => String(item.id) === String(itemId));
+                if (existingItem) return existingItem;
+            }
 
             try {
                 const response = await apiRequest(`/items/${itemId}/`);
-                if (response.ok) return await response.json();
+                if (response.ok) {
+                    const item = await response.json();
+                    upsertCachedItem(item);
+                    return item;
+                }
             } catch (error) {}
 
             return null;
@@ -2881,7 +2917,11 @@
                     closeRentalModal();
                     await openRentalModal(item);
                     if (currentBooking?.status === 'confirmed' && currentBooking?.payment_status !== 'paid') {
-                        await startBookingPayment();
+                        if (hasSignedCurrentBookingContract()) {
+                            await startBookingPayment();
+                        } else {
+                            setRentModalMessage('info', 'Сначала подпишите договор с помощью ЭЦП, затем переходите к оплате по СБП.');
+                        }
                     } else if (!currentBooking) {
                         setRentModalMessage('info', 'Бронь не найдена. Проверьте раздел аренды для этого объявления.');
                     }
@@ -3184,6 +3224,56 @@
             document.getElementById('rentSummaryStatus').textContent = formatBookingStatus(currentBooking?.status || '');
         }
 
+        function hasSignedCurrentBookingContract() {
+            return !!(
+                currentBookingContract &&
+                currentBookingContract.my_role === 'renter' &&
+                currentBookingContract.my_signed
+            );
+        }
+
+        function updateRentalActionButtons() {
+            const createBookingBtn = document.getElementById('createBookingBtn');
+            const openContractBtn = document.getElementById('openContractBtn');
+            const startPaymentBtn = document.getElementById('startPaymentBtn');
+            const booking = currentBooking;
+            const canOpenContract = ['confirmed', 'completed'].includes(booking?.status);
+            const canProceedToPayment = !!booking && booking.status === 'confirmed' && (
+                booking.payment_status === 'pending' ||
+                booking.payment_status === 'paid' ||
+                hasSignedCurrentBookingContract()
+            );
+
+            if (createBookingBtn) {
+                createBookingBtn.disabled = !!booking && ['pending', 'confirmed'].includes(booking.status);
+            }
+
+            if (openContractBtn) {
+                openContractBtn.disabled = !canOpenContract;
+            }
+
+            if (startPaymentBtn) {
+                startPaymentBtn.classList.toggle('is-hidden', !canProceedToPayment);
+                startPaymentBtn.disabled = !canProceedToPayment || booking?.payment_status === 'paid';
+                startPaymentBtn.textContent = booking?.payment_status === 'paid'
+                    ? 'Оплата уже выполнена'
+                    : 'Перейти к оплате по СБП';
+            }
+        }
+
+        async function syncCurrentBookingContract() {
+            if (!currentBooking || !canUseContractForBooking(currentBooking)) {
+                currentBookingContract = null;
+                updateRentalActionButtons();
+                return null;
+            }
+
+            const result = await getContractByBooking(currentBooking.id);
+            currentBookingContract = result.success ? result.data : null;
+            updateRentalActionButtons();
+            return currentBookingContract;
+        }
+
         function resetPaymentBox() {
             currentPaymentPayload = null;
             const box = document.getElementById('paymentBox');
@@ -3252,6 +3342,7 @@
             currentRentalItem = null;
             currentBooking = null;
             currentPaymentPayload = null;
+            currentBookingContract = null;
             bookedDateRanges = [];
             closeSbpDemoModal();
             setRentModalMessage('', '');
@@ -3262,6 +3353,7 @@
         async function refreshCurrentBookingState() {
             if (!currentRentalItem) return null;
             currentBooking = await getMyBookingForItem(currentRentalItem.id);
+            await syncCurrentBookingContract();
             updateRentalSummary();
             return currentBooking;
         }
@@ -3279,6 +3371,7 @@
             document.getElementById('rentEndDate').value = currentBooking?.end_date || '';
             setRentModalMessage('', '');
             resetPaymentBox();
+            await syncCurrentBookingContract();
             updateRentalSummary();
 
             destroyRentalPickers();
@@ -3310,6 +3403,8 @@
 
             if (currentBooking?.status === 'confirmed' && currentBooking?.payment_status === 'pending') {
                 setRentModalMessage('info', 'Бронь подтверждена. Можно перейти к оплате через СБП.');
+            } else if (currentBooking?.status === 'confirmed' && !hasSignedCurrentBookingContract()) {
+                setRentModalMessage('info', 'Бронь подтверждена. Сначала подпишите договор с помощью ЭЦП, затем станет доступна оплата по СБП.');
             } else if (currentBooking?.status === 'pending') {
                 setRentModalMessage('info', 'У вас уже есть заявка по этому товару. Оплата станет доступна после подтверждения владельцем.');
             }
@@ -3356,11 +3451,29 @@
                 }
 
                 currentBooking = data;
+                currentBookingContract = null;
                 updateRentalSummary();
-                setRentModalMessage('success', 'Заявка на аренду отправлена. После подтверждения владельцем станет доступна оплата.');
+                updateRentalActionButtons();
+                setRentModalMessage('success', 'Заявка на аренду отправлена. После подтверждения владельцем откроется договор на подпись, а затем станет доступна оплата.');
             } catch (error) {
                 setRentModalMessage('error', 'Ошибка подключения при создании брони.');
             }
+        }
+
+        async function openContractFromRentalModal() {
+            const booking = await refreshCurrentBookingState();
+
+            if (!booking) {
+                setRentModalMessage('error', 'Сначала создайте заявку на аренду.');
+                return;
+            }
+
+            if (!canUseContractForBooking(booking)) {
+                setRentModalMessage('info', 'Договор станет доступен после подтверждения брони владельцем.');
+                return;
+            }
+
+            await openContractFlowForBooking(booking);
         }
 
         async function startBookingPayment() {
@@ -3378,6 +3491,12 @@
 
             if (booking.payment_status === 'paid') {
                 setRentModalMessage('success', 'Эта бронь уже оплачена.');
+                return;
+            }
+
+            if (!hasSignedCurrentBookingContract() && booking.payment_status !== 'pending') {
+                setRentModalMessage('info', 'Сначала подпишите договор с помощью ЭЦП. После этого откроется оплата по СБП.');
+                await openContractFlowForBooking(booking);
                 return;
             }
 
@@ -4070,6 +4189,7 @@
                                     <div class="booking-request-actions">
                                         <button class="btn-outline" data-action="open-rental-item" data-id="${booking.id}">Открыть объявление</button>
                                         ${canUseContractForBooking(booking) ? `<button class="btn-outline" data-action="open-contract" data-id="${booking.id}" data-scope="outgoing">Договор / ЭЦП</button>` : ''}
+                                        ${canUseContractForBooking(booking) ? `<button class="btn-outline" data-action="download-contract-pdf" data-id="${booking.id}">Скачать PDF договора</button>` : ''}
                                         ${canLeaveReviewForBooking(booking) ? `<button class="btn-primary" data-action="leave-review" data-id="${booking.id}">Оставить отзыв</button>` : ''}
                                     </div>
                                 </div>
@@ -4085,7 +4205,7 @@
                 btn.addEventListener('click', async () => {
                     const result = await confirmIncomingBooking(btn.dataset.id);
                     if (result.success) {
-                        await showIncomingBookingsPage('<div class="success-message">✅ Заявка подтверждена. Теперь арендатор сможет перейти к оплате.</div>');
+                        await showIncomingBookingsPage('<div class="success-message">✅ Заявка подтверждена. Теперь арендатор сможет подписать договор и перейти к оплате.</div>');
                     } else {
                         const msg = document.getElementById('bookingsMessage');
                         msg.innerHTML = `<div class="error-message-box">❌ ${escapeHtml(result.data?.detail || result.data?.error || 'Не удалось подтвердить заявку.')}</div>`;
@@ -4132,6 +4252,12 @@
                     if (booking) {
                         await openContractFlowForBooking(booking);
                     }
+                });
+            });
+
+            document.querySelectorAll('[data-action="download-contract-pdf"]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    await downloadContractPdfByBookingId(btn.dataset.id);
                 });
             });
         }
@@ -4220,6 +4346,31 @@
             }
         }
 
+        function downloadContractFile(contract) {
+            if (!contract?.file_url) {
+                alert('❌ PDF договора пока недоступен');
+                return;
+            }
+
+            const link = document.createElement('a');
+            link.href = contract.file_url;
+            link.download = `${contract.document_number || 'contract'}.pdf`;
+            link.rel = 'noopener';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        }
+
+        async function downloadContractPdfByBookingId(bookingId) {
+            const result = await getContractByBooking(bookingId);
+            if (!result.success) {
+                alert(`❌ ${result.data?.error || result.data?.detail || 'Не удалось загрузить договор'}`);
+                return;
+            }
+
+            downloadContractFile(result.data);
+        }
+
         async function signContractWithDemoEds(contractId, signerName, certificatePin) {
             try {
                 const response = await apiRequest(`/contracts/${contractId}/sign/`, {
@@ -4267,8 +4418,12 @@
                         <label for="contractSignerPin">PIN демонстрационного сертификата</label>
                         <input type="password" id="contractSignerPin" placeholder="Минимум 4 символа">
                     </div>
+                    <label class="contract-consent" for="contractConsentCheckbox">
+                        <input type="checkbox" id="contractConsentCheckbox">
+                        <span>Я ознакомлен и соглашаюсь с договором.</span>
+                    </label>
                     <div class="contract-sign-message" id="contractSignMessage"></div>
-                    <button class="btn-primary" id="contractSignBtn" type="button">Подписать ЭЦП</button>
+                    <button class="btn-primary" id="contractSignBtn" type="button" disabled>Подписать</button>
                 </div>
             `;
 
@@ -4308,13 +4463,19 @@
                             contract.my_role === 'owner' ? contract.renter_signed_at : contract.owner_signed_at,
                             contract.my_role === 'owner' ? contract.renter_signature_code : contract.owner_signature_code
                         )}
-                        ${contract.file_url ? `<a class="btn-outline contract-download-link" href="${contract.file_url}" target="_blank" rel="noopener">Открыть текст договора</a>` : ''}
+                        ${contract.file_url ? `<a class="btn-outline contract-download-link" href="${contract.file_url}" target="_blank" rel="noopener" download>Скачать PDF договора</a>` : ''}
                         ${signatureForm}
                     </div>
                 </div>
             `;
 
             document.getElementById('contractModalCloseBtn')?.addEventListener('click', closeContractModal);
+            document.getElementById('contractConsentCheckbox')?.addEventListener('change', (event) => {
+                const signButton = document.getElementById('contractSignBtn');
+                if (signButton) {
+                    signButton.disabled = !event.target.checked;
+                }
+            });
             document.getElementById('contractSignBtn')?.addEventListener('click', async () => {
                 const signerName = document.getElementById('contractSignerName')?.value || '';
                 const signerPin = document.getElementById('contractSignerPin')?.value || '';
@@ -4336,12 +4497,19 @@
                     }
                     if (signButton) {
                         signButton.disabled = false;
-                        signButton.textContent = 'Подписать ЭЦП';
+                        signButton.textContent = 'Подписать';
                     }
                     return;
                 }
 
                 currentContractData = result.data;
+                if (currentBooking && String(currentBooking.id) === String(result.data?.booking)) {
+                    currentBookingContract = result.data;
+                    updateRentalActionButtons();
+                    if (result.data.my_role === 'renter' && result.data.my_signed) {
+                        setRentModalMessage('success', 'Договор подписан. Теперь можно переходить к оплате по СБП.');
+                    }
+                }
                 renderContractModal(currentContractData);
             });
         }
@@ -4359,6 +4527,10 @@
             }
 
             currentContractData = result.data;
+            if (currentBooking && String(currentBooking.id) === String(result.data?.booking)) {
+                currentBookingContract = result.data;
+                updateRentalActionButtons();
+            }
             renderContractModal(currentContractData);
             document.getElementById('contractModalOverlay')?.classList.add('active');
         }
@@ -4370,7 +4542,7 @@
                 return;
             }
 
-            const item = await getItemById(itemId);
+            const item = await getItemById(itemId, { preferFresh: true });
             if (!item) {
                 alert('❌ Не удалось загрузить объявление для отзыва');
                 return;
@@ -4488,6 +4660,7 @@
                                     ${canUseContractForBooking(booking) ? `
                                         <div class="booking-request-actions">
                                             <button class="btn-outline" type="button" data-action="open-owner-contract" data-id="${booking.id}">Договор / ЭЦП</button>
+                                            <button class="btn-outline" type="button" data-action="download-owner-contract-pdf" data-id="${booking.id}">Скачать PDF договора</button>
                                         </div>
                                     ` : ''}
                                 </div>
@@ -4515,6 +4688,7 @@
                                     ${canUseContractForBooking(booking) ? `
                                         <div class="booking-request-actions">
                                             <button class="btn-outline" type="button" data-action="open-owner-contract" data-id="${booking.id}">Договор / ЭЦП</button>
+                                            <button class="btn-outline" type="button" data-action="download-owner-contract-pdf" data-id="${booking.id}">Скачать PDF договора</button>
                                         </div>
                                     ` : ''}
                                 </div>
@@ -4539,6 +4713,12 @@
                     if (booking) {
                         await openContractFlowForBooking(booking);
                     }
+                });
+            });
+
+            document.querySelectorAll('[data-action="download-owner-contract-pdf"]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    await downloadContractPdfByBookingId(btn.dataset.id);
                 });
             });
         }
@@ -5395,6 +5575,7 @@
 
         document.getElementById('rentModalCloseBtn')?.addEventListener('click', closeRentalModal);
         document.getElementById('createBookingBtn')?.addEventListener('click', createBookingRequest);
+        document.getElementById('openContractBtn')?.addEventListener('click', openContractFromRentalModal);
         document.getElementById('startPaymentBtn')?.addEventListener('click', startBookingPayment);
         document.getElementById('paymentLinkBtn')?.addEventListener('click', openSbpDemoModal);
         document.getElementById('rentModalOverlay')?.addEventListener('click', (e) => {

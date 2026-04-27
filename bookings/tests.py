@@ -6,6 +6,7 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 
 from chats.models import Chat
+from contracts.models import Contract
 from items.models import Item
 
 from .models import Booking, Review
@@ -184,6 +185,7 @@ class BookingApiTest(TestCase):
         booking = self.create_booking()
         booking._status_changed_by = self.owner
         booking.change_status('confirmed')
+        Contract.create_for_booking(booking).sign_for_user(self.renter, 'Ivan Renter', '1234')
         booking.start_sbp_payment()
         booking.confirm_sbp_payment()
 
@@ -197,6 +199,7 @@ class BookingApiTest(TestCase):
         booking = self.create_booking()
         booking._status_changed_by = self.owner
         booking.change_status('confirmed')
+        Contract.create_for_booking(booking).sign_for_user(self.renter, 'Ivan Renter', '1234')
         booking.start_sbp_payment()
         booking.confirm_sbp_payment()
         booking._status_changed_by = self.owner
@@ -221,6 +224,7 @@ class BookingApiTest(TestCase):
         )
         booking._status_changed_by = self.owner
         booking.change_status('confirmed')
+        Contract.create_for_booking(booking).sign_for_user(self.renter, 'Ivan Renter', '1234')
         booking.start_sbp_payment()
         booking.confirm_sbp_payment()
 
@@ -242,6 +246,7 @@ class BookingApiTest(TestCase):
         booking = self.create_booking()
         booking._status_changed_by = self.owner
         booking.change_status('confirmed')
+        Contract.create_for_booking(booking).sign_for_user(self.renter, 'Ivan Renter', '1234')
         booking.start_sbp_payment()
         booking.confirm_sbp_payment()
         booking._status_changed_by = self.owner
@@ -260,6 +265,7 @@ class BookingApiTest(TestCase):
         booking = self.create_booking()
         booking._status_changed_by = self.owner
         booking.change_status('confirmed')
+        Contract.create_for_booking(booking).sign_for_user(self.renter, 'Ivan Renter', '1234')
         booking.start_sbp_payment()
         booking.confirm_sbp_payment()
         booking._status_changed_by = self.owner
@@ -285,6 +291,7 @@ class BookingApiTest(TestCase):
         booking = self.create_booking()
         booking._status_changed_by = self.owner
         booking.change_status('confirmed')
+        Contract.create_for_booking(booking).sign_for_user(self.renter, 'Ivan Renter', '1234')
 
         response = self.renter_client.post(f'/api/bookings/{booking.id}/start_payment/')
 
@@ -294,6 +301,17 @@ class BookingApiTest(TestCase):
         self.assertEqual(response.data['provider'], 'sbp_stub')
         self.assertEqual(response.data['booking_id'], booking.id)
         self.assertIn('qr_payload', response.data)
+
+    def test_payment_requires_renter_signature(self):
+        booking = self.create_booking()
+        booking._status_changed_by = self.owner
+        booking.change_status('confirmed')
+
+        response = self.renter_client.post(f'/api/bookings/{booking.id}/start_payment/')
+
+        self.assertEqual(response.status_code, 400)
+        booking.refresh_from_db()
+        self.assertEqual(booking.payment_status, 'unpaid')
 
     def test_payment_cannot_start_before_confirmation(self):
         booking = self.create_booking()
@@ -308,6 +326,7 @@ class BookingApiTest(TestCase):
         booking = self.create_booking()
         booking._status_changed_by = self.owner
         booking.change_status('confirmed')
+        Contract.create_for_booking(booking).sign_for_user(self.renter, 'Ivan Renter', '1234')
         booking.start_sbp_payment()
 
         response = self.renter_client.post(f'/api/bookings/{booking.id}/confirm_payment/')
@@ -337,6 +356,7 @@ class BookingApiTest(TestCase):
 
         booking._status_changed_by = self.owner
         booking.change_status('confirmed')
+        Contract.create_for_booking(booking).sign_for_user(self.renter, 'Ivan Renter', '1234')
 
         response = self.renter_client.post(f'/api/bookings/{booking.id}/start_payment/')
 

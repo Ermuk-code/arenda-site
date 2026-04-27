@@ -55,13 +55,14 @@ class ContractApiTest(TestCase):
         self.assertEqual(response.data['booking'], self.booking.id)
         self.assertEqual(response.data['status'], 'draft')
         self.assertTrue(Contract.objects.filter(booking=self.booking).exists())
+        self.assertTrue(response.data['file_url'].endswith('.pdf'))
 
     def test_renter_and_owner_can_sign_contract_with_demo_eds(self):
         contract = Contract.create_for_booking(self.booking)
 
         renter_response = self.renter_client.post(
             f'/api/contracts/{contract.id}/sign/',
-            {'signer_name': 'Иван Арендатор', 'certificate_pin': '1234'},
+            {'signer_name': 'Ivan Renter', 'certificate_pin': '1234'},
             format='json',
         )
         self.assertEqual(renter_response.status_code, 200)
@@ -71,7 +72,7 @@ class ContractApiTest(TestCase):
 
         owner_response = self.owner_client.post(
             f'/api/contracts/{contract.id}/sign/',
-            {'signer_name': 'Ольга Владелец', 'certificate_pin': '5678'},
+            {'signer_name': 'Olga Owner', 'certificate_pin': '5678'},
             format='json',
         )
         self.assertEqual(owner_response.status_code, 200)
@@ -80,6 +81,7 @@ class ContractApiTest(TestCase):
         self.assertIsNotNone(contract.signed_at)
         self.assertTrue(contract.renter_signature_code.startswith('EDS-DEMO-RENTER-'))
         self.assertTrue(contract.owner_signature_code.startswith('EDS-DEMO-OWNER-'))
+        self.assertTrue(contract.file.name.endswith('.pdf'))
 
     def test_contract_is_unavailable_for_pending_booking(self):
         pending_booking = Booking.objects.create(

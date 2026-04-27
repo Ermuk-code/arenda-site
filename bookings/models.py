@@ -139,6 +139,8 @@ class Booking(models.Model):
             raise ValidationError("Payment is available only for confirmed bookings")
         if self.payment_status == 'paid':
             raise ValidationError("Booking is already paid")
+        if not self.has_renter_signed_contract():
+            raise ValidationError("Sign the contract with demo EDS before SBP payment")
 
         now = timezone.now()
         if (
@@ -164,6 +166,14 @@ class Booking(models.Model):
             ]
         )
         return self.get_sbp_payment_payload()
+
+    def has_renter_signed_contract(self):
+        from contracts.models import Contract
+
+        contract = getattr(self, 'contract', None)
+        if contract is None and self.status in ['confirmed', 'completed']:
+            contract = Contract.create_for_booking(self)
+        return bool(contract and contract.renter_signed_at)
 
     def confirm_sbp_payment(self):
         if self.status != 'confirmed':

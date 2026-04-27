@@ -1,9 +1,13 @@
 import uuid
+from io import BytesIO
+from pathlib import Path
+from textwrap import wrap
 
-from django.core.files.base import ContentFile
 from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
 from django.db import models
 from django.utils import timezone
+from PIL import Image, ImageDraw, ImageFont
 
 from bookings.models import Booking
 
@@ -54,6 +58,23 @@ class Contract(models.Model):
     def build_preview_text(self):
         owner = self.booking.item.owner
         renter = self.booking.renter
+
+        renter_signature = 'не подписан'
+        if self.renter_signed_at:
+            renter_signature = (
+                f'{self.renter_signer_name or renter.username}, '
+                f'{self.renter_signed_at:%d.%m.%Y %H:%M}, '
+                f'код {self.renter_signature_code or "—"}'
+            )
+
+        owner_signature = 'не подписан'
+        if self.owner_signed_at:
+            owner_signature = (
+                f'{self.owner_signer_name or owner.username}, '
+                f'{self.owner_signed_at:%d.%m.%Y %H:%M}, '
+                f'код {self.owner_signature_code or "—"}'
+            )
+
         return (
             f'ДОГОВОР АРЕНДЫ № {self.document_number}\n\n'
             f'Предмет аренды: {self.booking.item.title}\n'
@@ -64,14 +85,16 @@ class Contract(models.Model):
             f'Статус брони: {self.booking.status}\n\n'
             f'Условия:\n'
             f'1. Арендодатель передает вещь во временное пользование арендатору.\n'
-            f'2. Арендатор обязуется использовать вещь по назначению и вернуть в согласованный срок.\n'
-            f'3. Подписание ЭЦП в этом интерфейсе является демонстрационным и используется только для показа дипломного проекта.\n'
+            f'2. Арендатор обязуется использовать вещь по назначению и вернуть ее в согласованный срок.\n'
+            f'3. Подписание ЭЦП в этом интерфейсе является демонстрационным и используется только для показа учебного проекта.\n\n'
+            f'Подпись арендатора: {renter_signature}\n'
+            f'Подпись арендодателя: {owner_signature}\n'
         )
 
     def ensure_generated_file(self):
         content = self.build_preview_text()
-        filename = f'contract_{self.booking_id}_{self.document_number}.txt'
-        self.file.save(filename, ContentFile(content.encode('utf-8')), save=False)
+        filename = f'contract_{self.booking_id}_{self.document_number}.pdf'
+        self.file.save(filename, ContentFile(self.build_pdf_bytes(content)), save=False)
         super().save(update_fields=['file'])
 
     def can_be_opened(self):
@@ -122,6 +145,59 @@ class Contract(models.Model):
                 'signed_at',
             ]
         )
+        self.ensure_generated_file()
 
     def generate_signature_code(self, role):
         return f'EDS-DEMO-{role}-{self.booking_id}-{uuid.uuid4().hex[:10].upper()}'
+
+    def build_pdf_bytes(self, content):
+        font = self._load_pdf_font(size=28)
+        page_width, page_height = 1240, 1754
+        margin_x = 90
+        margin_y = 90
+        line_height = 42
+        max_lines_per_page = max(1, (page_height - margin_y * 2) // line_height)
+
+        wrapped_lines = []
+        for paragraph in content.splitlines():
+            text = paragraph.strip()
+            if not text:
+                wrapped_lines.append('')
+                continue
+            wrapped_lines.extend(wrap(text, width=60))
+
+        if not wrapped_lines:
+            wrapped_lines = ['']
+
+        pages = []
+        for page_start in range(0, len(wrapped_lines), max_lines_per_page):
+            page = Image.new('RGB', (page_width, page_height), 'white')
+            draw = ImageDraw.Draw(page)
+            y = margin_y
+            for line in wrapped_lines[page_start:page_start + max_lines_per_page]:
+                draw.text((margin_x, y), line, fill='#111111', font=font)
+                y += line_height
+            pages.append(page)
+
+        buffer = BytesIO()
+        first_page, extra_pages = pages[0], pages[1:]
+        first_page.save(
+            buffer,
+            format='PDF',
+            save_all=True,
+            append_images=extra_pages,
+            resolution=150.0
+        )
+        return buffer.getvalue()
+
+    def _load_pdf_font(self, size):
+        font_candidates = [
+            Path('C:/Windows/Fonts/arial.ttf'),
+            Path('C:/Windows/Fonts/tahoma.ttf'),
+            Path('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'),
+            Path('/usr/share/fonts/dejavu/DejaVuSans.ttf'),
+        ]
+        for font_path in font_candidates:
+            if font_path.exists():
+                return ImageFont.truetype(str(font_path), size=size)
+        return ImageFont.load_default()

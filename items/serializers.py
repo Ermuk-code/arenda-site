@@ -1,4 +1,5 @@
 from rest_framework import serializers
+
 from .models import Item, ItemImage, ItemVideo, Category, ItemReview
 
 class ItemImageSerializer(serializers.ModelSerializer):
@@ -51,11 +52,11 @@ class ItemSerializer(serializers.ModelSerializer):
         ]
 
     def get_item_reviews(self, obj):
-        reviews = (
-            ItemReview.objects.filter(item=obj)
-            .select_related('author')
-            .order_by('-created_at')[:6]
-        )
+        from bookings.models import Review
+
+        reviews = Review.objects.filter(
+            booking__item=obj
+        ).select_related('booking__renter').order_by('-created_at')[:6]
 
         return [
             {
@@ -63,7 +64,7 @@ class ItemSerializer(serializers.ModelSerializer):
                 'rating': review.rating,
                 'comment': review.comment,
                 'created_at': review.created_at.isoformat(),
-                'author_username': review.author.username,
+                'author_username': review.booking.renter.username,
             }
             for review in reviews
         ]

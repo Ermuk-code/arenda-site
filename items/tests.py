@@ -7,7 +7,7 @@ from datetime import date
 from rest_framework.test import APIClient
 
 from .models import Category, Item, ItemImage
-from bookings.models import Booking
+from bookings.models import Booking, Review
 
 User = get_user_model()
 
@@ -185,6 +185,28 @@ class ItemApiBookingRangesTest(TestCase):
             response.data,
             [{'start_date': '2026-05-10', 'end_date': '2026-05-12'}]
         )
+
+    def test_item_detail_includes_booking_reviews(self):
+        booking = Booking.objects.create(
+            item=self.item,
+            renter=self.renter,
+            start_date=date(2026, 5, 10),
+            end_date=date(2026, 5, 12),
+            status='completed',
+            payment_status='paid'
+        )
+        Review.objects.create(
+            booking=booking,
+            rating=5,
+            comment='Отличная аренда'
+        )
+
+        response = self.client.get(f'/api/items/{self.item.id}/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data['item_reviews']), 1)
+        self.assertEqual(response.data['item_reviews'][0]['author_username'], self.renter.username)
+        self.assertEqual(response.data['item_reviews'][0]['comment'], 'Отличная аренда')
 
 
 class ItemCategoryApiTest(TestCase):
