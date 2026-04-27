@@ -589,6 +589,7 @@
             font-size: 0.9rem;
             line-height: 1.4;
             color: rgba(255,255,255,0.9);
+            white-space: pre-wrap;
         }
         .site-toast-close {
             margin-top: 10px;
@@ -1305,6 +1306,7 @@
         let availabilityFilterStart = '';
         let availabilityFilterEnd = '';
         let allProducts = [];
+        let activePreviewItemId = null;
         let activeChatConversationId = null;
         let activeChatFocusHandler = null;
         let activeChatVisibilityHandler = null;
@@ -1328,6 +1330,33 @@
 
         function getAccessToken() { return localStorage.getItem('access_token'); }
         function getRefreshToken() { return localStorage.getItem('refresh_token'); }
+        function getSeenNotificationsStorageKey() {
+            const userId = localStorage.getItem('user_id');
+            return userId ? `seen_notifications_${userId}` : 'seen_notifications_guest';
+        }
+        function loadSeenNotificationIds() {
+            try {
+                const raw = localStorage.getItem(getSeenNotificationsStorageKey());
+                const parsed = raw ? JSON.parse(raw) : [];
+                return new Set(Array.isArray(parsed) ? parsed.map(String) : []);
+            } catch (e) {
+                return new Set();
+            }
+        }
+        function persistSeenNotificationIds() {
+            try {
+                const ids = Array.from(shownNotificationIds).slice(-300);
+                localStorage.setItem(getSeenNotificationsStorageKey(), JSON.stringify(ids));
+            } catch (e) {}
+        }
+        function rememberNotificationShown(notificationId) {
+            if (notificationId === undefined || notificationId === null) return;
+            shownNotificationIds.add(String(notificationId));
+            persistSeenNotificationIds();
+        }
+        function hasShownNotification(notificationId) {
+            return shownNotificationIds.has(String(notificationId));
+        }
 
         function setTokens(access, refresh, userId, username, email, userType, profileData) {
             localStorage.setItem('access_token', access);
@@ -1854,6 +1883,7 @@
         }
 
         async function openItemPreview(item) {
+            activePreviewItemId = item?.id || null;
             let reviewBooking = null;
             if (isAuthenticated()) {
                 const outgoingBookings = await getOutgoingBookings();
@@ -1925,6 +1955,7 @@
         }
 
         function closeItemPreview() {
+            activePreviewItemId = null;
             document.getElementById('itemPreviewOverlay')?.classList.remove('active');
             document.getElementById('itemPreviewContent').innerHTML = '';
         }
@@ -2617,6 +2648,27 @@
             }
         }
 
+        function getNotificationBody(notification) {
+            if (!notification) return '';
+
+            const base = notification.message || '';
+            if (notification.type !== 'new_review') return base;
+
+            const metadata = notification.metadata || {};
+            const parts = [base];
+            const rating = metadata.rating;
+            const comment = (metadata.comment || '').trim();
+
+            if (rating && !base.includes('/5')) {
+                parts.push(`Оценка: ${rating}/5`);
+            }
+            if (comment && !base.includes(comment)) {
+                parts.push(`Комментарий: ${comment}`);
+            }
+
+            return parts.join('\n');
+        }
+
         function showSiteToast(notification) {
             const stack = document.getElementById('siteToastStack');
             const meta = getNotificationMeta(notification);
@@ -2626,7 +2678,7 @@
             toast.className = `site-toast ${meta.actionLabel ? 'actionable' : ''}`;
             toast.innerHTML = `
                 <div class="site-toast-title">${escapeHtml(meta.title)}</div>
-                <div class="site-toast-body">${escapeHtml(notification.message || '')}</div>
+                <div class="site-toast-body">${escapeHtml(getNotificationBody(notification))}</div>
                 <div class="site-toast-actions">
                     ${meta.actionLabel ? `<button class="site-toast-open" type="button">${escapeHtml(meta.actionLabel)}</button>` : ''}
                     <button class="site-toast-close" type="button">Закрыть</button>
@@ -2660,11 +2712,25 @@
             const meta = getNotificationMeta(notification);
             if (!meta || !notification?.id) return;
 
-            if (shownNotificationIds.has(notification.id)) return;
+            if (hasShownNotification(notification.id)) return;
 
-            shownNotificationIds.add(notification.id);
+            rememberNotificationShown(notification.id);
             if (!notification.is_read) {
                 showSiteToast(notification);
+            }
+
+            if (notification.type === 'new_review') {
+                const metadata = notification.metadata || {};
+                if (
+                    activePreviewItemId &&
+                    metadata.item_id &&
+                    String(activePreviewItemId) === String(metadata.item_id)
+                ) {
+                    const refreshedItem = await getItemById(metadata.item_id);
+                    if (refreshedItem) {
+                        await openItemPreview(refreshedItem);
+                    }
+                }
             }
 
             await refreshNavCounters();
@@ -2703,6 +2769,7 @@
         function startNotificationPolling() {
             stopNotificationPolling();
             if (!isAuthenticated()) return;
+            shownNotificationIds = loadSeenNotificationIds();
 
             checkSiteNotifications();
             notificationPollInterval = setInterval(() => {
