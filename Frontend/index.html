@@ -86,7 +86,7 @@
         .card { background: white; border-radius: 32px; padding: 24px 22px 28px; flex: 1; min-width: 260px; max-width: 320px; box-shadow: 0 12px 28px rgba(0,0,0,0.04); transition: 0.25s; border: 1px solid #eef2f0; text-align: center; position: relative; }
         .card:hover { transform: translateY(-6px); box-shadow: 0 24px 36px rgba(0,0,0,0.08); }
         .card-owner-badge { position: absolute; top: 16px; right: 16px; background: #2b6a7c20; color: #2b6a7c; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
-        .card-image { width: 100%; height: 180px; background: linear-gradient(135deg, #eef2f7, #e0e8ef); border-radius: 24px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .card-image { width: 100%; height: 180px; background: linear-gradient(135deg, #eef2f7, #e0e8ef); border-radius: 24px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; }
         .card-image img { width: 100%; height: 100%; object-fit: cover; }
         .card-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 12px; color: #1c3d48; }
         .card-description { font-size: 0.9rem; color: #6c8b9b; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -917,13 +917,23 @@
             padding: 16px;
             background: linear-gradient(180deg, #ffffff, #fbfdff);
         }
+        .owner-item-image-wrap {
+            display: block;
+            border: none;
+            padding: 0;
+            margin: 0 0 12px;
+            border-radius: 18px;
+            overflow: hidden;
+            background: transparent;
+            cursor: pointer;
+        }
         .owner-item-image {
             width: 100%;
             height: 160px;
             object-fit: cover;
             border-radius: 18px;
             background: #eef2f7;
-            margin-bottom: 12px;
+            display: block;
         }
         .owner-item-title {
             font-size: 1.05rem;
@@ -1464,7 +1474,7 @@
         <div class="sbp-demo-modal">
             <div class="sbp-demo-header">
                 <div class="sbp-demo-title">Оплата через СБП</div>
-                <div class="sbp-demo-subtitle">Демо-экран оплаты. Здесь мы имитируем переход в банковское приложение прямо внутри сайта.</div>
+                <div class="sbp-demo-subtitle">Демо-экран оплаты.</div>
             </div>
             <div class="sbp-demo-body">
                 <div class="sbp-demo-badge">СБП Demo</div>
@@ -2183,9 +2193,13 @@
 
             document.getElementById('toggleReviewFormBtn')?.addEventListener('click', () => {
                 const fields = document.getElementById('reviewFormFields');
+                const toggleBtn = document.getElementById('toggleReviewFormBtn');
                 if (fields) {
                     const shouldShow = fields.style.display === 'none';
                     fields.style.display = shouldShow ? 'block' : 'none';
+                    if (toggleBtn) {
+                        toggleBtn.textContent = shouldShow ? 'Закрыть поле для отзыва' : 'Оставить отзыв';
+                    }
                 }
             });
 
@@ -3522,7 +3536,15 @@
                 return `
                     <div class="card">
                         ${isOwner ? '<div class="card-owner-badge">Ваше объявление</div>' : ''}
-                        <div class="card-image"><img src="${imageUrl}" alt="${escapeHtml(product.title || product.name || 'Без названия')}"></div>
+                        <div
+                            class="card-image"
+                            role="button"
+                            tabindex="0"
+                            data-open-item-preview="${product.id}"
+                            aria-label="Открыть объявление ${escapeHtml(product.title || product.name || 'Без названия')}"
+                        >
+                            <img src="${imageUrl}" alt="${escapeHtml(product.title || product.name || 'Без названия')}">
+                        </div>
                         <div class="card-title">${escapeHtml(product.title || product.name || 'Без названия')}</div>
                         ${product.description ? `<div class="card-description">${escapeHtml(product.description.substring(0, 80))}${product.description.length > 80 ? '...' : ''}</div>` : ''}
                         <div class="card-price">${product.price_per_day || product.price || 0} ₽/<small>день</small></div>
@@ -3533,6 +3555,21 @@
                     </div>
                 `;
             }).join('');
+
+            document.querySelectorAll('[data-open-item-preview]').forEach(node => {
+                const openPreview = async () => {
+                    const sourceItem = allProducts.find(item => String(item.id) === String(node.dataset.openItemPreview));
+                    if (sourceItem) await openItemPreview(sourceItem);
+                };
+
+                node.addEventListener('click', openPreview);
+                node.addEventListener('keydown', async (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        await openPreview();
+                    }
+                });
+            });
 
             document.querySelectorAll('.card-btn').forEach(btn => {
                 btn.onclick = async () => {
@@ -4400,28 +4437,36 @@
             };
         }
 
+        function splitBookingsByTimeline(bookings) {
+            const today = getTodayDateString();
+            const current = (bookings || [])
+                .filter(booking => ['pending', 'confirmed'].includes(booking.status) && booking.end_date >= today)
+                .sort((a, b) => getBookingSortDate(a) - getBookingSortDate(b));
+            const past = (bookings || [])
+                .filter(booking => booking.status === 'completed' || booking.status === 'cancelled' || booking.end_date < today)
+                .sort((a, b) => getBookingSortDate(b) - getBookingSortDate(a));
+
+            return { current, past };
+        }
+
         async function showMyItemsPage() {
             if (!isAuthenticated()) { alert('Пожалуйста, войдите в систему'); showLoginPage(); return; }
 
-            const [items, bookings] = await Promise.all([
+            const [items, incomingBookings, outgoingBookings] = await Promise.all([
                 getMyItems(),
-                getAllIncomingBookings()
+                getAllIncomingBookings(),
+                getOutgoingBookings()
             ]);
 
-            const stats = getOwnerDashboardStats(items, bookings);
-            const today = getTodayDateString();
-            const currentBookings = bookings
-                .filter(booking => ['pending', 'confirmed'].includes(booking.status) && booking.end_date >= today)
-                .sort((a, b) => getBookingSortDate(a) - getBookingSortDate(b));
-            const pastBookings = bookings
-                .filter(booking => booking.status === 'completed' || booking.status === 'cancelled' || booking.end_date < today)
-                .sort((a, b) => getBookingSortDate(b) - getBookingSortDate(a));
+            const stats = getOwnerDashboardStats(items, incomingBookings);
+            const ownerBookings = splitBookingsByTimeline(incomingBookings);
+            const renterBookings = splitBookingsByTimeline(outgoingBookings);
 
             document.getElementById('app').innerHTML = `
                 <div class="my-items-page"><div class="my-items-card">
                     <div class="back-button" id="backToMainFromMyItems">← Назад</div>
                     <div class="my-items-title">📦 Мои объявления</div>
-                    <div class="my-items-sub">Личный кабинет владельца: ваши лоты, прибыль и история аренд.</div>
+                    <div class="my-items-sub">Здесь собраны ваши объявления, аренды у вас и объявления, которые арендуете вы.</div>
 
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -4429,12 +4474,12 @@
                             <div class="stat-card-value">${stats.itemsCount}</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-card-label">Текущие аренды</div>
-                            <div class="stat-card-value">${stats.currentBookingsCount}</div>
+                            <div class="stat-card-label">У меня арендовали</div>
+                            <div class="stat-card-value">${ownerBookings.current.length}</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-card-label">Прошлые аренды</div>
-                            <div class="stat-card-value">${stats.pastBookingsCount}</div>
+                            <div class="stat-card-label">Я арендую</div>
+                            <div class="stat-card-value">${renterBookings.current.length}</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-card-label">Общая прибыль</div>
@@ -4452,12 +4497,21 @@
                                     'https://placehold.co/400x300/eef2e9/2b6a7c?text=Ваше+объявление';
                                 return `
                                     <div class="owner-item-card">
-                                        <img class="owner-item-image" src="${imageUrl}" alt="${escapeHtml(item.title || 'Объявление')}">
+                                        <div
+                                            class="owner-item-image-wrap"
+                                            role="button"
+                                            tabindex="0"
+                                            data-action="open-my-item-preview"
+                                            data-id="${item.id}"
+                                            aria-label="Открыть объявление ${escapeHtml(item.title || 'Без названия')}"
+                                        >
+                                            <img class="owner-item-image" src="${imageUrl}" alt="${escapeHtml(item.title || 'Объявление')}">
+                                        </div>
                                         <div class="owner-item-title">${escapeHtml(item.title || 'Без названия')}</div>
                                         <div class="owner-item-meta">
                                             <div>Цена: ${formatPrice(item.price_per_day || 0)} / день</div>
-                                            <div>Статус: ${escapeHtml(item.status || 'available')}</div>
-                                            <div>Броней в ожидании: ${(bookings.filter(booking => String(booking.item) === String(item.id) && booking.status === 'pending')).length}</div>
+                                            <div>Статус: ${formatItemStatus(item.status || 'available')}</div>
+                                            <div>Броней в ожидании: ${(incomingBookings.filter(booking => String(booking.item) === String(item.id) && booking.status === 'pending')).length}</div>
                                         </div>
                                         <div class="owner-item-actions">
                                             <button class="btn-outline" type="button" data-action="edit-my-item" data-id="${item.id}">Изменить</button>
@@ -4468,10 +4522,10 @@
                         </div>
                     `}
 
-                    <div class="section-title">Текущие аренды</div>
-                    ${currentBookings.length === 0 ? '<div class="empty-message">Сейчас нет активных или ожидающих аренд.</div>' : `
+                    <div class="section-title">У меня арендовали сейчас</div>
+                    ${ownerBookings.current.length === 0 ? '<div class="empty-message">Сейчас нет активных или ожидающих аренд ваших объявлений.</div>' : `
                         <div class="bookings-list">
-                            ${currentBookings.map(booking => `
+                            ${ownerBookings.current.map(booking => `
                                 <div class="booking-request">
                                     <div class="booking-request-head">
                                         <div>
@@ -4495,10 +4549,10 @@
                         </div>
                     `}
 
-                    <div class="section-title">Прошлые аренды</div>
-                    ${pastBookings.length === 0 ? '<div class="empty-message">История прошлых аренд пока пуста.</div>' : `
+                    <div class="section-title">История аренд моих объявлений</div>
+                    ${ownerBookings.past.length === 0 ? '<div class="empty-message">История аренд ваших объявлений пока пуста.</div>' : `
                         <div class="bookings-list">
-                            ${pastBookings.map(booking => `
+                            ${ownerBookings.past.map(booking => `
                                 <div class="booking-request">
                                     <div class="booking-request-head">
                                         <div>
@@ -4517,6 +4571,62 @@
                                             <button class="btn-outline" type="button" data-action="open-owner-contract" data-id="${booking.id}">Договор / ЭЦП</button>
                                         </div>
                                     ` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    `}
+
+                    <div class="section-title">Я арендую сейчас</div>
+                    ${renterBookings.current.length === 0 ? '<div class="empty-message">У вас нет активных или ожидающих аренд чужих объявлений.</div>' : `
+                        <div class="bookings-list">
+                            ${renterBookings.current.map(booking => `
+                                <div class="booking-request">
+                                    <div class="booking-request-head">
+                                        <div>
+                                            <div class="booking-request-title">${escapeHtml(getBookingItemTitle(booking))}</div>
+                                            <div class="booking-request-meta">
+                                                <div>Владелец: ${escapeHtml(booking.owner_username || booking.owner?.username || 'Пользователь')}</div>
+                                                <div>Период: ${escapeHtml(booking.start_date || '—')} — ${escapeHtml(booking.end_date || '—')}</div>
+                                                <div>Сумма: ${formatPrice(booking.total_price || 0)}</div>
+                                                <div>Оплата: ${formatPaymentStatus(booking.payment_status || 'unpaid')}</div>
+                                            </div>
+                                            ${getReviewSummaryMarkup(booking)}
+                                        </div>
+                                        <div class="booking-request-status">${formatBookingStatus(booking.status)}</div>
+                                    </div>
+                                    <div class="booking-request-actions">
+                                        <button class="btn-outline" data-action="open-rental-item" data-id="${booking.id}">Открыть объявление</button>
+                                        ${canUseContractForBooking(booking) ? `<button class="btn-outline" data-action="open-contract" data-id="${booking.id}" data-scope="outgoing">Договор / ЭЦП</button>` : ''}
+                                        ${canLeaveReviewForBooking(booking) ? `<button class="btn-primary" data-action="leave-review" data-id="${booking.id}">Оставить отзыв</button>` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `}
+
+                    <div class="section-title">История моих аренд</div>
+                    ${renterBookings.past.length === 0 ? '<div class="empty-message">История ваших аренд пока пуста.</div>' : `
+                        <div class="bookings-list">
+                            ${renterBookings.past.map(booking => `
+                                <div class="booking-request">
+                                    <div class="booking-request-head">
+                                        <div>
+                                            <div class="booking-request-title">${escapeHtml(getBookingItemTitle(booking))}</div>
+                                            <div class="booking-request-meta">
+                                                <div>Владелец: ${escapeHtml(booking.owner_username || booking.owner?.username || 'Пользователь')}</div>
+                                                <div>Период: ${escapeHtml(booking.start_date || '—')} — ${escapeHtml(booking.end_date || '—')}</div>
+                                                <div>Сумма: ${formatPrice(booking.total_price || 0)}</div>
+                                                <div>Оплата: ${formatPaymentStatus(booking.payment_status || 'unpaid')}</div>
+                                            </div>
+                                            ${getReviewSummaryMarkup(booking)}
+                                        </div>
+                                        <div class="booking-request-status">${formatBookingStatus(booking.status)}</div>
+                                    </div>
+                                    <div class="booking-request-actions">
+                                        <button class="btn-outline" data-action="open-rental-item" data-id="${booking.id}">Открыть объявление</button>
+                                        ${canUseContractForBooking(booking) ? `<button class="btn-outline" data-action="open-contract" data-id="${booking.id}" data-scope="outgoing">Договор / ЭЦП</button>` : ''}
+                                        ${canLeaveReviewForBooking(booking) ? `<button class="btn-primary" data-action="leave-review" data-id="${booking.id}">Оставить отзыв</button>` : ''}
+                                    </div>
                                 </div>
                             `).join('')}
                         </div>
@@ -4525,6 +4635,19 @@
             `;
 
             document.getElementById('backToMainFromMyItems')?.addEventListener('click', () => showMainPage());
+            document.querySelectorAll('[data-action="open-my-item-preview"]').forEach(node => {
+                const openPreview = async () => {
+                    const item = items.find(entry => String(entry.id) === String(node.dataset.id));
+                    if (item) await openItemPreview(item);
+                };
+                node.addEventListener('click', openPreview);
+                node.addEventListener('keydown', async (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        await openPreview();
+                    }
+                });
+            });
             document.querySelectorAll('[data-action="edit-my-item"]').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const item = items.find(entry => String(entry.id) === String(btn.dataset.id));
@@ -4535,7 +4658,37 @@
             document.querySelectorAll('[data-action="open-owner-contract"]').forEach(btn => {
                 btn.addEventListener('click', async () => {
                     const bookingId = String(btn.dataset.id);
-                    const booking = bookings.find(entry => String(entry.id) === bookingId);
+                    const booking = incomingBookings.find(entry => String(entry.id) === bookingId);
+                    if (booking) {
+                        await openContractFlowForBooking(booking);
+                    }
+                });
+            });
+
+            document.querySelectorAll('[data-action="open-rental-item"]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const booking = outgoingBookings.find(entry => String(entry.id) === String(btn.dataset.id));
+                    if (booking) {
+                        await openReviewFlowForBooking(booking);
+                    }
+                });
+            });
+
+            document.querySelectorAll('[data-action="leave-review"]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const booking = outgoingBookings.find(entry => String(entry.id) === String(btn.dataset.id));
+                    if (booking) {
+                        await openReviewFlowForBooking(booking);
+                    }
+                });
+            });
+
+            document.querySelectorAll('[data-action="open-contract"]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const bookingId = String(btn.dataset.id);
+                    const scope = btn.dataset.scope;
+                    const sourceList = scope === 'incoming' ? incomingBookings : outgoingBookings;
+                    const booking = sourceList.find(entry => String(entry.id) === bookingId);
                     if (booking) {
                         await openContractFlowForBooking(booking);
                     }
