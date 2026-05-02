@@ -105,6 +105,36 @@ class BookingModelTest(TestCase):
 
         self.assertEqual(booking.total_price, 3000)
 
+    def test_hiding_review_excludes_it_from_rating_counters(self):
+        booking = Booking.objects.create(
+            item=self.item,
+            renter=self.renter,
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 1, 3),
+            status="completed"
+        )
+        review = Review.objects.create(
+            booking=booking,
+            rating=5,
+            comment="Visible review"
+        )
+
+        self.item.refresh_from_db()
+        self.owner.refresh_from_db()
+        self.assertEqual(self.item.reviews_count, 1)
+        self.assertEqual(self.owner.reviews_count, 1)
+
+        review.hide(reason='Offensive language')
+
+        self.item.refresh_from_db()
+        self.owner.refresh_from_db()
+        review.refresh_from_db()
+        self.assertTrue(review.is_hidden)
+        self.assertEqual(self.item.reviews_count, 0)
+        self.assertEqual(self.owner.reviews_count, 0)
+        self.assertEqual(self.item.average_rating, 0)
+        self.assertEqual(self.owner.average_rating, 0)
+
 
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
 class BookingApiTest(TestCase):
@@ -140,6 +170,12 @@ class BookingApiTest(TestCase):
             start_date=date(2026, 5, 1),
             end_date=date(2026, 5, 3)
         )
+
+    def sign_contract_by_both_parties(self, booking):
+        contract = Contract.create_for_booking(booking)
+        contract.sign_for_user(self.renter, 'Ivan Renter', '1234')
+        contract.sign_for_user(self.owner, 'Olga Owner', '5678')
+        return contract
 
     def test_owner_sees_incoming_bookings_in_list(self):
         booking = self.create_booking()
@@ -185,7 +221,7 @@ class BookingApiTest(TestCase):
         booking = self.create_booking()
         booking._status_changed_by = self.owner
         booking.change_status('confirmed')
-        Contract.create_for_booking(booking).sign_for_user(self.renter, 'Ivan Renter', '1234')
+        self.sign_contract_by_both_parties(booking)
         booking.start_sbp_payment()
         booking.confirm_sbp_payment()
 
@@ -199,7 +235,7 @@ class BookingApiTest(TestCase):
         booking = self.create_booking()
         booking._status_changed_by = self.owner
         booking.change_status('confirmed')
-        Contract.create_for_booking(booking).sign_for_user(self.renter, 'Ivan Renter', '1234')
+        self.sign_contract_by_both_parties(booking)
         booking.start_sbp_payment()
         booking.confirm_sbp_payment()
         booking._status_changed_by = self.owner
@@ -224,7 +260,7 @@ class BookingApiTest(TestCase):
         )
         booking._status_changed_by = self.owner
         booking.change_status('confirmed')
-        Contract.create_for_booking(booking).sign_for_user(self.renter, 'Ivan Renter', '1234')
+        self.sign_contract_by_both_parties(booking)
         booking.start_sbp_payment()
         booking.confirm_sbp_payment()
 
@@ -246,7 +282,7 @@ class BookingApiTest(TestCase):
         booking = self.create_booking()
         booking._status_changed_by = self.owner
         booking.change_status('confirmed')
-        Contract.create_for_booking(booking).sign_for_user(self.renter, 'Ivan Renter', '1234')
+        self.sign_contract_by_both_parties(booking)
         booking.start_sbp_payment()
         booking.confirm_sbp_payment()
         booking._status_changed_by = self.owner
@@ -265,7 +301,7 @@ class BookingApiTest(TestCase):
         booking = self.create_booking()
         booking._status_changed_by = self.owner
         booking.change_status('confirmed')
-        Contract.create_for_booking(booking).sign_for_user(self.renter, 'Ivan Renter', '1234')
+        self.sign_contract_by_both_parties(booking)
         booking.start_sbp_payment()
         booking.confirm_sbp_payment()
         booking._status_changed_by = self.owner
@@ -291,7 +327,7 @@ class BookingApiTest(TestCase):
         booking = self.create_booking()
         booking._status_changed_by = self.owner
         booking.change_status('confirmed')
-        Contract.create_for_booking(booking).sign_for_user(self.renter, 'Ivan Renter', '1234')
+        self.sign_contract_by_both_parties(booking)
 
         response = self.renter_client.post(f'/api/bookings/{booking.id}/start_payment/')
 
@@ -302,10 +338,11 @@ class BookingApiTest(TestCase):
         self.assertEqual(response.data['booking_id'], booking.id)
         self.assertIn('qr_payload', response.data)
 
-    def test_payment_requires_renter_signature(self):
+    def test_payment_requires_both_signatures(self):
         booking = self.create_booking()
         booking._status_changed_by = self.owner
         booking.change_status('confirmed')
+        Contract.create_for_booking(booking).sign_for_user(self.renter, 'Ivan Renter', '1234')
 
         response = self.renter_client.post(f'/api/bookings/{booking.id}/start_payment/')
 
@@ -326,7 +363,7 @@ class BookingApiTest(TestCase):
         booking = self.create_booking()
         booking._status_changed_by = self.owner
         booking.change_status('confirmed')
-        Contract.create_for_booking(booking).sign_for_user(self.renter, 'Ivan Renter', '1234')
+        self.sign_contract_by_both_parties(booking)
         booking.start_sbp_payment()
 
         response = self.renter_client.post(f'/api/bookings/{booking.id}/confirm_payment/')
@@ -356,7 +393,7 @@ class BookingApiTest(TestCase):
 
         booking._status_changed_by = self.owner
         booking.change_status('confirmed')
-        Contract.create_for_booking(booking).sign_for_user(self.renter, 'Ivan Renter', '1234')
+        self.sign_contract_by_both_parties(booking)
 
         response = self.renter_client.post(f'/api/bookings/{booking.id}/start_payment/')
 

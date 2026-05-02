@@ -139,8 +139,8 @@ class Booking(models.Model):
             raise ValidationError("Payment is available only for confirmed bookings")
         if self.payment_status == 'paid':
             raise ValidationError("Booking is already paid")
-        if not self.has_renter_signed_contract():
-            raise ValidationError("Sign the contract with demo EDS before SBP payment")
+        if not self.has_fully_signed_contract():
+            raise ValidationError("Both parties must sign the contract with demo EDS before SBP payment")
 
         now = timezone.now()
         if (
@@ -167,13 +167,21 @@ class Booking(models.Model):
         )
         return self.get_sbp_payment_payload()
 
-    def has_renter_signed_contract(self):
+    def get_contract(self):
         from contracts.models import Contract
 
         contract = getattr(self, 'contract', None)
         if contract is None and self.status in ['confirmed', 'completed']:
             contract = Contract.create_for_booking(self)
+        return contract
+
+    def has_renter_signed_contract(self):
+        contract = self.get_contract()
         return bool(contract and contract.renter_signed_at)
+
+    def has_fully_signed_contract(self):
+        contract = self.get_contract()
+        return bool(contract and contract.renter_signed_at and contract.owner_signed_at and contract.is_signed)
 
     def confirm_sbp_payment(self):
         if self.status != 'confirmed':
@@ -230,6 +238,16 @@ class Review(models.Model):
     )
     rating = models.IntegerField()
     comment = models.TextField(blank=True)
+    is_hidden = models.BooleanField(default=False)
+    moderation_reason = models.CharField(max_length=255, blank=True)
+    moderated_at = models.DateTimeField(null=True, blank=True)
+    moderated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='moderated_booking_reviews'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def clean(self):
@@ -264,25 +282,62 @@ class Review(models.Model):
                 existing_chat = Chat.objects.create(item=item)
                 existing_chat.users.add(self.booking.renter, owner)
 
-        item_reviews = Review.objects.filter(
-            booking__item=item
-        )
         if is_new:
             notify_new_review(self)
-        item.average_rating = item_reviews.aggregate(
-            Avg('rating')
-        )['rating__avg'] or 0
+        self.update_rating_counters(item=item, owner=owner)
 
-        item.reviews_count = item_reviews.count()
-        item.save()
+    def delete(self, *args, **kwargs):
+        item = self.booking.item
+        owner = item.owner
+        super().delete(*args, **kwargs)
+        self.update_rating_counters(item=item, owner=owner)
 
-        owner_reviews = Review.objects.filter(
-            booking__item__owner=owner
+    def hide(self, moderated_by=None, reason=''):
+        self.is_hidden = True
+        self.moderated_by = moderated_by
+        self.moderation_reason = (reason or '').strip()
+        self.moderated_at = timezone.now()
+        self.save(
+            update_fields=[
+                'is_hidden',
+                'moderated_by',
+                'moderation_reason',
+                'moderated_at',
+            ]
         )
 
-        owner.average_rating = owner_reviews.aggregate(
+    def unhide(self):
+        self.is_hidden = False
+        self.moderated_by = None
+        self.moderation_reason = ''
+        self.moderated_at = None
+        self.save(
+            update_fields=[
+                'is_hidden',
+                'moderated_by',
+                'moderation_reason',
+                'moderated_at',
+            ]
+        )
+
+    @staticmethod
+    def update_rating_counters(*, item, owner):
+        visible_item_reviews = Review.objects.filter(
+            booking__item=item,
+            is_hidden=False,
+        )
+        item.average_rating = visible_item_reviews.aggregate(
             Avg('rating')
         )['rating__avg'] or 0
+        item.reviews_count = visible_item_reviews.count()
+        item.save(update_fields=['average_rating', 'reviews_count'])
 
-        owner.reviews_count = owner_reviews.count()
-        owner.save()
+        visible_owner_reviews = Review.objects.filter(
+            booking__item__owner=owner,
+            is_hidden=False,
+        )
+        owner.average_rating = visible_owner_reviews.aggregate(
+            Avg('rating')
+        )['rating__avg'] or 0
+        owner.reviews_count = visible_owner_reviews.count()
+        owner.save(update_fields=['average_rating', 'reviews_count'])

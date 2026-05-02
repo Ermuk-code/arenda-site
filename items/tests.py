@@ -208,6 +208,27 @@ class ItemApiBookingRangesTest(TestCase):
         self.assertEqual(response.data['item_reviews'][0]['author_username'], self.renter.username)
         self.assertEqual(response.data['item_reviews'][0]['comment'], 'Отличная аренда')
 
+    def test_item_detail_hides_moderated_reviews(self):
+        booking = Booking.objects.create(
+            item=self.item,
+            renter=self.renter,
+            start_date=date(2026, 5, 10),
+            end_date=date(2026, 5, 12),
+            status='completed',
+            payment_status='paid'
+        )
+        review = Review.objects.create(
+            booking=booking,
+            rating=1,
+            comment='bad words here'
+        )
+        review.hide(reason='Offensive language')
+
+        response = self.client.get(f'/api/items/{self.item.id}/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['item_reviews'], [])
+
 
 class ItemCategoryApiTest(TestCase):
 

@@ -56,6 +56,8 @@ class ItemSerializer(serializers.ModelSerializer):
 
         reviews = Review.objects.filter(
             booking__item=obj
+        ).filter(
+            is_hidden=False
         ).select_related('booking__renter').order_by('-created_at')[:6]
 
         return [
