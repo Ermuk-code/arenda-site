@@ -10,13 +10,27 @@ def _send(to_email, subject, message):
         send_mail(
             subject=subject,
             message=message,
-            from_email=settings.EMAIL_HOST_USER,
+            from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None) or getattr(settings, "EMAIL_HOST_USER", None),
             recipient_list=[to_email],
             fail_silently=False,
         )
     except Exception as e:
         # Не роняем сервер если почта недоступна
         print(f"[EMAIL ERROR] {e}")
+
+
+def send_password_reset_code(user, code):
+    """Письмо с кодом восстановления пароля."""
+    _send(
+        to_email=user.email,
+        subject='Код для восстановления пароля',
+        message=(
+            f'Здравствуйте, {user.username}!\n\n'
+            f'Ваш код для восстановления пароля: {code}\n'
+            'Код действует 15 минут.\n\n'
+            'Если это были не вы, просто проигнорируйте это письмо.'
+        )
+    )
 
 
 def send_booking_created(booking):

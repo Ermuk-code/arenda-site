@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
+from django.core import mail
 
 User = get_user_model()
 
@@ -85,3 +86,33 @@ class UserModelTest(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertIn("passport_series", response.json())
+
+    def test_password_reset_flow(self):
+        user = User.objects.create_user(
+            username="reset_user",
+            password="oldpass123",
+            email="reset@example.com",
+        )
+
+        request_response = self.client.post(
+            "/api/users/password-reset/request/",
+            {"email": "reset@example.com"},
+            format="json"
+        )
+        self.assertEqual(request_response.status_code, 200)
+        self.assertEqual(len(mail.outbox), 1)
+
+        import re
+        code_match = re.search(r"(\\d{6})", mail.outbox[0].body)
+        self.assertIsNotNone(code_match)
+        code = code_match.group(1)
+
+        confirm_response = self.client.post(
+            "/api/users/password-reset/confirm/",
+            {"email": "reset@example.com", "code": code, "new_password": "newpass123"},
+            format="json"
+        )
+        self.assertEqual(confirm_response.status_code, 200)
+
+        user.refresh_from_db()
+        self.assertTrue(user.check_password("newpass123"))

@@ -179,6 +179,36 @@
         .auth-btn { width: 100%; background: #2b6a7c; color: white; border: none; padding: 14px; border-radius: 60px; font-weight: 700; font-size: 1.1rem; cursor: pointer; }
         .auth-footer { margin-top: 28px; text-align: center; }
         .auth-footer a { color: #2b6a7c; text-decoration: none; font-weight: 600; }
+        .auth-extra-card {
+            width: 100%;
+            border: 1.5px solid #e2e9ef;
+            border-radius: 28px;
+            padding: 24px;
+            background: #ffffff;
+            margin-top: 12px;
+        }
+        .auth-extra-title { font-weight: 700; color: #1a3e4c; margin-bottom: 8px; }
+        .auth-extra-sub { color: #6b8b9c; margin-bottom: 14px; font-size: 0.95rem; }
+        .forgot-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(14, 27, 34, 0.58);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            z-index: 1300;
+        }
+        .forgot-modal-overlay.active { display: flex; }
+        .forgot-status {
+            margin-bottom: 12px;
+            border-radius: 14px;
+            padding: 10px 12px;
+            font-size: 0.92rem;
+            display: none;
+        }
+        .forgot-status.success { display: block; background: #e8f7ef; color: #146a41; }
+        .forgot-status.error { display: block; background: #fdecec; color: #8f1d1d; }
 
         .success-message { background: #d4edda; color: #155724; padding: 12px; border-radius: 12px; margin-bottom: 20px; text-align: center; }
         .error-message-box { background: #f8d7da; color: #721c24; padding: 12px; border-radius: 12px; margin-bottom: 20px; text-align: center; }
@@ -4182,6 +4212,24 @@
             }
         }
 
+        async function requestPasswordReset(email) {
+            const response = await apiRequest('/users/password-reset/request/', {
+                method: 'POST',
+                body: JSON.stringify({ email })
+            });
+            const data = await response.json().catch(() => ({}));
+            return { ok: response.ok, data };
+        }
+
+        async function confirmPasswordReset(email, code, newPassword) {
+            const response = await apiRequest('/users/password-reset/confirm/', {
+                method: 'POST',
+                body: JSON.stringify({ email, code, new_password: newPassword })
+            });
+            const data = await response.json().catch(() => ({}));
+            return { ok: response.ok, data };
+        }
+
         function logout() {
             if (wsConnection) { wsConnection.close(); wsConnection = null; }
             closeNotificationsSocket();
@@ -5717,9 +5765,25 @@
                         <div class="input-group"><label>Имя пользователя</label><input type="text" id="loginUsername" required></div>
                         <div class="input-group"><label>Пароль</label><input type="password" id="loginPassword" required></div>
                         <button type="submit" class="auth-btn">Войти</button>
+                        <div class="auth-footer"><a href="#" id="forgotPasswordBtn">Забыли пароль?</a></div>
                         <div class="auth-footer">Нет аккаунта? <a href="#" id="switchToRegister">Зарегистрироваться</a></div>
                     </form>
                 </div></div>
+                <div class="forgot-modal-overlay" id="forgotModalOverlay">
+                    <div class="auth-card" style="max-width:520px;">
+                        <div class="back-button" id="closeForgotModalBtn">✕ Закрыть</div>
+                        <div class="auth-title">Восстановление пароля</div>
+                        <div class="auth-sub">Введите email, код из письма и новый пароль.</div>
+                        <div id="forgotStatusMessage" class="forgot-status"></div>
+                        <form id="forgotPasswordForm">
+                            <div class="input-group"><label>Email</label><input type="email" id="forgotEmail" required></div>
+                            <div class="input-group"><label>Код из письма</label><input type="text" id="forgotCode" maxlength="6" placeholder="123456"></div>
+                            <div class="input-group"><label>Новый пароль</label><input type="password" id="forgotNewPassword" minlength="6" placeholder="Минимум 6 символов"></div>
+                            <button type="button" class="auth-btn" id="forgotPasswordSendCodeBtn" style="margin-bottom:10px;">Отправить код</button>
+                            <button type="submit" class="auth-btn" id="forgotPasswordSubmitBtn">Подтвердить и сменить пароль</button>
+                        </form>
+                    </div>
+                </div>
             `;
 
             document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -5734,8 +5798,88 @@
                 }
             });
 
+            document.getElementById('forgotPasswordBtn')?.addEventListener('click', async (e) => {
+                e.preventDefault();
+                document.getElementById('forgotModalOverlay')?.classList.add('active');
+            });
+            
             document.getElementById('switchToRegister')?.addEventListener('click', (e) => { e.preventDefault(); showRegisterPage(); });
             document.getElementById('backToMainFromLogin')?.addEventListener('click', () => showMainPage());
+            let resetCodeSent = false;
+            const forgotStatus = document.getElementById('forgotStatusMessage');
+            const forgotOverlay = document.getElementById('forgotModalOverlay');
+            const showForgotStatus = (text, type = 'success') => {
+                if (!forgotStatus) return;
+                forgotStatus.className = `forgot-status ${type}`;
+                forgotStatus.textContent = text;
+            };
+            const clearForgotStatus = () => {
+                if (!forgotStatus) return;
+                forgotStatus.className = 'forgot-status';
+                forgotStatus.textContent = '';
+            };
+
+            document.getElementById('closeForgotModalBtn')?.addEventListener('click', () => {
+                forgotOverlay?.classList.remove('active');
+                clearForgotStatus();
+            });
+            forgotOverlay?.addEventListener('click', (e) => {
+                if (e.target === forgotOverlay) {
+                    forgotOverlay.classList.remove('active');
+                    clearForgotStatus();
+                }
+            });
+
+            document.getElementById('forgotPasswordSendCodeBtn')?.addEventListener('click', async () => {
+                const email = document.getElementById('forgotEmail')?.value?.trim();
+                if (!email) {
+                    showForgotStatus('Введите email', 'error');
+                    return;
+                }
+
+                const requestResult = await requestPasswordReset(email);
+                if (!requestResult.ok) {
+                    showForgotStatus(requestResult.data.error || 'Не удалось отправить код', 'error');
+                    return;
+                }
+                resetCodeSent = true;
+                showForgotStatus('Код отправлен на почту. Теперь введите код и новый пароль.', 'success');
+            });
+
+            document.getElementById('forgotPasswordForm')?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('forgotEmail')?.value?.trim();
+                const code = document.getElementById('forgotCode')?.value?.trim();
+                const newPassword = document.getElementById('forgotNewPassword')?.value || '';
+
+                if (!email) {
+                    showForgotStatus('Введите email', 'error');
+                    return;
+                }
+                if (!resetCodeSent) {
+                    showForgotStatus('Сначала нажмите "Отправить код"', 'error');
+                    return;
+                }
+                if (!code || !newPassword) {
+                    showForgotStatus('Введите код и новый пароль', 'error');
+                    return;
+                }
+                if (newPassword.length < 6) {
+                    showForgotStatus('Пароль должен быть не короче 6 символов', 'error');
+                    return;
+                }
+
+                const confirmResult = await confirmPasswordReset(email, code, newPassword);
+                if (!confirmResult.ok) {
+                    showForgotStatus(confirmResult.data.error || 'Не удалось изменить пароль', 'error');
+                    return;
+                }
+
+                clearTokens();
+                updateNavBar();
+                showForgotStatus('Пароль изменён. Войдите заново с новым паролем.', 'success');
+                showLoginPage();
+            });
         }
 
         async function showMainPage() {
