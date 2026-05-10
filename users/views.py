@@ -12,6 +12,8 @@ from notifications.email import send_password_reset_code
 
 User = get_user_model()
 
+User = get_user_model()
+
 @extend_schema(
     description="""
 Обновление профиля пользователя.
@@ -75,7 +77,17 @@ class PasswordResetRequestView(APIView):
         code = f"{randint(0, 999999):06d}"
         cache.set(f'password_reset_code:{email}', code, timeout=15 * 60)
 
-        send_password_reset_code(user, code)
+        from notifications.email import _send
+        _send(
+            to_email=user.email,
+            subject='Код для восстановления пароля',
+            message=(
+                f'Здравствуйте, {user.username}!\n\n'
+                f'Ваш код для восстановления пароля: {code}\n'
+                'Код действует 15 минут.\n\n'
+                'Если это были не вы, просто проигнорируйте это письмо.'
+            )
+        )
 
         return Response({'status': 'verification code sent'})
 
