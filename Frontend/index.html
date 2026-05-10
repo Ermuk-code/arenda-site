@@ -5824,6 +5824,81 @@
 
             document.getElementById('switchToRegister')?.addEventListener('click', (e) => { e.preventDefault(); showRegisterPage(); });
             document.getElementById('backToMainFromLogin')?.addEventListener('click', () => showMainPage());
+            let resetCodeSent = false;
+            const forgotStatus = document.getElementById('forgotStatusMessage');
+            const forgotOverlay = document.getElementById('forgotModalOverlay');
+            const showForgotStatus = (text, type = 'success') => {
+                if (!forgotStatus) return;
+                forgotStatus.className = `forgot-status ${type}`;
+                forgotStatus.textContent = text;
+            };
+            const clearForgotStatus = () => {
+                if (!forgotStatus) return;
+                forgotStatus.className = 'forgot-status';
+                forgotStatus.textContent = '';
+            };
+
+            document.getElementById('closeForgotModalBtn')?.addEventListener('click', () => {
+                forgotOverlay?.classList.remove('active');
+                clearForgotStatus();
+            });
+            forgotOverlay?.addEventListener('click', (e) => {
+                if (e.target === forgotOverlay) {
+                    forgotOverlay.classList.remove('active');
+                    clearForgotStatus();
+                }
+            });
+
+            document.getElementById('forgotPasswordSendCodeBtn')?.addEventListener('click', async () => {
+                const email = document.getElementById('forgotEmail')?.value?.trim();
+                if (!email) {
+                    showForgotStatus('Введите email', 'error');
+                    return;
+                }
+
+                const requestResult = await requestPasswordReset(email);
+                if (!requestResult.ok) {
+                    showForgotStatus(requestResult.data.error || 'Не удалось отправить код', 'error');
+                    return;
+                }
+                resetCodeSent = true;
+                showForgotStatus('Код отправлен на почту. Теперь введите код и новый пароль.', 'success');
+            });
+
+            document.getElementById('forgotPasswordForm')?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('forgotEmail')?.value?.trim();
+                const code = document.getElementById('forgotCode')?.value?.trim();
+                const newPassword = document.getElementById('forgotNewPassword')?.value || '';
+
+                if (!email) {
+                    showForgotStatus('Введите email', 'error');
+                    return;
+                }
+                if (!resetCodeSent) {
+                    showForgotStatus('Сначала нажмите "Отправить код"', 'error');
+                    return;
+                }
+                if (!code || !newPassword) {
+                    showForgotStatus('Введите код и новый пароль', 'error');
+                    return;
+                }
+                if (newPassword.length < 6) {
+                    showForgotStatus('Пароль должен быть не короче 6 символов', 'error');
+                    return;
+                }
+
+                const confirmResult = await confirmPasswordReset(email, code, newPassword);
+                if (!confirmResult.ok) {
+                    showForgotStatus(confirmResult.data.error || 'Не удалось изменить пароль', 'error');
+                    return;
+                }
+
+                clearTokens();
+                updateNavBar();
+                showForgotStatus('Пароль изменён. Войдите заново с новым паролем.', 'success');
+                showLoginPage();
+            });
         }
 
         function showForgotPasswordPage() {
