@@ -5773,48 +5773,28 @@
                 }
             });
 
-            const forgotPanel = document.getElementById('forgotPasswordPanel');
-            const forgotSubmitBtn = document.getElementById('forgotPasswordSubmitBtn');
-            let resetCodeSent = false;
-
             document.getElementById('forgotPasswordBtn')?.addEventListener('click', async (e) => {
                 e.preventDefault();
-                forgotPanel?.classList.remove('hidden');
-            });
+                const email = prompt('Введите email, указанный при регистрации:');
+                if (!email) return;
 
-            document.getElementById('forgotPasswordForm')?.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const email = document.getElementById('forgotEmail')?.value?.trim();
-                const code = document.getElementById('forgotCode')?.value?.trim();
-                const newPassword = document.getElementById('forgotNewPassword')?.value || '';
-
-                if (!email) {
-                    alert('❌ Введите email');
+                const requestResult = await requestPasswordReset(email.trim());
+                if (!requestResult.ok) {
+                    alert(`❌ ${requestResult.data.error || 'Не удалось отправить код'}`);
                     return;
                 }
+                alert('✅ Код отправлен на вашу почту');
 
-                if (!resetCodeSent) {
-                    const requestResult = await requestPasswordReset(email);
-                    if (!requestResult.ok) {
-                        alert(`❌ ${requestResult.data.error || 'Не удалось отправить код'}`);
-                        return;
-                    }
-                    resetCodeSent = true;
-                    if (forgotSubmitBtn) forgotSubmitBtn.textContent = 'Подтвердить и сменить пароль';
-                    alert('✅ Код отправлен на почту. Введите код и новый пароль.');
-                    return;
-                }
-
-                if (!code || !newPassword) {
-                    alert('❌ Введите код и новый пароль');
-                    return;
-                }
+                const code = prompt('Введите код из письма:');
+                if (!code) return;
+                const newPassword = prompt('Введите новый пароль (минимум 6 символов):');
+                if (!newPassword) return;
                 if (newPassword.length < 6) {
                     alert('❌ Пароль должен быть не короче 6 символов');
                     return;
                 }
 
-                const confirmResult = await confirmPasswordReset(email, code, newPassword);
+                const confirmResult = await confirmPasswordReset(email.trim(), code.trim(), newPassword);
                 if (!confirmResult.ok) {
                     alert(`❌ ${confirmResult.data.error || 'Не удалось изменить пароль'}`);
                     return;
