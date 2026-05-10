@@ -8,6 +8,9 @@ from random import randint
 from .serializers import RegisterSerializer
 from .serializers import ProfileSerializer
 from drf_spectacular.utils import extend_schema
+from notifications.email import send_password_reset_code
+
+User = get_user_model()
 
 User = get_user_model()
 
