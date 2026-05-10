@@ -4182,6 +4182,24 @@
             }
         }
 
+        async function requestPasswordReset(email) {
+            const response = await apiRequest('/users/password-reset/request/', {
+                method: 'POST',
+                body: JSON.stringify({ email })
+            });
+            const data = await response.json().catch(() => ({}));
+            return { ok: response.ok, data };
+        }
+
+        async function confirmPasswordReset(email, code, newPassword) {
+            const response = await apiRequest('/users/password-reset/confirm/', {
+                method: 'POST',
+                body: JSON.stringify({ email, code, new_password: newPassword })
+            });
+            const data = await response.json().catch(() => ({}));
+            return { ok: response.ok, data };
+        }
+
         function logout() {
             if (wsConnection) { wsConnection.close(); wsConnection = null; }
             closeNotificationsSocket();
@@ -5717,6 +5735,7 @@
                         <div class="input-group"><label>Имя пользователя</label><input type="text" id="loginUsername" required></div>
                         <div class="input-group"><label>Пароль</label><input type="password" id="loginPassword" required></div>
                         <button type="submit" class="auth-btn">Войти</button>
+                        <div class="auth-footer"><a href="#" id="forgotPasswordBtn">Забыли пароль?</a></div>
                         <div class="auth-footer">Нет аккаунта? <a href="#" id="switchToRegister">Зарегистрироваться</a></div>
                     </form>
                 </div></div>
@@ -5732,6 +5751,39 @@
                     showMainPage();
                     loadProducts(1);
                 }
+            });
+
+            document.getElementById('forgotPasswordBtn')?.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const email = prompt('Введите email, указанный при регистрации:');
+                if (!email) return;
+
+                const requestResult = await requestPasswordReset(email.trim());
+                if (!requestResult.ok) {
+                    alert(`❌ ${requestResult.data.error || 'Не удалось отправить код'}`);
+                    return;
+                }
+                alert('✅ Код отправлен на вашу почту');
+
+                const code = prompt('Введите код из письма:');
+                if (!code) return;
+                const newPassword = prompt('Введите новый пароль (минимум 6 символов):');
+                if (!newPassword) return;
+                if (newPassword.length < 6) {
+                    alert('❌ Пароль должен быть не короче 6 символов');
+                    return;
+                }
+
+                const confirmResult = await confirmPasswordReset(email.trim(), code.trim(), newPassword);
+                if (!confirmResult.ok) {
+                    alert(`❌ ${confirmResult.data.error || 'Не удалось изменить пароль'}`);
+                    return;
+                }
+
+                clearTokens();
+                updateNavBar();
+                alert('✅ Пароль изменён. Войдите заново с новым паролем.');
+                showLoginPage();
             });
 
             document.getElementById('switchToRegister')?.addEventListener('click', (e) => { e.preventDefault(); showRegisterPage(); });
