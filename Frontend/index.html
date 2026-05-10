@@ -179,27 +179,14 @@
         .auth-btn { width: 100%; background: #2b6a7c; color: white; border: none; padding: 14px; border-radius: 60px; font-weight: 700; font-size: 1.1rem; cursor: pointer; }
         .auth-footer { margin-top: 28px; text-align: center; }
         .auth-footer a { color: #2b6a7c; text-decoration: none; font-weight: 600; }
-        .auth-extra-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(14, 27, 34, 0.58);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-            z-index: 1300;
-        }
-        .auth-extra-overlay.active { display: flex; }
         .auth-extra-card {
-            width: min(100%, 520px);
+            margin-top: 16px;
             border: 1.5px solid #e2e9ef;
-            border-radius: 28px;
-            padding: 24px;
-            background: #ffffff;
-            box-shadow: 0 24px 52px rgba(18, 42, 50, 0.28);
+            border-radius: 22px;
+            padding: 16px;
+            background: #f9fcff;
         }
-        .auth-extra-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
-        .auth-extra-close { border: none; background: #eef2f7; color: #2b6a7c; border-radius: 50%; width: 34px; height: 34px; cursor: pointer; font-size: 18px; }
+        .auth-extra-card.hidden { display: none; }
         .auth-extra-title { font-weight: 700; color: #1a3e4c; margin-bottom: 8px; }
         .auth-extra-sub { color: #6b8b9c; margin-bottom: 14px; font-size: 0.95rem; }
 
@@ -5761,6 +5748,16 @@
                         <div class="auth-footer"><a href="#" id="forgotPasswordBtn">Забыли пароль?</a></div>
                         <div class="auth-footer">Нет аккаунта? <a href="#" id="switchToRegister">Зарегистрироваться</a></div>
                     </form>
+                    <div class="auth-extra-card hidden" id="forgotPasswordPanel">
+                        <div class="auth-extra-title">Восстановление пароля</div>
+                        <div class="auth-extra-sub">Введите email, получите код и задайте новый пароль.</div>
+                        <form id="forgotPasswordForm">
+                            <div class="input-group"><label>Email</label><input type="email" id="forgotEmail" required></div>
+                            <div class="input-group"><label>Код из письма</label><input type="text" id="forgotCode" maxlength="6" placeholder="123456"></div>
+                            <div class="input-group"><label>Новый пароль</label><input type="password" id="forgotNewPassword" minlength="6" placeholder="Минимум 6 символов"></div>
+                            <button type="submit" class="auth-btn" id="forgotPasswordSubmitBtn">Отправить код</button>
+                        </form>
+                    </div>
                 </div></div>
                 <div class="auth-extra-overlay" id="forgotPasswordModal">
                     <div class="auth-extra-card">
@@ -5792,62 +5789,28 @@
                 }
             });
 
-            const forgotModal = document.getElementById('forgotPasswordModal');
-            let resetCodeSent = false;
-
             document.getElementById('forgotPasswordBtn')?.addEventListener('click', async (e) => {
                 e.preventDefault();
-                forgotModal?.classList.add('active');
-            });
+                const email = prompt('Введите email, указанный при регистрации:');
+                if (!email) return;
 
-            document.getElementById('forgotPasswordCloseBtn')?.addEventListener('click', () => {
-                forgotModal?.classList.remove('active');
-            });
-
-            forgotModal?.addEventListener('click', (e) => {
-                if (e.target === forgotModal) forgotModal.classList.remove('active');
-            });
-
-            document.getElementById('forgotPasswordSendCodeBtn')?.addEventListener('click', async () => {
-                const email = document.getElementById('forgotEmail')?.value?.trim();
-                if (!email) {
-                    alert('❌ Введите email');
-                    return;
-                }
-
-                const requestResult = await requestPasswordReset(email);
+                const requestResult = await requestPasswordReset(email.trim());
                 if (!requestResult.ok) {
                     alert(`❌ ${requestResult.data.error || 'Не удалось отправить код'}`);
                     return;
                 }
-                resetCodeSent = true;
-                alert('✅ Код отправлен на почту. Теперь введите код и новый пароль.');
-            });
+                alert('✅ Код отправлен на вашу почту');
 
-            document.getElementById('forgotPasswordForm')?.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const email = document.getElementById('forgotEmail')?.value?.trim();
-                const code = document.getElementById('forgotCode')?.value?.trim();
-                const newPassword = document.getElementById('forgotNewPassword')?.value || '';
-
-                if (!email) {
-                    alert('❌ Введите email');
-                    return;
-                }
-                if (!resetCodeSent) {
-                    alert('❌ Сначала нажмите "Отправить код"');
-                    return;
-                }
-                if (!code || !newPassword) {
-                    alert('❌ Введите код и новый пароль');
-                    return;
-                }
+                const code = prompt('Введите код из письма:');
+                if (!code) return;
+                const newPassword = prompt('Введите новый пароль (минимум 6 символов):');
+                if (!newPassword) return;
                 if (newPassword.length < 6) {
                     alert('❌ Пароль должен быть не короче 6 символов');
                     return;
                 }
 
-                const confirmResult = await confirmPasswordReset(email, code, newPassword);
+                const confirmResult = await confirmPasswordReset(email.trim(), code.trim(), newPassword);
                 if (!confirmResult.ok) {
                     alert(`❌ ${confirmResult.data.error || 'Не удалось изменить пароль'}`);
                     return;
@@ -5856,7 +5819,6 @@
                 clearTokens();
                 updateNavBar();
                 alert('✅ Пароль изменён. Войдите заново с новым паролем.');
-                forgotModal?.classList.remove('active');
                 showLoginPage();
             });
 
