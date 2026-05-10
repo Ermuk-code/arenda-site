@@ -5759,6 +5759,22 @@
                         </form>
                     </div>
                 </div></div>
+                <div class="auth-extra-overlay" id="forgotPasswordModal">
+                    <div class="auth-extra-card">
+                        <div class="auth-extra-header">
+                            <div class="auth-extra-title">Восстановление пароля</div>
+                            <button type="button" class="auth-extra-close" id="forgotPasswordCloseBtn">×</button>
+                        </div>
+                        <div class="auth-extra-sub">Введите email, код из письма и новый пароль.</div>
+                        <form id="forgotPasswordForm">
+                            <div class="input-group"><label>Email</label><input type="email" id="forgotEmail" required></div>
+                            <div class="input-group"><label>Код из письма</label><input type="text" id="forgotCode" maxlength="6" placeholder="123456"></div>
+                            <div class="input-group"><label>Новый пароль</label><input type="password" id="forgotNewPassword" minlength="6" placeholder="Минимум 6 символов"></div>
+                            <button type="button" class="auth-btn" id="forgotPasswordSendCodeBtn" style="margin-bottom:10px;">Отправить код</button>
+                            <button type="submit" class="auth-btn" id="forgotPasswordSubmitBtn">Подтвердить и сменить пароль</button>
+                        </form>
+                    </div>
+                </div>
             `;
 
             document.getElementById('loginForm').addEventListener('submit', async (e) => {
