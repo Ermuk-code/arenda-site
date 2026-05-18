@@ -25,9 +25,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-cd(cz1l$96958q81&5tbqhg==f0un^9(tx5&-c-4vbp@unzqee'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['mokitoki.vti-cloud.ru', 'www.mokitoki.vti-cloud.ru', '*']
 
 
 # Application definition
