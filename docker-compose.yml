@@ -28,7 +28,7 @@ services:
     environment:
       POSTGRES_DB: arenda
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: fojhr4
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

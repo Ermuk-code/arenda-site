@@ -22,13 +22,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-cd(cz1l$96958q81&5tbqhg==f0un^9(tx5&-c-4vbp@unzqee'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['mokitoki.vti-cloud.ru', 'www.mokitoki.vti-cloud.ru', '*']
+ALLOWED_HOSTS = ['mokitoki.vti-cloud.ru', 'www.mokitoki.vti-cloud.ru', '192.168.0.88', 'localhost', '127.0.0.1', 'web']
 
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
 
 # Application definition
 
@@ -64,7 +66,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+"http://localhost", "http://127.0.0.1", "http://mokitoki.vti-cloud.ru"]
 ROOT_URLCONF = 'arenda_site.urls'
 
 TEMPLATES = [
@@ -91,24 +95,15 @@ WSGI_APPLICATION = 'arenda_site.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'arenda',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
         'HOST': 'db',
         'PORT': '5432',
     }
 }
 
-#DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.postgresql',
-#        'NAME': 'arenda',
-#        'USER': 'postgres',
-#        'PASSWORD': 'postgres',
-#        'HOST': 'db',
-#        'PORT': 5432,
-#    }
-#}
+
 
 
 # Password validation
@@ -173,8 +168,8 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Mokitoki API',
-    'DESCRIPTION': 'API для онлайн площадки Mokitoki',
+    'TITLE': 'Diplom API',
+    'DESCRIPTION': 'API для онлайн площадки аренды вещей',
     'VERSION': '1.0.0',
 }
 
