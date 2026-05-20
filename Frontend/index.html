@@ -2741,8 +2741,8 @@
                     if (data.kpp) localStorage.setItem('kpp', data.kpp);
                     return { success: true, data };
                 } else {
-                    const error = await response.json();
-                    return { success: false, error };
+                    const detail = await readApiError(response, 'Не удалось обновить профиль.');
+                    return { success: false, error: { detail } };
                 }
             } catch (error) {
                 return { success: false, error: { detail: 'Ошибка подключения' } };
@@ -2756,8 +2756,8 @@
                     body: JSON.stringify({ old_password: oldPassword, new_password: newPassword })
                 });
                 if (response.ok) return { success: true };
-                const error = await response.json();
-                return { success: false, error };
+                const detail = await readApiError(response, 'Не удалось изменить пароль.');
+                return { success: false, error: { detail } };
             } catch (error) {
                 return { success: false, error: { detail: 'Ошибка подключения' } };
             }
@@ -3661,14 +3661,13 @@
                     })
                 });
 
-                const data = await response.json().catch(() => ({}));
-
                 if (!response.ok) {
-                    const message = data.detail || data.non_field_errors?.[0] || data[0] || 'Не удалось создать бронь.';
+                    const message = await readApiError(response, 'Не удалось создать бронь.');
                     setRentModalMessage('error', message);
                     return;
                 }
 
+                const data = await response.json().catch(() => ({}));
                 currentBooking = data;
                 currentItemBookings = [
                     ...currentItemBookings.filter(entry => String(entry.id) !== String(data.id)),
@@ -3729,14 +3728,13 @@
                     body: JSON.stringify({})
                 });
 
-                const data = await response.json().catch(() => ({}));
-
                 if (!response.ok) {
-                    const message = data.detail || data.error || data.non_field_errors?.[0] || 'Не удалось начать оплату.';
+                    const message = await readApiError(response, 'Не удалось начать оплату.');
                     setRentModalMessage('error', message);
                     return;
                 }
 
+                const data = await response.json().catch(() => ({}));
                 fillPaymentBox(data);
                 setRentModalMessage('success', 'Открылось демо-окно СБП. Нажмите "Оплатить", чтобы завершить оплату.');
                 openSbpDemoModal();
@@ -3768,10 +3766,8 @@
                     body: JSON.stringify({})
                 });
 
-                const data = await response.json().catch(() => ({}));
-
                 if (!response.ok) {
-                    const message = data.detail || data.error || data.non_field_errors?.[0] || 'Не удалось подтвердить оплату.';
+                    const message = await readApiError(response, 'Не удалось подтвердить оплату.');
                     setRentModalMessage('error', message);
                     if (demoMessageBox) {
                         demoMessageBox.innerHTML = `<div class="rent-error">${escapeHtml(message)}</div>`;
@@ -3783,6 +3779,7 @@
                     return;
                 }
 
+                const data = await response.json().catch(() => ({}));
                 currentBooking = data;
                 updateRentalSummary();
                 resetPaymentBox();
@@ -4192,7 +4189,7 @@
                 }
             } catch (error) {
                 console.error('❌ Ошибка подключения:', error);
-                alert('❌ Ошибка подключения к серверу. Проверьте, запущен ли сервер.\n\n' + error.message);
+                alert('❌ Ошибка подключения к серверу. Проверьте, запущен ли сервер.');
                 return false;
             }
         }
@@ -4234,6 +4231,10 @@
                 method: 'POST',
                 body: JSON.stringify({ email })
             });
+            if (!response.ok) {
+                const message = await readApiError(response, 'Не удалось отправить код.');
+                return { ok: false, data: { error: message } };
+            }
             const data = await response.json().catch(() => ({}));
             return { ok: response.ok, data };
         }
@@ -4243,6 +4244,10 @@
                 method: 'POST',
                 body: JSON.stringify({ email, code, new_password: newPassword })
             });
+            if (!response.ok) {
+                const message = await readApiError(response, 'Не удалось изменить пароль.');
+                return { ok: false, data: { error: message } };
+            }
             const data = await response.json().catch(() => ({}));
             return { ok: response.ok, data };
         }
@@ -4403,7 +4408,8 @@
                         await showIncomingBookingsPage('<div class="success-message">✅ Заявка подтверждена. Теперь арендатор сможет подписать договор и перейти к оплате.</div>');
                     } else {
                         const msg = document.getElementById('bookingsMessage');
-                        msg.innerHTML = `<div class="error-message-box">❌ ${escapeHtml(result.data?.detail || result.data?.error || 'Не удалось подтвердить заявку.')}</div>`;
+                        const errorMessage = extractApiErrorMessage(result.data, 'Не удалось подтвердить заявку.');
+                        msg.innerHTML = `<div class="error-message-box">❌ ${escapeHtml(errorMessage)}</div>`;
                     }
                 });
             });
@@ -4415,7 +4421,8 @@
                         await showIncomingBookingsPage('<div class="success-message">✅ Заявка отклонена.</div>');
                     } else {
                         const msg = document.getElementById('bookingsMessage');
-                        msg.innerHTML = `<div class="error-message-box">❌ ${escapeHtml(result.data?.detail || result.data?.error || 'Не удалось отклонить заявку.')}</div>`;
+                        const errorMessage = extractApiErrorMessage(result.data, 'Не удалось отклонить заявку.');
+                        msg.innerHTML = `<div class="error-message-box">❌ ${escapeHtml(errorMessage)}</div>`;
                     }
                 });
             });
@@ -4534,6 +4541,10 @@
         async function getContractByBooking(bookingId) {
             try {
                 const response = await apiRequest(`/contracts/by-booking/${bookingId}/`);
+                if (!response.ok) {
+                    const message = await readApiError(response, 'Не удалось загрузить договор.');
+                    return { success: false, data: { error: message } };
+                }
                 const data = await response.json().catch(() => ({}));
                 return { success: response.ok, data };
             } catch (error) {
@@ -4559,7 +4570,7 @@
         async function downloadContractPdfByBookingId(bookingId) {
             const result = await getContractByBooking(bookingId);
             if (!result.success) {
-                alert(`❌ ${result.data?.error || result.data?.detail || 'Не удалось загрузить договор'}`);
+                alert(`❌ ${extractApiErrorMessage(result.data, 'Не удалось загрузить договор.')}`);
                 return;
             }
 
@@ -4575,6 +4586,10 @@
                         certificate_pin: certificatePin,
                     })
                 });
+                if (!response.ok) {
+                    const message = await readApiError(response, 'Не удалось подписать договор.');
+                    return { success: false, data: { error: message } };
+                }
                 const data = await response.json().catch(() => ({}));
                 return { success: response.ok, data };
             } catch (error) {
@@ -4688,7 +4703,8 @@
                 const result = await signContractWithDemoEds(contract.id, signerName, signerPin);
                 if (!result.success) {
                     if (messageBox) {
-                        messageBox.innerHTML = `<div class="rent-error">❌ ${escapeHtml(result.data?.error || result.data?.detail || 'Не удалось подписать договор.')}</div>`;
+                        const errorMessage = extractApiErrorMessage(result.data, 'Не удалось подписать договор.');
+                        messageBox.innerHTML = `<div class="rent-error">❌ ${escapeHtml(errorMessage)}</div>`;
                     }
                     if (signButton) {
                         signButton.disabled = false;
@@ -4719,7 +4735,7 @@
 
             const result = await getContractByBooking(booking.id);
             if (!result.success) {
-                alert(`❌ ${result.data?.error || result.data?.detail || 'Не удалось загрузить договор'}`);
+                alert(`❌ ${extractApiErrorMessage(result.data, 'Не удалось загрузить договор.')}`);
                 return;
             }
 
@@ -5367,7 +5383,8 @@
                     setTimeout(() => msgDiv.innerHTML = '', 2000);
                     updateNavBar();
                 } else {
-                    msgDiv.innerHTML = '<div class="error-message-box">❌ Ошибка: ' + JSON.stringify(result.error) + '</div>';
+                    const errorMessage = extractApiErrorMessage(result.error, 'Не удалось обновить профиль.');
+                    msgDiv.innerHTML = `<div class="error-message-box">❌ ${escapeHtml(errorMessage)}</div>`;
                 }
             });
 
@@ -5395,7 +5412,8 @@
                     document.getElementById('confirmPassword').value = '';
                     setTimeout(() => msgDiv.innerHTML = '', 2000);
                 } else {
-                    msgDiv.innerHTML = '<div class="error-message-box">❌ ' + (result.error?.detail || 'Ошибка смены пароля') + '</div>';
+                    const errorMessage = extractApiErrorMessage(result.error, 'Не удалось изменить пароль.');
+                    msgDiv.innerHTML = `<div class="error-message-box">❌ ${escapeHtml(errorMessage)}</div>`;
                 }
             });
 
@@ -5561,7 +5579,7 @@
                         await deleteExistingItemImage(imageId);
                         await showEditItemPage(editItem);
                     } catch (error) {
-                        alert(`❌ ${error.message || 'Не удалось удалить фото'}`);
+                        alert(`❌ ${translateServerMessage(error.message, 'Не удалось удалить фото.')}`);
                     }
                 });
             });
@@ -5876,7 +5894,7 @@
                         const requestResult = await requestPasswordReset(email);
                         
                         if (!requestResult.ok) {
-                            alert(`❌ ${requestResult.data.error || 'Не удалось отправить код'}`);
+                            alert(`❌ ${extractApiErrorMessage(requestResult.data, 'Не удалось отправить код.')}`);
                             return;
                         }
                         
@@ -5926,7 +5944,7 @@
                         const confirmResult = await confirmPasswordReset(email, code, newPassword);
                         
                         if (!confirmResult.ok) {
-                            alert(`❌ ${confirmResult.data.error || 'Не удалось изменить пароль'}`);
+                            alert(`❌ ${extractApiErrorMessage(confirmResult.data, 'Не удалось изменить пароль.')}`);
                             return;
                         }
                         
@@ -5997,7 +6015,7 @@
 
                 const requestResult = await requestPasswordReset(email);
                 if (!requestResult.ok) {
-                    alert(`❌ ${requestResult.data.error || 'Не удалось отправить код'}`);
+                    alert(`❌ ${extractApiErrorMessage(requestResult.data, 'Не удалось отправить код.')}`);
                     return;
                 }
                 resetCodeSent = true;
@@ -6029,7 +6047,7 @@
 
                 const confirmResult = await confirmPasswordReset(email, code, newPassword);
                 if (!confirmResult.ok) {
-                    alert(`❌ ${confirmResult.data.error || 'Не удалось изменить пароль'}`);
+                    alert(`❌ ${extractApiErrorMessage(confirmResult.data, 'Не удалось изменить пароль.')}`);
                     return;
                 }
 
