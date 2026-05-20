@@ -1812,9 +1812,31 @@
             return stack;
         }
 
+        function sanitizeToastMessage(message, fallback = 'Произошла ошибка. Попробуйте ещё раз.') {
+            const raw = (message ?? '').toString().trim();
+            if (!raw) return fallback;
+
+            const withoutIcon = raw.replace(/^[❌✅]\s*/, '').trim();
+            const looksLikeHtml = /<\/?[a-z][\s\S]*>/i.test(raw) || /<!doctype html/i.test(raw);
+            const looksLikeDjangoDebug = /You're seeing this error because you have DEBUG/i.test(raw)
+                || /Request Method:/i.test(raw)
+                || /WSGI_APPLICATION/i.test(raw)
+                || /Traceback/i.test(raw);
+
+            if (looksLikeHtml || looksLikeDjangoDebug) {
+                return fallback;
+            }
+
+            const translated = translateServerMessage(withoutIcon, withoutIcon || fallback);
+            if (!translated || /<\/?[a-z][\s\S]*>/i.test(translated)) return fallback;
+
+            const prefix = raw.match(/^[❌✅]\s*/)?.[0] || '';
+            return `${prefix}${translated}`;
+        }
+
         function showQuickToast(message, { title, timeoutMs } = {}) {
             const stack = ensureSiteToastStack();
-            const text = (message ?? '').toString();
+            const text = sanitizeToastMessage(message);
 
             let derivedTitle = title;
             let derivedTimeout = timeoutMs;
@@ -1980,7 +2002,13 @@
                 'Token is invalid or expired': 'Сессия истекла. Войдите снова.',
                 'No active account found with the given credentials': 'Неверный логин или пароль.',
                 'A user with that username already exists.': 'Пользователь с таким именем уже существует.',
-                'user with this email already exists.': 'Пользователь с таким email уже существует.'
+                'user with this email already exists.': 'Пользователь с таким email уже существует.',
+                'Authentication credentials were not provided.': 'Войдите в систему.',
+                'Authentication required': 'Войдите в систему.',
+                'You are not the owner of this item': 'Это действие доступно только владельцу объявления.',
+                'Owner cannot review their own item': 'Нельзя оставить отзыв на своё объявление.',
+                'Invalid item id.': 'Объявление не найдено.',
+                'Server Error (500)': 'Ошибка сервера. Попробуйте ещё раз.'
             };
 
             if (exactMap[raw]) return exactMap[raw];
@@ -1997,8 +2025,29 @@
             if (/may not be blank/i.test(raw)) return 'Поле не должно быть пустым.';
             if (/required/i.test(raw)) return 'Это поле обязательно.';
             if (/not found/i.test(raw)) return 'Ничего не найдено.';
+            if (/failed to fetch|networkerror|load failed|network request failed/i.test(raw)) return 'Нет соединения с сервером.';
+            if (/permission|not authorized|forbidden|credentials were not provided/i.test(raw)) return 'Недостаточно прав для этого действия.';
+            if (/invalid item/i.test(raw)) return 'Объявление не найдено.';
+            if (/server error|internal server error|traceback|wsgi_application/i.test(raw)) {
+                return fallback || 'Ошибка сервера. Попробуйте ещё раз.';
+            }
 
             return raw;
+        }
+
+        async function readApiError(response, fallback = 'Произошла ошибка. Попробуйте ещё раз.') {
+            const contentType = response.headers.get('content-type') || '';
+            const responseText = await response.text().catch(() => '');
+
+            if (contentType.includes('application/json')) {
+                try {
+                    return extractApiErrorMessage(JSON.parse(responseText), fallback);
+                } catch (e) {
+                    return fallback;
+                }
+            }
+
+            return sanitizeToastMessage(responseText, fallback);
         }
 
         function extractApiErrorMessage(data, fallback = 'Произошла ошибка.') {
@@ -2460,12 +2509,13 @@
                     method: 'POST',
                     body: JSON.stringify({ text: (text || '').trim() })
                 });
-                const data = await response.json().catch(() => ({}));
                 if (!response.ok) {
-                    alert(data.detail || data.error || '❌ Не удалось отправить сообщение');
+                    const message = await readApiError(response, 'Не удалось отправить сообщение.');
+                    alert('❌ ' + message);
                     return { ok: false };
                 }
 
+                const data = await response.json().catch(() => ({}));
                 return { ok: true, message: data, shouldRenderLocally: true };
             } catch (error) {
                 alert('❌ Нет соединения с сервером');
@@ -2591,25 +2641,17 @@
                 });
                 if (response.ok) return { ok: true, data: await response.json() };
 
-                let errorData = {};
-                try {
-                    errorData = await response.json();
-                } catch (e) {}
-
-                const errorMessage =
-                    errorData.error ||
-                    errorData.detail ||
-                    `Ошибка ${response.status}`;
+                const errorMessage = await readApiError(response, `Не удалось создать чат. Код ошибки: ${response.status}.`);
 
                 console.error('createConversation failed', {
                     status: response.status,
                     body,
-                    errorData
+                    errorMessage
                 });
                 return { ok: false, error: errorMessage };
             } catch (error) {
                 console.error('createConversation network error', error);
-                return { ok: false, error: error.message || 'Ошибка сети' };
+                return { ok: false, error: translateServerMessage(error.message, 'Ошибка сети') };
             }
         }
 
@@ -3919,7 +3961,8 @@
             if (conversation?.ok && conversation.data) {
                 showChatPage(conversation.data.id);
             } else {
-                alert(`Не удалось создать чат: ${conversation?.error || 'неизвестная ошибка'}`);
+                const message = translateServerMessage(conversation?.error || '', 'Не удалось создать чат.');
+                alert('❌ ' + message);
             }
         }
 
@@ -3960,18 +4003,15 @@
 
         async function createItemWithImages(formData, mediaFiles) {
             try {
-                const ownerId = localStorage.getItem('user_id');
-
-                if (!ownerId) {
-                    alert('❌ Ошибка: пользователь не авторизован. Выйдите и войдите заново.');
+                if (!isAuthenticated()) {
+                    alert('❌ Войдите в систему, чтобы создать объявление.');
                     return false;
                 }
 
                 const apiData = {
                     title: formData.name,
                     description: formData.description,
-                    price_per_day: formData.price_per_day,
-                    owner: parseInt(ownerId, 10)
+                    price_per_day: formData.price_per_day
                 };
 
                 if (formData.category && formData.category !== '') {
@@ -3988,26 +4028,9 @@
                 });
 
                 if (!response.ok) {
-                    const responseText = await response.text().catch(() => '');
-                    let error = {};
-                    try {
-                        error = responseText ? JSON.parse(responseText) : {};
-                    } catch (e) {
-                        error = { detail: responseText || 'Неизвестная ошибка при создании объявления' };
-                    }
-
-                    const message =
-                        error.detail ||
-                        error.non_field_errors?.[0] ||
-                        error.owner?.[0] ||
-                        error.title?.[0] ||
-                        error.description?.[0] ||
-                        error.price_per_day?.[0] ||
-                        error.category?.[0] ||
-                        'Не удалось создать объявление';
-
-                    console.error('❌ Ошибка API:', error);
-                    alert('❌ Ошибка создания объявления: ' + message);
+                    const message = await readApiError(response, 'Не удалось создать объявление. Проверьте данные и попробуйте ещё раз.');
+                    console.error('❌ Ошибка API:', message);
+                    alert('❌ ' + message);
                     return false;
                 }
 
@@ -4027,22 +4050,9 @@
                         });
 
                         if (!uploadResp.ok) {
-                            const responseText = await uploadResp.text().catch(() => '');
-                            let uploadError = {};
-                            try {
-                                uploadError = responseText ? JSON.parse(responseText) : {};
-                            } catch (e) {
-                                uploadError = { detail: responseText || 'Неизвестная ошибка при загрузке фото' };
-                            }
-
-                            const uploadMessage =
-                                uploadError.detail ||
-                                uploadError.image?.[0] ||
-                                uploadError.item?.[0] ||
-                                'Не удалось загрузить фото';
-
+                            const uploadMessage = await readApiError(uploadResp, 'Не удалось загрузить фото.');
                             mediaUploadErrors.push(`${mediaFile.name}: ${uploadMessage}`);
-                            console.error('❌ Ошибка загрузки медиа:', uploadError);
+                            console.error('❌ Ошибка загрузки медиа:', uploadMessage);
                         }
                     }
                 }
@@ -4079,22 +4089,9 @@
                 });
 
                 if (!uploadResp.ok) {
-                    const responseText = await uploadResp.text().catch(() => '');
-                    let uploadError = {};
-                    try {
-                        uploadError = responseText ? JSON.parse(responseText) : {};
-                    } catch (e) {
-                        uploadError = { detail: responseText || 'Неизвестная ошибка при загрузке медиа' };
-                    }
-
-                    const uploadMessage =
-                        uploadError.detail ||
-                        uploadError.image?.[0] ||
-                        uploadError.item?.[0] ||
-                        'Не удалось загрузить фото';
-
+                    const uploadMessage = await readApiError(uploadResp, 'Не удалось загрузить фото.');
                     mediaUploadErrors.push(`${mediaFile.name}: ${uploadMessage}`);
-                    console.error('❌ Ошибка загрузки медиа:', uploadError);
+                    console.error('❌ Ошибка загрузки медиа:', uploadMessage);
                 }
             }
 
@@ -4111,15 +4108,7 @@
             });
 
             if (!response.ok) {
-                const responseText = await response.text().catch(() => '');
-                let error = {};
-                try {
-                    error = responseText ? JSON.parse(responseText) : {};
-                } catch (e) {
-                    error = { detail: responseText || 'Не удалось удалить фото' };
-                }
-
-                throw new Error(error.detail || 'Не удалось удалить фото');
+                throw new Error(await readApiError(response, 'Не удалось удалить фото.'));
             }
         }
 
@@ -4135,24 +4124,8 @@
                 });
 
                 if (!response.ok) {
-                    const responseText = await response.text().catch(() => '');
-                    let error = {};
-                    try {
-                        error = responseText ? JSON.parse(responseText) : {};
-                    } catch (e) {
-                        error = { detail: responseText || 'Неизвестная ошибка при обновлении объявления' };
-                    }
-
-                    const message =
-                        error.detail ||
-                        error.non_field_errors?.[0] ||
-                        error.title?.[0] ||
-                        error.description?.[0] ||
-                        error.price_per_day?.[0] ||
-                        error.category?.[0] ||
-                        'Не удалось обновить объявление';
-
-                    alert('❌ Ошибка редактирования объявления: ' + message);
+                    const message = await readApiError(response, 'Не удалось обновить объявление. Проверьте данные и попробуйте ещё раз.');
+                    alert('❌ ' + message);
                     return false;
                 }
 

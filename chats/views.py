@@ -76,10 +76,10 @@ class ConversationListCreateView(APIView):
             try:
                 item = Item.objects.get(id=item_id)
             except Item.DoesNotExist:
-                return Response({'error': 'Item not found'}, status=404)
+                return Response({'error': 'Объявление не найдено.'}, status=404)
 
             if item.owner_id != other_user.id:
-                return Response({'error': 'Item does not belong to selected participant'}, status=400)
+                return Response({'error': 'Объявление не принадлежит выбранному пользователю.'}, status=400)
 
         existing = Chat.objects.filter(users=request.user).filter(users=other_user)
         if item:
@@ -102,7 +102,7 @@ class ConversationDetailView(APIView):
     def get(self, request, conversation_id):
         chat = Chat.objects.filter(id=conversation_id, users=request.user).first()
         if not chat:
-            return Response({'error': 'Not found'}, status=404)
+            return Response({'error': 'Чат не найден.'}, status=404)
 
         read_message_ids = mark_chat_messages_read(chat, request.user)
         broadcast_messages_read(chat.id, read_message_ids, request.user.id)
@@ -125,7 +125,7 @@ class ConversationMessageCreateView(APIView):
     def post(self, request, conversation_id):
         chat = Chat.objects.filter(id=conversation_id, users=request.user).first()
         if not chat:
-            return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Чат не найден.'}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = MessageCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

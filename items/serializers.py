@@ -40,6 +40,7 @@ class ItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = Item
         fields = '__all__'
+        read_only_fields = ['owner', 'average_rating', 'reviews_count', 'created_at']
 
     def get_booked_ranges(self, obj):
         active_bookings = obj.bookings.filter(status__in=['pending', 'confirmed']).order_by('start_date')
