@@ -100,9 +100,9 @@ class ItemViewSet(viewsets.ModelViewSet):
 
         # POST
         if not request.user.is_authenticated:
-            raise PermissionDenied("Authentication required")
+            raise PermissionDenied("Войдите в систему.")
         if item.owner_id == request.user.id:
-            raise PermissionDenied("Owner cannot review their own item")
+            raise PermissionDenied("Нельзя оставить отзыв на своё объявление.")
 
         serializer = ItemReviewSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -122,15 +122,15 @@ class ItemImageUploadView(generics.CreateAPIView):
     def perform_create(self, serializer):
         item_id = self.request.data.get('item')
         if not item_id:
-            raise ValidationError({'item': ['This field is required.']})
+            raise ValidationError({'item': ['Укажите объявление.']})
 
         try:
             item = Item.objects.get(id=item_id)
         except Item.DoesNotExist:
-            raise ValidationError({'item': ['Invalid item id.']})
+            raise ValidationError({'item': ['Объявление не найдено.']})
 
         if item.owner != self.request.user:
-            raise PermissionDenied("You are not the owner of this item")
+            raise PermissionDenied("Это действие доступно только владельцу объявления.")
 
         serializer.save(item=item)
 
