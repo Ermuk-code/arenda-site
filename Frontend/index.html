@@ -5712,9 +5712,9 @@
                         <div class="user-type-info">
                             <h4>📄 Профиль физического лица</h4>
                             <div class="input-group"><label>ФИО *</label><input type="text" id="regFullName" maxlength="255" placeholder="Иванов Иван Иванович"></div>
-                            <div class="input-group"><label>Серия паспорта</label><input type="text" id="regPassportSeries" placeholder="Необязательно на этом шаге"></div>
-                            <div class="input-group"><label>Номер паспорта</label><input type="text" id="regPassportNumber" placeholder="Необязательно на этом шаге"></div>
-                            <div class="input-group"><label>ИНН</label><input type="text" id="regInn" placeholder="Необязательно на этом шаге"></div>
+                            <div class="input-group"><label>Серия паспорта</label><input type="text" id="regPassportSeries" placeholder="Серия паспорта (4 цифры)"></div>
+                            <div class="input-group"><label>Номер паспорта</label><input type="text" id="regPassportNumber" placeholder="Номер паспорта (6 цифр) "></div>
+                            <div class="input-group"><label>ИНН</label><input type="text" id="regInn" placeholder="ИНН (12 цифр)"></div>
                         </div>
                     `;
                 } else if (userType === 'entrepreneur') {
@@ -5722,8 +5722,8 @@
                         <div class="user-type-info">
                             <h4>🏢 Профиль ИП</h4>
                             <div class="input-group"><label>Наименование ИП</label><input type="text" id="regEntrepreneurName" maxlength="255" placeholder="ИП Иванов Иван Иванович"></div>
-                            <div class="input-group"><label>ИНН</label><input type="text" id="regInn" placeholder="Необязательно на этом шаге"></div>
-                            <div class="input-group"><label>ОГРНИП</label><input type="text" id="regOgrnip" placeholder="Необязательно на этом шаге"></div>
+                            <div class="input-group"><label>ИНН</label><input type="text" id="regInn" placeholder="ИНН (12 цифр)"></div>
+                            <div class="input-group"><label>ОГРНИП</label><input type="text" id="regOgrnip" placeholder="ОГРНИП (15 цифр)"></div>
                         </div>
                     `;
                 } else {
@@ -5731,8 +5731,8 @@
                         <div class="user-type-info">
                             <h4>🏛️ Профиль юридического лица</h4>
                             <div class="input-group"><label>Наименование организации</label><input type="text" id="regCompanyName" maxlength="255" placeholder="ООО Ромашка"></div>
-                            <div class="input-group"><label>ИНН</label><input type="text" id="regInn" placeholder="Необязательно на этом шаге"></div>
-                            <div class="input-group"><label>КПП</label><input type="text" id="regKpp" placeholder="Необязательно на этом шаге"></div>
+                            <div class="input-group"><label>ИНН</label><input type="text" id="regInn" placeholder="ИНН (10 цифр)"></div>
+                            <div class="input-group"><label>КПП</label><input type="text" id="regKpp" placeholder="КПП (9 цифр)"></div>
                         </div>
                     `;
                 }
@@ -6109,7 +6109,7 @@
                     <div id="productsContainer" class="products"><div class="loading">Загрузка товаров...</div></div>
                     <div id="pagination" class="pagination"></div>
                 </div>
-                <footer>© Аренда вещей — умная аренда</footer>
+                <footer>Сайт создан в рамках выполнения выпускной квалификационной работы, не является коммерческим проектом и не представляет собой публичную оферту (ст. 437 ГК РФ). Администрация сайта не несёт ответственности за сделки, заключённые между пользователями, а также за достоверность и обработку их персональных данных.</footer>
             `;
             updateNavBar();
             startNotificationPolling();
