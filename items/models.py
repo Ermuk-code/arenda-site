@@ -11,10 +11,10 @@ class Category(models.Model):
 class Item(models.Model):
 
     STATUS_CHOICES = (
-        ('pending', 'Pending moderation'),
-        ('available', 'Available'),
-        ('unavailable', 'Unavailable'),
-        ('blocked', 'Blocked'),
+        ('pending', 'На модерации'),
+        ('available', 'Опубликовано'),
+        ('unavailable', 'Недоступно'),
+        ('blocked', 'Заблокировано'),
     )
 
     owner = models.ForeignKey(
@@ -76,13 +76,13 @@ class ItemModerationRequest(models.Model):
     STATUS_REJECTED = 'rejected'
 
     ACTION_CHOICES = (
-        (ACTION_CREATE, 'Create'),
-        (ACTION_UPDATE, 'Update'),
+        (ACTION_CREATE, 'Создание'),
+        (ACTION_UPDATE, 'Редактирование'),
     )
     STATUS_CHOICES = (
-        (STATUS_PENDING, 'Pending'),
-        (STATUS_APPROVED, 'Approved'),
-        (STATUS_REJECTED, 'Rejected'),
+        (STATUS_PENDING, 'Ожидает рассмотрения'),
+        (STATUS_APPROVED, 'Одобрена'),
+        (STATUS_REJECTED, 'Отклонена'),
     )
 
     item = models.ForeignKey(
@@ -122,7 +122,7 @@ class ItemModerationRequest(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.get_action_display()} request for {self.item}'
+        return f'{self.get_action_display()} объявления {self.item}'
 
 
 class ItemVideo(models.Model):

@@ -1,7 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
-from notifications.email import send_item_moderation_rejected, send_item_moderation_request_to_admins
+from notifications.email import (
+    send_item_moderation_approved,
+    send_item_moderation_rejected,
+    send_item_moderation_request_to_admins,
+)
 from notifications.services import create_notification
 
 from .models import ItemModerationRequest
@@ -43,7 +47,7 @@ def create_item_moderation_request(item, submitted_by, action):
     ItemModerationRequest.objects.filter(
         item=item,
         status=ItemModerationRequest.STATUS_PENDING,
-    ).update(status=ItemModerationRequest.STATUS_REJECTED, rejection_reason='Superseded by a newer request')
+    ).update(status=ItemModerationRequest.STATUS_REJECTED, rejection_reason='Заменена новой заявкой')
 
     request = ItemModerationRequest.objects.create(
         item=item,
@@ -60,8 +64,8 @@ def notify_item_moderation_request(moderation_request):
     User = get_user_model()
     admins = User.objects.filter(is_superuser=True, is_active=True)
     message = (
-        f'New item moderation request #{moderation_request.id}: '
-        f'{moderation_request.item.title} by {moderation_request.submitted_by.username}'
+        f'Новая заявка на модерацию #{moderation_request.id}: '
+        f'«{moderation_request.item.title}» от пользователя {moderation_request.submitted_by.username}'
     )
 
     for admin in admins:
@@ -102,13 +106,14 @@ def approve_item_moderation_request(moderation_request, admin):
             'item_id': moderation_request.item_id,
         },
     )
+    send_item_moderation_approved(moderation_request.submitted_by, moderation_request.item.title)
     return moderation_request
 
 
 def reject_item_moderation_request(moderation_request, admin, reason):
     owner = moderation_request.submitted_by
     item = moderation_request.item
-    title = item.title if item else moderation_request.item_snapshot.get('title', 'item')
+    title = item.title if item else moderation_request.item_snapshot.get('title', 'объявление')
     moderation_request.status = ItemModerationRequest.STATUS_REJECTED
     moderation_request.rejection_reason = reason
     moderation_request.reviewed_by = admin

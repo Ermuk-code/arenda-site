@@ -39,11 +39,11 @@ class ItemAdmin(admin.ModelAdmin):
     inlines = (ItemImageInline, ItemVideoInline)
     actions = ('block_items', 'unblock_items')
 
-    @admin.action(description='Block selected items')
+    @admin.action(description='Заблокировать выбранные объявления')
     def block_items(self, request, queryset):
         queryset.update(status='blocked')
 
-    @admin.action(description='Mark selected items as available')
+    @admin.action(description='Опубликовать выбранные объявления')
     def unblock_items(self, request, queryset):
         queryset.update(status='available')
 
@@ -68,18 +68,18 @@ class ItemModerationRequestAdmin(admin.ModelAdmin):
     ordering = ('-created_at',)
     actions = ('approve_requests', 'reject_requests')
 
-    @admin.action(description='Approve selected item requests')
+    @admin.action(description='Одобрить выбранные заявки')
     def approve_requests(self, request, queryset):
         for moderation_request in queryset.filter(status=ItemModerationRequest.STATUS_PENDING):
             approve_item_moderation_request(moderation_request, request.user)
 
-    @admin.action(description='Reject selected item requests')
+    @admin.action(description='Отклонить выбранные заявки')
     def reject_requests(self, request, queryset):
         for moderation_request in queryset.filter(status=ItemModerationRequest.STATUS_PENDING):
             reject_item_moderation_request(
                 moderation_request,
                 request.user,
-                'Rejected by administrator from Django admin.',
+                'Отклонено администратором через панель управления.',
             )
 
 

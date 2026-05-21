@@ -61,7 +61,7 @@ class ItemModerationRequestViewSet(viewsets.ReadOnlyModelViewSet):
     def approve(self, request, pk=None):
         moderation_request = self.get_object()
         if moderation_request.status != ItemModerationRequest.STATUS_PENDING:
-            raise ValidationError({'status': ['Request has already been reviewed.']})
+            raise ValidationError({'status': ['Заявка уже рассмотрена.']})
 
         approve_item_moderation_request(moderation_request, request.user)
         return Response(self.get_serializer(moderation_request).data)
@@ -70,11 +70,11 @@ class ItemModerationRequestViewSet(viewsets.ReadOnlyModelViewSet):
     def reject(self, request, pk=None):
         moderation_request = self.get_object()
         if moderation_request.status != ItemModerationRequest.STATUS_PENDING:
-            raise ValidationError({'status': ['Request has already been reviewed.']})
+            raise ValidationError({'status': ['Заявка уже рассмотрена.']})
 
         reason = (request.data.get('reason') or '').strip()
         if not reason:
-            raise ValidationError({'reason': ['Rejection reason is required.']})
+            raise ValidationError({'reason': ['Укажите причину отказа.']})
 
         serialized = self.get_serializer(moderation_request).data
         reject_item_moderation_request(moderation_request, request.user, reason)
