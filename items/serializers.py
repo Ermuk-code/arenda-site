@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Item, ItemImage, ItemVideo, Category, ItemReview
+from .models import Category, Item, ItemImage, ItemModerationRequest, ItemReview, ItemVideo
 
 class ItemImageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -71,6 +71,48 @@ class ItemSerializer(serializers.ModelSerializer):
             }
             for review in reviews
         ]
+
+
+class ModerationUserSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    username = serializers.CharField(read_only=True)
+    email = serializers.EmailField(read_only=True)
+    phone = serializers.CharField(read_only=True)
+    user_type = serializers.CharField(read_only=True)
+    full_name = serializers.CharField(read_only=True)
+    entrepreneur_name = serializers.CharField(read_only=True)
+    company_name = serializers.CharField(read_only=True)
+    passport_series = serializers.CharField(read_only=True)
+    passport_number = serializers.CharField(read_only=True)
+    inn = serializers.CharField(read_only=True)
+    kpp = serializers.CharField(read_only=True)
+    ogrnip = serializers.CharField(read_only=True)
+    profile_completed = serializers.BooleanField(read_only=True)
+
+
+class ItemModerationRequestSerializer(serializers.ModelSerializer):
+    item = ItemSerializer(read_only=True)
+    submitted_by = ModerationUserSerializer(read_only=True)
+    reviewed_by_username = serializers.CharField(source='reviewed_by.username', read_only=True)
+
+    class Meta:
+        model = ItemModerationRequest
+        fields = [
+            'id',
+            'item',
+            'submitted_by',
+            'action',
+            'status',
+            'item_snapshot',
+            'user_snapshot',
+            'rejection_reason',
+            'reviewed_by',
+            'reviewed_by_username',
+            'reviewed_at',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = fields
 
 
 class ItemReviewSerializer(serializers.ModelSerializer):

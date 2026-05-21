@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from datetime import date
 from rest_framework.test import APIClient
 
-from .models import Category, Item, ItemImage
+from .models import Category, Item, ItemImage, ItemModerationRequest
 from bookings.models import Booking, Review
 
 User = get_user_model()
@@ -74,6 +74,15 @@ class ItemEditApiTest(TestCase):
         self.assertEqual(self.item.title, 'New Camera')
         self.assertEqual(self.item.description, 'Updated description')
         self.assertEqual(self.item.price_per_day, 700)
+        self.assertEqual(self.item.status, 'pending')
+        self.assertTrue(
+            ItemModerationRequest.objects.filter(
+                item=self.item,
+                submitted_by=self.owner,
+                action=ItemModerationRequest.ACTION_UPDATE,
+                status=ItemModerationRequest.STATUS_PENDING,
+            ).exists()
+        )
 
     def test_owner_can_upload_new_image_for_existing_item(self):
         image = SimpleUploadedFile(

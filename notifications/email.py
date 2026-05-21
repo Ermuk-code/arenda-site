@@ -33,6 +33,40 @@ def send_password_reset_code(user, code):
     )
 
 
+def send_item_moderation_request_to_admins(moderation_request, admins):
+    item = moderation_request.item
+    owner = moderation_request.submitted_by
+    subject = f"New item moderation request: {item.title}"
+    message = (
+        f"Moderation request #{moderation_request.id}\n\n"
+        f"Action: {moderation_request.action}\n"
+        f"Item: {item.title}\n"
+        f"Price per day: {item.price_per_day}\n"
+        f"Category: {item.category.name if item.category else '-'}\n\n"
+        f"Owner: {owner.username}\n"
+        f"Email: {owner.email}\n"
+        f"Phone: {owner.phone or '-'}\n"
+        f"User type: {owner.user_type}\n\n"
+        "Open the admin moderation page to approve or reject this request."
+    )
+    for admin in admins:
+        _send(admin.email, subject, message)
+
+
+def send_item_moderation_rejected(user, item_title, reason):
+    _send(
+        to_email=user.email,
+        subject=f"Item publication rejected: {item_title}",
+        message=(
+            f"Hello, {user.username}!\n\n"
+            f"Your request to publish or edit the item \"{item_title}\" was rejected by an administrator.\n\n"
+            f"Reason: {reason}\n\n"
+            "The item has been removed. You can create a new listing after fixing the issue.\n\n"
+            "Mokitoki team"
+        ),
+    )
+
+
 def send_booking_created(booking):
     """Арендодателю: новая заявка на бронирование"""
     owner = booking.item.owner

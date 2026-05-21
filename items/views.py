@@ -1,9 +1,9 @@
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly, IsAuthenticated
 from users.permissions import IsProfileCompleted
-from .models import Item, ItemReview
+from .models import Item, ItemModerationRequest, ItemReview
 from .permissions import IsOwner
-from .serializers import ItemSerializer, ItemReviewSerializer
+from .serializers import ItemModerationRequestSerializer, ItemSerializer, ItemReviewSerializer
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
@@ -22,10 +22,66 @@ from users.permissions import IsProfileCompleted
 from .models import Category, Item, ItemImage
 from .permissions import IsOwner
 from .serializers import CategorySerializer, ItemImageSerializer, ItemSerializer
+from .services import (
+    approve_item_moderation_request,
+    create_item_moderation_request,
+    reject_item_moderation_request,
+)
 
 class CategoryViewSet(ModelViewSet):
     queryset = Category.objects.order_by('name')
     serializer_class = CategorySerializer
+
+
+class IsSuperUser(IsAdminUser):
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated and request.user.is_superuser)
+
+
+class ItemModerationRequestViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = ItemModerationRequestSerializer
+    permission_classes = [IsSuperUser]
+
+    def get_queryset(self):
+        queryset = ItemModerationRequest.objects.select_related(
+            'item',
+            'item__owner',
+            'item__category',
+            'submitted_by',
+            'reviewed_by',
+        ).prefetch_related('item__images', 'item__videos')
+
+        status = self.request.query_params.get('status')
+        if status:
+            queryset = queryset.filter(status=status)
+
+        return queryset
+
+    @action(detail=True, methods=['post'])
+    def approve(self, request, pk=None):
+        moderation_request = self.get_object()
+        if moderation_request.status != ItemModerationRequest.STATUS_PENDING:
+            raise ValidationError({'status': ['Request has already been reviewed.']})
+
+        approve_item_moderation_request(moderation_request, request.user)
+        return Response(self.get_serializer(moderation_request).data)
+
+    @action(detail=True, methods=['post'])
+    def reject(self, request, pk=None):
+        moderation_request = self.get_object()
+        if moderation_request.status != ItemModerationRequest.STATUS_PENDING:
+            raise ValidationError({'status': ['Request has already been reviewed.']})
+
+        reason = (request.data.get('reason') or '').strip()
+        if not reason:
+            raise ValidationError({'reason': ['Rejection reason is required.']})
+
+        serialized = self.get_serializer(moderation_request).data
+        reject_item_moderation_request(moderation_request, request.user, reason)
+        serialized['status'] = ItemModerationRequest.STATUS_REJECTED
+        serialized['rejection_reason'] = reason
+        return Response(serialized)
+
 
 class ItemViewSet(viewsets.ModelViewSet):
 
@@ -60,10 +116,20 @@ class ItemViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        item = serializer.save(owner=self.request.user, status='pending')
+        create_item_moderation_request(
+            item=item,
+            submitted_by=self.request.user,
+            action=ItemModerationRequest.ACTION_CREATE,
+        )
 
     def perform_update(self, serializer):
-        serializer.save(owner=self.request.user)
+        item = serializer.save(owner=self.request.user, status='pending')
+        create_item_moderation_request(
+            item=item,
+            submitted_by=self.request.user,
+            action=ItemModerationRequest.ACTION_UPDATE,
+        )
 
     def get_permissions(self):
         if self.action in ['update', 'partial_update', 'destroy']:

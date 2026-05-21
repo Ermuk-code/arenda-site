@@ -14,6 +14,9 @@ class Notification(models.Model):
         ('return_reminder', 'Напоминание о возврате'),
         ('new_message', 'Новое сообщение'),
         ('new_review', 'Новый отзыв'),
+        ('item_moderation_request', 'Заявка на модерацию объявления'),
+        ('item_moderation_approved', 'Объявление одобрено'),
+        ('item_moderation_rejected', 'Объявление отклонено'),
     )
 
     user = models.ForeignKey(

@@ -1725,6 +1725,7 @@
             if (userType) localStorage.setItem('user_type', userType);
 
             if (profileData) {
+                localStorage.setItem('is_superuser', profileData.is_superuser ? '1' : '0');
                 if (profileData.full_name) localStorage.setItem('full_name', profileData.full_name);
                 if (profileData.entrepreneur_name) localStorage.setItem('entrepreneur_name', profileData.entrepreneur_name);
                 if (profileData.company_name) localStorage.setItem('company_name', profileData.company_name);
@@ -1751,6 +1752,7 @@
             localStorage.removeItem('inn');
             localStorage.removeItem('ogrnip');
             localStorage.removeItem('kpp');
+            localStorage.removeItem('is_superuser');
         }
 
         function isAuthenticated() { return !!getAccessToken(); }
@@ -2394,6 +2396,7 @@
 
         function formatItemStatus(status) {
             const map = {
+                pending: 'На модерации',
                 available: 'Доступно',
                 unavailable: 'Недоступно',
                 blocked: 'Заблокировано',
@@ -2884,6 +2887,9 @@
                 booking_cancelled: { title: 'Бронирование отменено', actionLabel: 'Открыть' },
                 booking_confirmed: { title: 'Бронирование подтверждено', actionLabel: 'Оплатить' },
                 payment_confirmed: { title: 'Оплата подтверждена', actionLabel: 'К моим объявлениям' },
+                item_moderation_request: { title: 'Новая заявка на объявление', actionLabel: 'К модерации' },
+                item_moderation_approved: { title: 'Объявление одобрено', actionLabel: 'Открыть' },
+                item_moderation_rejected: { title: 'Объявление отклонено', actionLabel: 'К моим объявлениям' },
                 new_message: { title: 'Новое сообщение', actionLabel: 'Открыть чат' },
                 return_reminder: { title: 'Напоминание о возврате', actionLabel: 'К объявлению' },
                 new_review: { title: 'Новый отзыв', actionLabel: 'К объявлению' },
@@ -3029,6 +3035,13 @@
                 closeItemPreview();
                 closeRentalModal();
                 await showMyItemsPage();
+                return;
+            }
+
+            if (destination === 'item_moderation' || type === 'item_moderation_request') {
+                closeItemPreview();
+                closeRentalModal();
+                await showModerationPage();
                 return;
             }
 
@@ -4055,9 +4068,9 @@
                 }
 
                 if (mediaUploadErrors.length) {
-                    alert(`✅ Объявление создано, но часть медиа не загрузилась:\n\n${mediaUploadErrors.join('\n')}`);
+                    alert(`✅ Заявка на создание объявления отправлена администратору, но часть медиа не загрузилась:\n\n${mediaUploadErrors.join('\n')}`);
                 } else {
-                    alert('✅ Объявление опубликовано!');
+                    alert('✅ Заявка отправлена администратору. Объявление появится в общем доступе после одобрения.');
                 }
                 showMainPage();
                 loadProducts(1);
@@ -4129,9 +4142,9 @@
                 const mediaUploadErrors = await uploadItemMedia(itemId, mediaFiles, token);
 
                 if (mediaUploadErrors.length) {
-                    alert(`✅ Объявление обновлено, но часть медиа не загрузилась:\n\n${mediaUploadErrors.join('\n')}`);
+                    alert(`✅ Заявка на редактирование отправлена администратору, но часть медиа не загрузилась:\n\n${mediaUploadErrors.join('\n')}`);
                 } else {
-                    alert('✅ Объявление обновлено!');
+                    alert('✅ Заявка на редактирование отправлена администратору. Объявление снова появится после одобрения.');
                 }
 
                 selectedMediaFiles = [];
@@ -4269,9 +4282,13 @@
 
             if (isAuthenticated()) {
                 connectNotificationsSocket();
+                const adminButtonHtml = localStorage.getItem('is_superuser') === '1'
+                    ? '<button class="btn-outline nav-btn" id="moderationNavBtn">🛡️ Модерация</button>'
+                    : '';
                 authSection.innerHTML = `
                     <div class="user-info">
                         <span>👤 ${localStorage.getItem('username') || 'Пользователь'}</span>
+                        ${adminButtonHtml}
                         <button class="btn-outline nav-btn" id="myItemsNavBtn">📦 Мои объявления</button>
                         <button class="btn-outline nav-btn" id="bookingsNavBtn">📥 Заявки<span class="nav-badge attention" id="bookingsNavBadge" style="${navCounters.bookings ? '' : 'display:none;'}">${formatCompactCount(navCounters.bookings)}</span></button>
                         <button class="btn-outline nav-btn" id="chatsNavBtn">💬 Чаты<span class="nav-badge" id="chatsNavBadge" style="${navCounters.chats ? '' : 'display:none;'}">${formatCompactCount(navCounters.chats)}</span></button>
@@ -4280,6 +4297,7 @@
                         <button class="btn-outline" id="logoutNavBtn">Выйти</button>
                     </div>
                 `;
+                document.getElementById('moderationNavBtn')?.addEventListener('click', () => showModerationPage());
                 document.getElementById('myItemsNavBtn')?.addEventListener('click', () => showMyItemsPage());
                 document.getElementById('bookingsNavBtn')?.addEventListener('click', () => showIncomingBookingsPage());
                 document.getElementById('chatsNavBtn')?.addEventListener('click', () => showChatsPage());
@@ -4304,6 +4322,107 @@
                 document.getElementById('loginNavBtn')?.addEventListener('click', (e) => { e.preventDefault(); showLoginPage(); });
                 document.getElementById('registerNavBtn')?.addEventListener('click', (e) => { e.preventDefault(); showRegisterPage(); });
             }
+        }
+
+        function renderModerationRequestCard(request) {
+            const item = request.item || {};
+            const user = request.submitted_by || {};
+            const category = item.category_name || request.item_snapshot?.category || 'Без категории';
+            const actionLabel = request.action === 'update' ? 'Редактирование' : 'Создание';
+            const images = Array.isArray(item.images) ? item.images : [];
+
+            return `
+                <div class="booking-request-card" data-request-id="${request.id}">
+                    <div class="booking-request-top">
+                        <div>
+                            <div class="booking-request-title">${escapeHtml(item.title || request.item_snapshot?.title || 'Без названия')}</div>
+                            <div class="booking-request-meta">
+                                <div>Тип заявки: ${escapeHtml(actionLabel)}</div>
+                                <div>Категория: ${escapeHtml(category)}</div>
+                                <div>Цена: ${escapeHtml(item.price_per_day || request.item_snapshot?.price_per_day || '0')} ₽/день</div>
+                                <div>Дата заявки: ${escapeHtml(formatDateRu(request.created_at))}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="booking-request-meta" style="margin-top:12px;">
+                        <div><strong>Описание:</strong> ${escapeHtml(item.description || request.item_snapshot?.description || '—')}</div>
+                        <div><strong>Пользователь:</strong> ${escapeHtml(user.username || '—')}</div>
+                        <div><strong>Email:</strong> ${escapeHtml(user.email || '—')}</div>
+                        <div><strong>Телефон:</strong> ${escapeHtml(user.phone || '—')}</div>
+                        <div><strong>Тип пользователя:</strong> ${escapeHtml(user.user_type || '—')}</div>
+                        <div><strong>ФИО / организация:</strong> ${escapeHtml(user.full_name || user.entrepreneur_name || user.company_name || '—')}</div>
+                        <div><strong>ИНН:</strong> ${escapeHtml(user.inn || '—')}</div>
+                        <div><strong>КПП:</strong> ${escapeHtml(user.kpp || '—')}</div>
+                        <div><strong>ОГРНИП:</strong> ${escapeHtml(user.ogrnip || '—')}</div>
+                        <div><strong>Паспорт:</strong> ${escapeHtml([user.passport_series, user.passport_number].filter(Boolean).join(' ') || '—')}</div>
+                    </div>
+                    ${images.length ? `
+                        <div class="image-preview">
+                            ${images.map(img => `<div class="preview-item"><img src="${escapeHtml(img.image)}" alt=""></div>`).join('')}
+                        </div>
+                    ` : ''}
+                    <div class="form-group" style="margin-top:16px;">
+                        <label>Причина отказа</label>
+                        <textarea class="moderation-reason" rows="3" placeholder="Заполните, если отказываете"></textarea>
+                    </div>
+                    <div class="form-actions wrap">
+                        <button class="btn-primary" data-action="approve" data-id="${request.id}" type="button">Отправить</button>
+                        <button class="btn-danger" data-action="reject" data-id="${request.id}" type="button">Отказать</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function showModerationPage() {
+            if (!isAuthenticated() || localStorage.getItem('is_superuser') !== '1') {
+                alert('Раздел доступен только администратору.');
+                return;
+            }
+
+            const requests = await fetchPaginatedResults('/items/moderation-requests/?status=pending');
+            document.getElementById('app').innerHTML = `
+                <div class="bookings-page"><div class="bookings-card">
+                    <div class="back-button" id="backToMainFromModeration">← Назад</div>
+                    <div class="bookings-title">🛡️ Модерация объявлений</div>
+                    <div class="bookings-sub">Проверьте данные объявления и пользователя, затем одобрите публикацию или укажите причину отказа.</div>
+                    <div id="moderationContent">
+                        ${requests.length ? requests.map(renderModerationRequestCard).join('') : '<div class="empty-message">Новых заявок на модерацию нет.</div>'}
+                    </div>
+                </div></div>
+            `;
+
+            document.getElementById('backToMainFromModeration')?.addEventListener('click', () => showMainPage());
+            document.querySelectorAll('[data-action="approve"]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const response = await apiRequest(`/items/moderation-requests/${btn.dataset.id}/approve/`, { method: 'POST', body: JSON.stringify({}) });
+                    if (!response.ok) {
+                        alert('❌ ' + await readApiError(response, 'Не удалось одобрить заявку.'));
+                        return;
+                    }
+                    alert('✅ Объявление одобрено и опубликовано.');
+                    showModerationPage();
+                });
+            });
+            document.querySelectorAll('[data-action="reject"]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const card = btn.closest('[data-request-id]');
+                    const reason = card?.querySelector('.moderation-reason')?.value?.trim() || '';
+                    if (!reason) {
+                        alert('❌ Укажите причину отказа.');
+                        return;
+                    }
+                    const response = await apiRequest(`/items/moderation-requests/${btn.dataset.id}/reject/`, {
+                        method: 'POST',
+                        body: JSON.stringify({ reason })
+                    });
+                    if (!response.ok) {
+                        alert('❌ ' + await readApiError(response, 'Не удалось отказать заявке.'));
+                        return;
+                    }
+                    alert('✅ Заявка отклонена. Объявление удалено, пользователю отправлено письмо.');
+                    showModerationPage();
+                });
+            });
         }
 
         async function showChatsPage() {

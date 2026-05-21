@@ -11,6 +11,7 @@ class Category(models.Model):
 class Item(models.Model):
 
     STATUS_CHOICES = (
+        ('pending', 'Pending moderation'),
         ('available', 'Available'),
         ('unavailable', 'Unavailable'),
         ('blocked', 'Blocked'),
@@ -65,6 +66,63 @@ class ItemImage(models.Model):
 
     class Meta:
         ordering = ['-uploaded_at']
+
+
+class ItemModerationRequest(models.Model):
+    ACTION_CREATE = 'create'
+    ACTION_UPDATE = 'update'
+    STATUS_PENDING = 'pending'
+    STATUS_APPROVED = 'approved'
+    STATUS_REJECTED = 'rejected'
+
+    ACTION_CHOICES = (
+        (ACTION_CREATE, 'Create'),
+        (ACTION_UPDATE, 'Update'),
+    )
+    STATUS_CHOICES = (
+        (STATUS_PENDING, 'Pending'),
+        (STATUS_APPROVED, 'Approved'),
+        (STATUS_REJECTED, 'Rejected'),
+    )
+
+    item = models.ForeignKey(
+        Item,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='moderation_requests',
+    )
+    submitted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='item_moderation_requests',
+    )
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    item_snapshot = models.JSONField(default=dict, blank=True)
+    user_snapshot = models.JSONField(default=dict, blank=True)
+    rejection_reason = models.TextField(blank=True)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reviewed_item_moderation_requests',
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status', '-created_at']),
+            models.Index(fields=['submitted_by', '-created_at']),
+            models.Index(fields=['item', 'status']),
+        ]
+
+    def __str__(self):
+        return f'{self.get_action_display()} request for {self.item}'
 
 
 class ItemVideo(models.Model):
