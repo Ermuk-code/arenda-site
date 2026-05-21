@@ -124,7 +124,7 @@ def reject_item_moderation_request(moderation_request, admin, reason):
     create_notification(
         user=owner,
         notification_type='item_moderation_rejected',
-        message=f'Ваше объявление «{title}» отклонено. Причина: {reason}',
+        message=f'Вам отказано в публикации объявления под названием «{title}» . Причина: {reason}',
         metadata={
             'destination': 'my_items',
             'request_id': moderation_request.id,
