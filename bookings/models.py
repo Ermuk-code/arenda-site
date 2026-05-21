@@ -102,8 +102,13 @@ class Booking(models.Model):
         # Freeze booking price on creation so later item price changes
         # do not affect already created bookings or payment flows.
         if is_new or self.total_price is None:
+            from decimal import Decimal, ROUND_HALF_UP
+            MARKUP_RATE = Decimal('0.20')  # наценка платформы 20%
             days = (self.end_date - self.start_date).days
-            self.total_price = days * self.item.price_per_day
+            price_with_markup = (self.item.price_per_day * (1 + MARKUP_RATE)).quantize(
+                Decimal('0.01'), rounding=ROUND_HALF_UP
+            )
+            self.total_price = days * price_with_markup
 
         super().save(*args, **kwargs)
         if is_new:

@@ -1,9 +1,16 @@
 from rest_framework.routers import DefaultRouter
-from .views import ItemViewSet, ItemImageUploadView, ItemImageDeleteView, CategoryViewSet
+from .views import (
+    CategoryViewSet,
+    ItemImageDeleteView,
+    ItemImageUploadView,
+    ItemModerationRequestViewSet,
+    ItemViewSet,
+)
 from django.urls import path
 
 router = DefaultRouter()
 router.register(r'categories', CategoryViewSet, basename='categories')
+router.register(r'moderation-requests', ItemModerationRequestViewSet, basename='item-moderation-requests')
 router.register(r'', ItemViewSet, basename='items')
 
 urlpatterns = [

@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from .models import Category, Item, ItemImage, ItemReview, ItemVideo
+from .models import Category, Item, ItemImage, ItemModerationRequest, ItemReview, ItemVideo
+from .services import approve_item_moderation_request, reject_item_moderation_request
 
 
 @admin.register(Category)
@@ -38,13 +39,48 @@ class ItemAdmin(admin.ModelAdmin):
     inlines = (ItemImageInline, ItemVideoInline)
     actions = ('block_items', 'unblock_items')
 
-    @admin.action(description='Block selected items')
+    @admin.action(description='Заблокировать выбранные объявления')
     def block_items(self, request, queryset):
         queryset.update(status='blocked')
 
-    @admin.action(description='Mark selected items as available')
+    @admin.action(description='Опубликовать выбранные объявления')
     def unblock_items(self, request, queryset):
         queryset.update(status='available')
+
+
+@admin.register(ItemModerationRequest)
+class ItemModerationRequestAdmin(admin.ModelAdmin):
+    list_display = ('id', 'item', 'submitted_by', 'action', 'status', 'reviewed_by', 'created_at')
+    list_filter = ('status', 'action', 'created_at', 'reviewed_at')
+    search_fields = ('item__title', 'submitted_by__username', 'submitted_by__email', 'rejection_reason')
+    readonly_fields = (
+        'item',
+        'submitted_by',
+        'action',
+        'status',
+        'item_snapshot',
+        'user_snapshot',
+        'reviewed_by',
+        'reviewed_at',
+        'created_at',
+        'updated_at',
+    )
+    ordering = ('-created_at',)
+    actions = ('approve_requests', 'reject_requests')
+
+    @admin.action(description='Одобрить выбранные заявки')
+    def approve_requests(self, request, queryset):
+        for moderation_request in queryset.filter(status=ItemModerationRequest.STATUS_PENDING):
+            approve_item_moderation_request(moderation_request, request.user)
+
+    @admin.action(description='Отклонить выбранные заявки')
+    def reject_requests(self, request, queryset):
+        for moderation_request in queryset.filter(status=ItemModerationRequest.STATUS_PENDING):
+            reject_item_moderation_request(
+                moderation_request,
+                request.user,
+                'Отклонено администратором через панель управления.',
+            )
 
 
 @admin.register(ItemImage)
