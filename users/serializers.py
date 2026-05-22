@@ -80,7 +80,10 @@ class RegisterSerializer(BaseUserDataMixin, serializers.ModelSerializer):
             'inn',
             'kpp',
             'ogrnip',
+            'is_staff',
+            'is_superuser',
         ]
+        read_only_fields = ['is_staff', 'is_superuser']
 
     def validate(self, data):
         if len(data['password']) < 6:
@@ -137,7 +140,10 @@ class ProfileSerializer(BaseUserDataMixin, serializers.ModelSerializer):
             'inn',
             'kpp',
             'ogrnip',
+            'is_staff',
+            'is_superuser',
         ]
+        read_only_fields = ['is_staff', 'is_superuser']
 
     @staticmethod
     def _field_error(field, message):

@@ -33,6 +33,53 @@ def send_password_reset_code(user, code):
     )
 
 
+def send_item_moderation_request_to_admins(moderation_request, admins):
+    item = moderation_request.item
+    owner = moderation_request.submitted_by
+    action_label = 'создание' if moderation_request.action == 'create' else 'редактирование'
+    subject = f"Новая заявка на модерацию объявления: {item.title}"
+    message = (
+        f"Заявка на модерацию #{moderation_request.id}\n\n"
+        f"Действие: {action_label}\n"
+        f"Объявление: {item.title}\n"
+        f"Цена за день: {item.price_per_day} руб.\n"
+        f"Категория: {item.category.name if item.category else 'Без категории'}\n\n"
+        f"Пользователь: {owner.username}\n"
+        f"Email: {owner.email}\n"
+        f"Телефон: {owner.phone or 'не указан'}\n"
+        f"Тип пользователя: {owner.user_type}\n\n"
+        "Откройте раздел модерации на сайте, чтобы одобрить или отклонить заявку."
+    )
+    for admin in admins:
+        _send(admin.email, subject, message)
+
+
+def send_item_moderation_approved(user, item_title):
+    _send(
+        to_email=user.email,
+        subject=f"Объявление одобрено: {item_title}",
+        message=(
+            f"Здравствуйте, {user.username}!\n\n"
+            f"Ваше объявление «{item_title}» одобрено и опубликовано на сайте.\n\n"
+            "С уважением, команда Mokitoki"
+        ),
+    )
+
+
+def send_item_moderation_rejected(user, item_title, reason):
+    _send(
+        to_email=user.email,
+        subject=f"Объявление отклонено: {item_title}",
+        message=(
+            f"Здравствуйте, {user.username}!\n\n"
+            f"Ваша заявка на публикацию или редактирование объявления «{item_title}» отклонена модератором.\n\n"
+            f"Причина: {reason}\n\n"
+            "Объявление снято с публикации. Вы можете создать новое объявление после исправления причины отказа.\n\n"
+            "С уважением, команда Mokitoki"
+        ),
+    )
+
+
 def send_booking_created(booking):
     """Арендодателю: новая заявка на бронирование"""
     owner = booking.item.owner

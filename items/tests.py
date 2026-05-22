@@ -1,4 +1,5 @@
 import tempfile
+from unittest.mock import patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
@@ -6,8 +7,10 @@ from django.contrib.auth import get_user_model
 from datetime import date
 from rest_framework.test import APIClient
 
-from .models import Category, Item, ItemImage
+from .models import Category, Item, ItemImage, ItemModerationRequest
+from .services import approve_item_moderation_request, create_item_moderation_request, reject_item_moderation_request
 from bookings.models import Booking, Review
+from notifications.models import Notification
 
 User = get_user_model()
 
@@ -74,6 +77,15 @@ class ItemEditApiTest(TestCase):
         self.assertEqual(self.item.title, 'New Camera')
         self.assertEqual(self.item.description, 'Updated description')
         self.assertEqual(self.item.price_per_day, 700)
+        self.assertEqual(self.item.status, 'pending')
+        self.assertTrue(
+            ItemModerationRequest.objects.filter(
+                item=self.item,
+                submitted_by=self.owner,
+                action=ItemModerationRequest.ACTION_UPDATE,
+                status=ItemModerationRequest.STATUS_PENDING,
+            ).exists()
+        )
 
     def test_owner_can_upload_new_image_for_existing_item(self):
         image = SimpleUploadedFile(
@@ -273,3 +285,68 @@ class ItemCategoryApiTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['count'], 1)
         self.assertEqual(response.data['results'][0]['id'], self.tools_item.id)
+
+
+class ItemModerationNotificationTest(TestCase):
+
+    def setUp(self):
+        self.owner = User.objects.create_user(
+            username="moderated_owner",
+            password="12345",
+            email="moderated_owner@test.com",
+            profile_completed=True,
+        )
+        self.admin = User.objects.create_user(
+            username="moderator",
+            password="12345",
+            email="moderator@test.com",
+            is_superuser=True,
+            is_staff=True,
+        )
+        self.item = Item.objects.create(
+            title="Шуруповерт",
+            description="Почти новый",
+            price_per_day=500,
+            owner=self.owner,
+            status="pending",
+        )
+
+    @patch('items.services.send_item_moderation_request_to_admins')
+    @patch('items.services.send_item_moderation_approved')
+    def test_approval_notifies_owner_on_site_and_by_email(self, send_approved_mock, send_admins_mock):
+        moderation_request = create_item_moderation_request(
+            item=self.item,
+            submitted_by=self.owner,
+            action=ItemModerationRequest.ACTION_CREATE,
+        )
+
+        approve_item_moderation_request(moderation_request, self.admin)
+
+        notification = Notification.objects.get(
+            user=self.owner,
+            type='item_moderation_approved',
+        )
+        self.assertIn('одобрено', notification.message)
+        self.assertEqual(notification.metadata['item_id'], self.item.id)
+        send_approved_mock.assert_called_once_with(self.owner, 'Шуруповерт')
+
+    @patch('items.services.send_item_moderation_request_to_admins')
+    @patch('items.services.send_item_moderation_rejected')
+    def test_rejection_notifies_owner_on_site_and_by_email(self, send_rejected_mock, send_admins_mock):
+        moderation_request = create_item_moderation_request(
+            item=self.item,
+            submitted_by=self.owner,
+            action=ItemModerationRequest.ACTION_CREATE,
+        )
+        reason = 'На фото плохо видно товар.'
+
+        reject_item_moderation_request(moderation_request, self.admin, reason)
+
+        notification = Notification.objects.get(
+            user=self.owner,
+            type='item_moderation_rejected',
+        )
+        self.assertIn('отклонено', notification.message)
+        self.assertIn(reason, notification.message)
+        self.assertEqual(notification.metadata['reason'], reason)
+        send_rejected_mock.assert_called_once_with(self.owner, 'Шуруповерт', reason)

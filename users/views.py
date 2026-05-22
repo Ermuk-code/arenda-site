@@ -14,9 +14,44 @@ User = get_user_model()
 
 User = get_user_model()
 
+
+class SendEmailVerificationCodeView(APIView):
+    """
+    Шаг 1 регистрации: отправить код подтверждения на email.
+    POST { "email": "user@example.com" }
+    """
+    def post(self, request):
+        email = (request.data.get('email') or '').strip().lower()
+        if not email:
+            return Response({'error': 'Email обязателен'}, status=400)
+
+        if User.objects.filter(email__iexact=email).exists():
+            return Response({'error': 'Пользователь с таким email уже существует'}, status=400)
+
+        code = f"{randint(0, 999999):06d}"
+        cache.set(f'email_verify_code:{email}', code, timeout=15 * 60)
+
+        from notifications.email import _send
+        _send(
+            to_email=email,
+            subject='Код подтверждения email — Mokitoki',
+            message=(
+                f'Здравствуйте!\n\n'
+                f'Ваш код подтверждения для регистрации на Mokitoki: {code}\n'
+                'Код действует 15 минут.\n\n'
+                'Если это были не вы, просто проигнорируйте это письмо.'
+            )
+        )
+        return Response({'status': 'Код подтверждения отправлен на указанный email'})
+
+
 @extend_schema(
     description="""
-Обновление профиля пользователя.
+Регистрация нового пользователя.
+
+Перед регистрацией необходимо подтвердить email:
+1. POST /api/users/send-email-code/ с { "email": "..." } — на почту придёт 6-значный код
+2. Передать этот код в поле `email_code` при регистрации
 
 Типы пользователей:
 
@@ -27,6 +62,27 @@ User = get_user_model()
 )
 class RegisterView(CreateAPIView):
     serializer_class = RegisterSerializer
+
+    def create(self, request, *args, **kwargs):
+        email = (request.data.get('email') or '').strip().lower()
+        email_code = (request.data.get('email_code') or '').strip()
+
+        if not email_code:
+            return Response(
+                {'error': 'Необходимо указать код подтверждения email (email_code)'},
+                status=400
+            )
+
+        saved_code = cache.get(f'email_verify_code:{email}')
+        if not saved_code or saved_code != email_code:
+            return Response(
+                {'error': 'Неверный или истёкший код подтверждения email'},
+                status=400
+            )
+
+        response = super().create(request, *args, **kwargs)
+        cache.delete(f'email_verify_code:{email}')
+        return response
 
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]

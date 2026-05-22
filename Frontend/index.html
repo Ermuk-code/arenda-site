@@ -1725,6 +1725,7 @@
             if (userType) localStorage.setItem('user_type', userType);
 
             if (profileData) {
+                localStorage.setItem('is_superuser', profileData.is_superuser ? '1' : '0');
                 if (profileData.full_name) localStorage.setItem('full_name', profileData.full_name);
                 if (profileData.entrepreneur_name) localStorage.setItem('entrepreneur_name', profileData.entrepreneur_name);
                 if (profileData.company_name) localStorage.setItem('company_name', profileData.company_name);
@@ -1751,6 +1752,7 @@
             localStorage.removeItem('inn');
             localStorage.removeItem('ogrnip');
             localStorage.removeItem('kpp');
+            localStorage.removeItem('is_superuser');
         }
 
         function isAuthenticated() { return !!getAccessToken(); }
@@ -1976,6 +1978,11 @@
             addFieldError('inn', 'ИНН', 'Проверьте значение');
             addFieldError('ogrnip', 'ОГРНИП', 'Проверьте значение');
             addFieldError('kpp', 'КПП', 'Проверьте значение');
+            addFieldError('email_code', 'Код подтверждения', 'Неверный или истёкший код');
+
+            if (responseData?.error) {
+                errors.push(`• ${responseData.error}`);
+            }
 
             if (responseData?.detail) {
                 errors.push(`• ${translateServerMessage(responseData.detail, 'Проверьте введённые данные.')}`);
@@ -2106,6 +2113,14 @@
             return `${number.toLocaleString('ru-RU')} ₽`;
         }
 
+        // Возвращает цену с наценкой 20% из поля price_with_markup (если пришло с сервера),
+        // иначе считает сам: price_per_day * 1.20
+        function getDisplayPrice(item) {
+            if (item && item.price_with_markup) return Number(item.price_with_markup);
+            const base = Number(item?.price_per_day || item?.price || 0);
+            return Math.round(base * 1.20 * 100) / 100;
+        }
+
         function formatDateRu(dateString) {
             if (!dateString) return '—';
             const date = new Date(dateString);
@@ -2227,7 +2242,7 @@
                         </div>
                     </div>
                     <div class="item-preview-panel">
-                        <div class="item-preview-price">${formatPrice(item.price_per_day || 0)} / день</div>
+                        <div class="item-preview-price">${formatPrice(getDisplayPrice(item))} / день</div>
                         ${actionButtons}
                         <div class="item-preview-meta">
                             <div><strong>Владелец:</strong> ${escapeHtml(item.owner_username || 'Не указан')}</div>
@@ -2394,6 +2409,7 @@
 
         function formatItemStatus(status) {
             const map = {
+                pending: 'На модерации',
                 available: 'Доступно',
                 unavailable: 'Недоступно',
                 blocked: 'Заблокировано',
@@ -2884,6 +2900,9 @@
                 booking_cancelled: { title: 'Бронирование отменено', actionLabel: 'Открыть' },
                 booking_confirmed: { title: 'Бронирование подтверждено', actionLabel: 'Оплатить' },
                 payment_confirmed: { title: 'Оплата подтверждена', actionLabel: 'К моим объявлениям' },
+                item_moderation_request: { title: 'Новая заявка на объявление', actionLabel: 'К модерации' },
+                item_moderation_approved: { title: 'Объявление одобрено', actionLabel: 'Открыть' },
+                item_moderation_rejected: { title: 'Объявление отклонено', actionLabel: 'К моим объявлениям' },
                 new_message: { title: 'Новое сообщение', actionLabel: 'Открыть чат' },
                 return_reminder: { title: 'Напоминание о возврате', actionLabel: 'К объявлению' },
                 new_review: { title: 'Новый отзыв', actionLabel: 'К объявлению' },
@@ -3029,6 +3048,13 @@
                 closeItemPreview();
                 closeRentalModal();
                 await showMyItemsPage();
+                return;
+            }
+
+            if (destination === 'item_moderation' || type === 'item_moderation_request') {
+                closeItemPreview();
+                closeRentalModal();
+                await showModerationPage();
                 return;
             }
 
@@ -3371,7 +3397,7 @@
             const startDate = document.getElementById('rentStartDate')?.value;
             const endDate = document.getElementById('rentEndDate')?.value;
             const days = calculateRentalDays(startDate, endDate);
-            const pricePerDay = Number(currentRentalItem?.price_per_day || currentRentalItem?.price || 0);
+            const pricePerDay = getDisplayPrice(currentRentalItem);
             const total = days * pricePerDay;
 
             document.getElementById('rentSummaryItem').textContent = currentRentalItem?.title || currentRentalItem?.name || '—';
@@ -3872,10 +3898,10 @@
                         </div>
                         <div class="card-title">${escapeHtml(product.title || product.name || 'Без названия')}</div>
                         ${product.description ? `<div class="card-description">${escapeHtml(product.description.substring(0, 80))}${product.description.length > 80 ? '...' : ''}</div>` : ''}
-                        <div class="card-price">${product.price_per_day || product.price || 0} ₽/<small>день</small></div>
+                        <div class="card-price">${getDisplayPrice(product).toLocaleString('ru-RU')} ₽/<small>день</small></div>
                         <button class="card-btn" data-id="${product.id}" data-action="open">Открыть</button>
                         ${!isOwner ? `<button class="card-btn card-chat-btn" data-id="${product.id}" data-owner="${product.owner}" data-action="chat">💬 Написать продавцу</button>` : ''}
-                        ${!isOwner ? `<button class="card-btn" data-id="${product.id}" data-owner="${product.owner}" data-title="${escapeHtml(product.title || product.name || 'Товар')}" data-price="${product.price_per_day || product.price || 0}" data-action="rent">Арендовать</button>` : ''}
+                        ${!isOwner ? `<button class="card-btn" data-id="${product.id}" data-owner="${product.owner}" data-title="${escapeHtml(product.title || product.name || 'Товар')}" data-price="${getDisplayPrice(product)}" data-action="rent">Арендовать</button>` : ''}
                         ${isOwner ? `<button class="card-btn card-delete-btn" data-id="${product.id}" data-action="delete">🗑 Удалить</button>` : ''}
                     </div>
                 `;
@@ -3938,7 +3964,7 @@
                             id: productId,
                             owner: ownerId,
                             title: btn.dataset.title,
-                            price_per_day: Number(btn.dataset.price || 0),
+                            price_per_day: Number(btn.dataset.price || 0),  // уже содержит наценку
                             booked_ranges: sourceItem?.booked_ranges || []
                         };
 
@@ -4055,9 +4081,9 @@
                 }
 
                 if (mediaUploadErrors.length) {
-                    alert(`✅ Объявление создано, но часть медиа не загрузилась:\n\n${mediaUploadErrors.join('\n')}`);
+                    alert(`✅ Заявка на создание объявления отправлена администратору, но часть медиа не загрузилась:\n\n${mediaUploadErrors.join('\n')}`);
                 } else {
-                    alert('✅ Объявление опубликовано!');
+                    alert('✅ Заявка отправлена администратору. Объявление появится в общем доступе после одобрения.');
                 }
                 showMainPage();
                 loadProducts(1);
@@ -4129,9 +4155,9 @@
                 const mediaUploadErrors = await uploadItemMedia(itemId, mediaFiles, token);
 
                 if (mediaUploadErrors.length) {
-                    alert(`✅ Объявление обновлено, но часть медиа не загрузилась:\n\n${mediaUploadErrors.join('\n')}`);
+                    alert(`✅ Заявка на редактирование отправлена администратору, но часть медиа не загрузилась:\n\n${mediaUploadErrors.join('\n')}`);
                 } else {
-                    alert('✅ Объявление обновлено!');
+                    alert('✅ Заявка на редактирование отправлена администратору. Объявление снова появится после одобрения.');
                 }
 
                 selectedMediaFiles = [];
@@ -4144,12 +4170,12 @@
             }
         }
 
-        async function register(username, email, password, userType, extraProfileData = {}) {
+        async function register(username, email, password, userType, extraProfileData = {}, emailCode = '') {
             try {
                 const response = await fetch(`${API_BASE}/users/register/`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, email, password, user_type: userType, ...extraProfileData })
+                    body: JSON.stringify({ username, email, password, user_type: userType, email_code: emailCode, ...extraProfileData })
                 });
 
                 let responseData;
@@ -4269,9 +4295,13 @@
 
             if (isAuthenticated()) {
                 connectNotificationsSocket();
+                const adminButtonHtml = localStorage.getItem('is_superuser') === '1'
+                    ? '<button class="btn-outline nav-btn" id="moderationNavBtn">🛡️ Модерация</button>'
+                    : '';
                 authSection.innerHTML = `
                     <div class="user-info">
                         <span>👤 ${localStorage.getItem('username') || 'Пользователь'}</span>
+                        ${adminButtonHtml}
                         <button class="btn-outline nav-btn" id="myItemsNavBtn">📦 Мои объявления</button>
                         <button class="btn-outline nav-btn" id="bookingsNavBtn">📥 Заявки<span class="nav-badge attention" id="bookingsNavBadge" style="${navCounters.bookings ? '' : 'display:none;'}">${formatCompactCount(navCounters.bookings)}</span></button>
                         <button class="btn-outline nav-btn" id="chatsNavBtn">💬 Чаты<span class="nav-badge" id="chatsNavBadge" style="${navCounters.chats ? '' : 'display:none;'}">${formatCompactCount(navCounters.chats)}</span></button>
@@ -4280,6 +4310,7 @@
                         <button class="btn-outline" id="logoutNavBtn">Выйти</button>
                     </div>
                 `;
+                document.getElementById('moderationNavBtn')?.addEventListener('click', () => showModerationPage());
                 document.getElementById('myItemsNavBtn')?.addEventListener('click', () => showMyItemsPage());
                 document.getElementById('bookingsNavBtn')?.addEventListener('click', () => showIncomingBookingsPage());
                 document.getElementById('chatsNavBtn')?.addEventListener('click', () => showChatsPage());
@@ -4304,6 +4335,107 @@
                 document.getElementById('loginNavBtn')?.addEventListener('click', (e) => { e.preventDefault(); showLoginPage(); });
                 document.getElementById('registerNavBtn')?.addEventListener('click', (e) => { e.preventDefault(); showRegisterPage(); });
             }
+        }
+
+        function renderModerationRequestCard(request) {
+            const item = request.item || {};
+            const user = request.submitted_by || {};
+            const category = item.category_name || request.item_snapshot?.category || 'Без категории';
+            const actionLabel = request.action === 'update' ? 'Редактирование' : 'Создание';
+            const images = Array.isArray(item.images) ? item.images : [];
+
+            return `
+                <div class="booking-request-card" data-request-id="${request.id}">
+                    <div class="booking-request-top">
+                        <div>
+                            <div class="booking-request-title">${escapeHtml(item.title || request.item_snapshot?.title || 'Без названия')}</div>
+                            <div class="booking-request-meta">
+                                <div>Тип заявки: ${escapeHtml(actionLabel)}</div>
+                                <div>Категория: ${escapeHtml(category)}</div>
+                                <div>Цена: ${escapeHtml(item.price_per_day || request.item_snapshot?.price_per_day || '0')} ₽/день</div>
+                                <div>Дата заявки: ${escapeHtml(formatDateRu(request.created_at))}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="booking-request-meta" style="margin-top:12px;">
+                        <div><strong>Описание:</strong> ${escapeHtml(item.description || request.item_snapshot?.description || '—')}</div>
+                        <div><strong>Пользователь:</strong> ${escapeHtml(user.username || '—')}</div>
+                        <div><strong>Email:</strong> ${escapeHtml(user.email || '—')}</div>
+                        <div><strong>Телефон:</strong> ${escapeHtml(user.phone || '—')}</div>
+                        <div><strong>Тип пользователя:</strong> ${escapeHtml(user.user_type || '—')}</div>
+                        <div><strong>ФИО / организация:</strong> ${escapeHtml(user.full_name || user.entrepreneur_name || user.company_name || '—')}</div>
+                        <div><strong>ИНН:</strong> ${escapeHtml(user.inn || '—')}</div>
+                        <div><strong>КПП:</strong> ${escapeHtml(user.kpp || '—')}</div>
+                        <div><strong>ОГРНИП:</strong> ${escapeHtml(user.ogrnip || '—')}</div>
+                        <div><strong>Паспорт:</strong> ${escapeHtml([user.passport_series, user.passport_number].filter(Boolean).join(' ') || '—')}</div>
+                    </div>
+                    ${images.length ? `
+                        <div class="image-preview">
+                            ${images.map(img => `<div class="preview-item"><img src="${escapeHtml(img.image)}" alt=""></div>`).join('')}
+                        </div>
+                    ` : ''}
+                    <div class="form-group" style="margin-top:16px;">
+                        <label>Причина отказа</label>
+                        <textarea class="moderation-reason" rows="3" placeholder="Заполните, если отказываете"></textarea>
+                    </div>
+                    <div class="form-actions wrap">
+                        <button class="btn-primary" data-action="approve" data-id="${request.id}" type="button">Отправить</button>
+                        <button class="btn-danger" data-action="reject" data-id="${request.id}" type="button">Отказать</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function showModerationPage() {
+            if (!isAuthenticated() || localStorage.getItem('is_superuser') !== '1') {
+                alert('Раздел доступен только администратору.');
+                return;
+            }
+
+            const requests = await fetchPaginatedResults('/items/moderation-requests/?status=pending');
+            document.getElementById('app').innerHTML = `
+                <div class="bookings-page"><div class="bookings-card">
+                    <div class="back-button" id="backToMainFromModeration">← Назад</div>
+                    <div class="bookings-title">🛡️ Модерация объявлений</div>
+                    <div class="bookings-sub">Проверьте данные объявления и пользователя, затем одобрите публикацию или укажите причину отказа.</div>
+                    <div id="moderationContent">
+                        ${requests.length ? requests.map(renderModerationRequestCard).join('') : '<div class="empty-message">Новых заявок на модерацию нет.</div>'}
+                    </div>
+                </div></div>
+            `;
+
+            document.getElementById('backToMainFromModeration')?.addEventListener('click', () => showMainPage());
+            document.querySelectorAll('[data-action="approve"]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const response = await apiRequest(`/items/moderation-requests/${btn.dataset.id}/approve/`, { method: 'POST', body: JSON.stringify({}) });
+                    if (!response.ok) {
+                        alert('❌ ' + await readApiError(response, 'Не удалось одобрить заявку.'));
+                        return;
+                    }
+                    alert('✅ Объявление одобрено и опубликовано.');
+                    showModerationPage();
+                });
+            });
+            document.querySelectorAll('[data-action="reject"]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const card = btn.closest('[data-request-id]');
+                    const reason = card?.querySelector('.moderation-reason')?.value?.trim() || '';
+                    if (!reason) {
+                        alert('❌ Укажите причину отказа.');
+                        return;
+                    }
+                    const response = await apiRequest(`/items/moderation-requests/${btn.dataset.id}/reject/`, {
+                        method: 'POST',
+                        body: JSON.stringify({ reason })
+                    });
+                    if (!response.ok) {
+                        alert('❌ ' + await readApiError(response, 'Не удалось отказать заявке.'));
+                        return;
+                    }
+                    alert('✅ Заявка отклонена. Объявление удалено, пользователю отправлено письмо.');
+                    showModerationPage();
+                });
+            });
         }
 
         async function showChatsPage() {
@@ -5437,7 +5569,7 @@
                     <form id="createItemForm">
                         <div class="form-group"><label>Название товара *</label><input type="text" id="itemName" placeholder="Например: Дрель Makita" required></div>
                         <div class="form-group"><label>Описание</label><textarea id="itemDesc" rows="4" placeholder="Опишите состояние, характеристики..."></textarea></div>
-                        <div class="form-group"><label>Цена за день (₽) *</label><input type="number" id="itemPrice" placeholder="500" required></div>
+                        <div class="form-group"><label>Цена за день (₽) *</label><input type="number" id="itemPrice" placeholder="500" required><small style="display:block;margin-top:6px;color:#b45309;font-size:12px">⚠️ Внимание. Уведомляем Вас о том, что будут добавлены 20% от вашей цены, которые покроют комиссию.</small></div>
                         <div class="form-group"><label>Категория</label>
                             <select id="itemCategory">${categoryOptions}</select>
                         </div>
@@ -5505,7 +5637,7 @@
                     <form id="editItemForm">
                         <div class="form-group"><label>Название товара *</label><input type="text" id="editItemName" value="${escapeHtml(editItem.title || '')}" placeholder="Например: Дрель Makita" required></div>
                         <div class="form-group"><label>Описание</label><textarea id="editItemDesc" rows="4" placeholder="Опишите состояние, характеристики...">${escapeHtml(editItem.description || '')}</textarea></div>
-                        <div class="form-group"><label>Цена за день (₽) *</label><input type="number" id="editItemPrice" value="${Number(editItem.price_per_day || 0)}" placeholder="500" required></div>
+                        <div class="form-group"><label>Цена за день (₽) *</label><input type="number" id="editItemPrice" value="${Number(editItem.price_per_day || 0)}" placeholder="500" required><small style="display:block;margin-top:6px;color:#b45309;font-size:12px">⚠️ Внимание. Уведомляем Вас о том, что будут добавлены 20% от вашей цены, которые покроют комиссию.</small></div>
                         <div class="form-group"><label>Категория</label>
                             <select id="editItemCategory">${categoryOptions}</select>
                         </div>
@@ -5664,7 +5796,18 @@
                     <div class="auth-sub">Создайте новый аккаунт и заполните обязательные данные для выбранного типа пользователя.</div>
                     <form id="registerForm">
                         <div class="input-group"><label>Имя пользователя *</label><input type="text" id="regUsername" required></div>
-                        <div class="input-group"><label>Email *</label><input type="email" id="regEmail" required></div>
+                        <div class="input-group">
+                            <label>Email *</label>
+                            <div style="display:flex;gap:8px;align-items:flex-start">
+                                <input type="email" id="regEmail" required style="flex:1">
+                                <button type="button" id="sendEmailCodeBtn" class="auth-btn" style="white-space:nowrap;flex-shrink:0;margin-top:0;padding:8px 14px;font-size:13px;width:auto">Получить код</button>
+                            </div>
+                            <div id="emailCodeStatus" style="font-size:12px;margin-top:4px;color:green;display:none"></div>
+                        </div>
+                        <div class="input-group" id="emailCodeGroup" style="display:none">
+                            <label>Код подтверждения * <span style="font-size:12px;font-weight:normal;color:#6b7280">(отправлен на email)</span></label>
+                            <input type="text" id="regEmailCode" maxlength="6" placeholder="6-значный код" autocomplete="one-time-code">
+                        </div>
                         <div class="input-group">
                             <label>Пароль *</label>
                             <div class="password-field">
@@ -5734,6 +5877,58 @@
             attachPasswordToggle('toggleRegPassword', 'regPassword');
             attachPasswordToggle('toggleRegPassword2', 'regPassword2');
 
+            // Логика кнопки «Получить код»
+            let emailCodeSent = false;
+            let sendCodeCooldown = null;
+            document.getElementById('sendEmailCodeBtn')?.addEventListener('click', async () => {
+                const email = document.getElementById('regEmail').value.trim();
+                if (!email) { alert('❌ Введите email'); return; }
+                const btn = document.getElementById('sendEmailCodeBtn');
+                const status = document.getElementById('emailCodeStatus');
+                btn.disabled = true;
+                btn.textContent = 'Отправка...';
+                try {
+                    const res = await fetch(`${API_BASE}/users/send-email-code/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email })
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        emailCodeSent = true;
+                        document.getElementById('emailCodeGroup').style.display = '';
+                        status.style.display = '';
+                        status.style.color = 'green';
+                        status.textContent = '✅ Код отправлен. Проверьте почту (действует 15 минут).';
+                        // Cooldown 60 секунд
+                        let seconds = 60;
+                        btn.textContent = `Отправить повторно (${seconds}с)`;
+                        sendCodeCooldown = setInterval(() => {
+                            seconds--;
+                            if (seconds <= 0) {
+                                clearInterval(sendCodeCooldown);
+                                btn.disabled = false;
+                                btn.textContent = 'Отправить повторно';
+                            } else {
+                                btn.textContent = `Отправить повторно (${seconds}с)`;
+                            }
+                        }, 1000);
+                    } else {
+                        status.style.display = '';
+                        status.style.color = 'red';
+                        status.textContent = '❌ ' + (data.error || data.detail || 'Ошибка отправки кода');
+                        btn.disabled = false;
+                        btn.textContent = 'Получить код';
+                    }
+                } catch (e) {
+                    status.style.display = '';
+                    status.style.color = 'red';
+                    status.textContent = '❌ Ошибка подключения к серверу';
+                    btn.disabled = false;
+                    btn.textContent = 'Получить код';
+                }
+            });
+
             document.getElementById('registerForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const password = document.getElementById('regPassword').value;
@@ -5742,6 +5937,17 @@
                     alert('❌ Пароли не совпадают');
                     return;
                 }
+
+                const emailCode = (document.getElementById('regEmailCode')?.value || '').trim();
+                if (!emailCodeSent) {
+                    alert('❌ Сначала получите код подтверждения email — нажмите кнопку «Получить код».');
+                    return;
+                }
+                if (!emailCode) {
+                    alert('❌ Введите код подтверждения, который был отправлен на ваш email.');
+                    return;
+                }
+
                 const userType = document.getElementById('regUserType').value;
                 const extraProfileData = {
                     full_name: normalizeWhitespace(document.getElementById('regFullName')?.value || ''),
@@ -5780,7 +5986,8 @@
                     document.getElementById('regEmail').value,
                     password,
                     userType,
-                    extraProfileData
+                    extraProfileData,
+                    emailCode
                 );
                 if (success) showMainPage();
             });
