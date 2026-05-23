@@ -74,6 +74,12 @@ class Booking(models.Model):
     )
     payment_expires_at = models.DateTimeField(null=True, blank=True)
     paid_at = models.DateTimeField(null=True, blank=True)
+    pickup_point = models.CharField(
+        max_length=300,
+        blank=True,
+        default='',
+        verbose_name='Место самовывоза'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def clean(self):

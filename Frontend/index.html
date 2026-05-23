@@ -103,6 +103,18 @@
             background: #d35454;
             box-shadow: 0 10px 16px rgba(211,84,84,0.18);
         }
+        .search-bar-section { background: white; border-bottom: 1px solid #eef2f6; padding: 16px 0; }
+        .search-bar-inner { display: flex; align-items: center; gap: 0; max-width: 640px; margin: 0 auto; background: #f0f5f8; border-radius: 999px; border: 1.5px solid #d9e5ec; transition: border-color 0.2s, box-shadow 0.2s; }
+        .search-bar-inner:focus-within { border-color: #2b6a7c; box-shadow: 0 0 0 3px rgba(43,106,124,0.12); }
+        .search-bar-icon { display: flex; align-items: center; justify-content: center; padding: 0 14px 0 18px; color: #7da3b0; flex-shrink: 0; }
+        .search-bar-input { flex: 1; border: none; background: transparent; font-size: 1rem; padding: 12px 0; color: #1a2c3e; outline: none; }
+        .search-bar-input::placeholder { color: #9ab5bf; }
+        .search-bar-clear { background: none; border: none; cursor: pointer; padding: 0 10px; color: #9ab5bf; font-size: 1.2rem; line-height: 1; display: none; align-items: center; justify-content: center; }
+        .search-bar-clear.visible { display: flex; }
+        .search-bar-clear:hover { color: #2b6a7c; }
+        .search-bar-btn { background: #2b6a7c; border: none; color: white; padding: 10px 22px; border-radius: 999px; font-weight: 600; cursor: pointer; font-size: 0.95rem; margin: 3px; transition: background 0.2s; flex-shrink: 0; }
+        .search-bar-btn:hover { background: #1e5668; }
+        .search-results-label { text-align: center; padding: 12px 0 0; color: #5a8090; font-size: 0.92rem; }
         .categories { background: white; border-bottom: 1px solid #eef2f6; padding: 14px 0; }
         .cats-list { display: flex; gap: 28px; flex-wrap: wrap; justify-content: center; list-style: none; }
         .cats-list li { font-weight: 500; color: #2f4f5f; cursor: pointer; transition: 0.2s; padding: 5px 0; }
@@ -532,13 +544,27 @@
             font-size: 20px;
             font-weight: 700;
         }
-        .rent-summary {
-            background: #f6f9fd;
-            border: 1px solid #e6edf3;
-            border-radius: 18px;
-            padding: 16px;
-            margin-bottom: 20px;
-        }
+        .pickup-section { margin-bottom: 20px; }
+        .pickup-section label { display: block; font-weight: 500; margin-bottom: 8px; color: #2c6072; font-size: 0.97rem; }
+        .pickup-search-wrap { position: relative; margin-bottom: 10px; }
+        .pickup-search-wrap svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #7da3b0; pointer-events: none; }
+        .pickup-search { width: 100%; padding: 11px 14px 11px 40px; border-radius: 14px; border: 1.5px solid #e2e9ef; font-size: 0.95rem; transition: border-color 0.2s; background: #fff; }
+        .pickup-search:focus { outline: none; border-color: #2b6a7c; }
+        .pickup-list { max-height: 230px; overflow-y: auto; border: 1.5px solid #e2e9ef; border-radius: 14px; background: #fff; }
+        .pickup-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; cursor: pointer; border-bottom: 1px solid #f0f4f8; transition: background 0.15s; }
+        .pickup-item:last-child { border-bottom: none; }
+        .pickup-item:hover { background: #f4f9fc; }
+        .pickup-item.selected { background: #e8f5f2; border-left: 3px solid #1f8a6b; }
+        .pickup-item-radio { width: 18px; height: 18px; border: 2px solid #b0c8d4; border-radius: 50%; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s; }
+        .pickup-item.selected .pickup-item-radio { border-color: #1f8a6b; background: #1f8a6b; }
+        .pickup-item.selected .pickup-item-radio::after { content: ''; width: 7px; height: 7px; border-radius: 50%; background: white; display: block; }
+        .pickup-item-info { flex: 1; min-width: 0; }
+        .pickup-item-index { font-size: 0.75rem; font-weight: 700; color: #2b6a7c; background: #e8f0f4; border-radius: 6px; padding: 2px 7px; display: inline-block; margin-bottom: 3px; }
+        .pickup-item-addr { font-size: 0.9rem; color: #1c3d48; font-weight: 500; }
+        .pickup-selected-info { background: #e8f5f2; border: 1px solid #b6ddd4; border-radius: 12px; padding: 10px 14px; font-size: 0.88rem; color: #1a5c47; display: none; }
+        .pickup-selected-info.visible { display: block; }
+        .pickup-empty { text-align: center; padding: 24px; color: #9ab5bf; font-size: 0.9rem; }
+        .rent-summary { background: #f6f9fd; border: 1px solid #e6edf3; border-radius: 18px; padding: 16px; margin-bottom: 20px; }
         .rent-summary-row {
             display: flex;
             justify-content: space-between;
@@ -1495,6 +1521,16 @@
                 <input type="text" id="rentEndDate" placeholder="Выберите дату окончания">
             </div>
 
+            <div class="pickup-section">
+                <label>📦 Место самовывоза — Почта России (г. Курск)</label>
+                <div class="pickup-search-wrap">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="pickupSearchInput" class="pickup-search" placeholder="Поиск по адресу или индексу..." autocomplete="off">
+                </div>
+                <div class="pickup-list" id="pickupList"></div>
+                <div class="pickup-selected-info" id="pickupSelectedInfo"></div>
+            </div>
+
             <div class="rent-summary">
                 <div class="rent-summary-row">
                     <span>Товар</span>
@@ -1659,6 +1695,7 @@
         let currentPage = 1;
         let totalPages = 1;
         let currentCategory = 'all';
+        let currentSearchQuery = '';
         let availabilityFilterMode = 'all';
         let availabilityFilterStart = '';
         let availabilityFilterEnd = '';
@@ -3652,7 +3689,94 @@
 
             document.getElementById('rentModalOverlay')?.classList.add('active');
 
+            initPickupWidget();
             applyCurrentBookingRentalMessage();
+        }
+
+
+        // --- Виджет самовывоза (поиск через API → DaData → PostgreSQL) ---
+        let selectedPickupOffice = null;
+        let pickupSearchTimer = null;
+
+        function renderPickupList(offices, loading = false, error = false) {
+            const list = document.getElementById('pickupList');
+            if (!list) return;
+
+            if (loading) {
+                list.innerHTML = '<div class="pickup-empty">🔍 Поиск отделений...</div>';
+                return;
+            }
+            if (error) {
+                list.innerHTML = '<div class="pickup-empty">❌ Ошибка загрузки. Попробуйте ещё раз.</div>';
+                return;
+            }
+            if (!offices || !offices.length) {
+                list.innerHTML = '<div class="pickup-empty">Введите город или адрес для поиска</div>';
+                return;
+            }
+
+            list.innerHTML = offices.map(o => `
+                <div class="pickup-item ${selectedPickupOffice?.postal_code === o.postal_code ? 'selected' : ''}"
+                     data-code="${o.postal_code}">
+                    <div class="pickup-item-radio"></div>
+                    <div class="pickup-item-info">
+                        <span class="pickup-item-index">${o.postal_code}</span>
+                        <div class="pickup-item-addr">${o.address_str}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            list.querySelectorAll('.pickup-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    const code = el.dataset.code;
+                    selectedPickupOffice = (window._pickupOfficesCache || []).find(o => o.postal_code === code) || null;
+                    renderPickupList(window._pickupOfficesCache || []);
+                    updatePickupSelectedInfo();
+                });
+            });
+        }
+
+        function updatePickupSelectedInfo() {
+            const info = document.getElementById('pickupSelectedInfo');
+            if (!info) return;
+            if (selectedPickupOffice) {
+                info.textContent = `✅ Выбрано: ${selectedPickupOffice.postal_code} — ${selectedPickupOffice.address_str}`;
+                info.classList.add('visible');
+            } else {
+                info.classList.remove('visible');
+            }
+        }
+
+        async function searchPickupOffices(query) {
+            if (!query || query.length < 2) {
+                renderPickupList([]);
+                return;
+            }
+            renderPickupList([], true);
+            try {
+                const resp = await apiRequest(`/post-offices/search/?query=${encodeURIComponent(query)}`);
+                if (!resp.ok) throw new Error();
+                const data = await resp.json();
+                window._pickupOfficesCache = data;
+                renderPickupList(data);
+            } catch {
+                renderPickupList([], false, true);
+            }
+        }
+
+        function initPickupWidget() {
+            selectedPickupOffice = null;
+            window._pickupOfficesCache = [];
+            renderPickupList([]);
+            updatePickupSelectedInfo();
+            const searchInput = document.getElementById('pickupSearchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.addEventListener('input', () => {
+                    clearTimeout(pickupSearchTimer);
+                    pickupSearchTimer = setTimeout(() => searchPickupOffices(searchInput.value.trim()), 400);
+                });
+            }
         }
 
         async function createBookingRequest() {
@@ -3672,6 +3796,11 @@
                 return;
             }
 
+            if (!selectedPickupOffice) {
+                setRentModalMessage('error', 'Выберите место самовывоза (отделение Почты России).');
+                return;
+            }
+
             if (currentBooking && ['pending', 'confirmed'].includes(currentBooking.status)) {
                 setRentModalMessage('info', 'Заявка по этому товару уже существует.');
                 return;
@@ -3683,7 +3812,10 @@
                     body: JSON.stringify({
                         item: currentRentalItem.id,
                         start_date: startDate,
-                        end_date: endDate
+                        end_date: endDate,
+                        pickup_point: selectedPickupOffice
+                            ? `${selectedPickupOffice.postal_code} — ${selectedPickupOffice.address_str}`
+                            : ''
                     })
                 });
 
@@ -3837,6 +3969,9 @@
                 const params = new URLSearchParams({ page: String(page) });
                 if (currentCategory !== 'all') {
                     params.set('category', String(currentCategory));
+                }
+                if (currentSearchQuery) {
+                    params.set('search', currentSearchQuery);
                 }
 
                 const response = await apiRequest(`/items/?${params.toString()}`);
@@ -6282,6 +6417,26 @@
                         <div id="authSection" class="auth-buttons"></div>
                     </div>
                 </div>
+                <div class="search-bar-section">
+                    <div class="container">
+                        <div class="search-bar-inner">
+                            <span class="search-bar-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            </span>
+                            <input
+                                type="text"
+                                id="searchInput"
+                                class="search-bar-input"
+                                placeholder="Поиск объявлений..."
+                                value="${escapeHtml(currentSearchQuery)}"
+                                autocomplete="off"
+                            />
+                            <button id="searchClearBtn" class="search-bar-clear ${currentSearchQuery ? 'visible' : ''}" type="button" title="Очистить">×</button>
+                            <button id="searchBtn" class="search-bar-btn" type="button">Найти</button>
+                        </div>
+                        ${currentSearchQuery ? `<div class="search-results-label" id="searchResultsLabel">Результаты поиска: «${escapeHtml(currentSearchQuery)}»</div>` : ''}
+                    </div>
+                </div>
                 <div class="categories">
                     <div class="container">
                         <ul class="cats-list" id="categoriesList">
@@ -6345,6 +6500,43 @@
                 availabilityFilterStart = '';
                 availabilityFilterEnd = '';
                 showMainPage();
+            });
+
+            // Search bar events
+            const searchInput = document.getElementById('searchInput');
+            const searchBtn = document.getElementById('searchBtn');
+            const searchClearBtn = document.getElementById('searchClearBtn');
+
+            function doSearch() {
+                const q = (searchInput?.value || '').trim();
+                currentSearchQuery = q;
+                searchClearBtn?.classList.toggle('visible', !!q);
+                const label = document.getElementById('searchResultsLabel');
+                if (label) {
+                    label.textContent = q ? `Результаты поиска: «${q}»` : '';
+                    label.style.display = q ? '' : 'none';
+                } else if (q) {
+                    const lbl = document.createElement('div');
+                    lbl.id = 'searchResultsLabel';
+                    lbl.className = 'search-results-label';
+                    lbl.textContent = `Результаты поиска: «${q}»`;
+                    searchInput?.closest('.container')?.appendChild(lbl);
+                }
+                loadProducts(1);
+            }
+
+            searchBtn?.addEventListener('click', doSearch);
+            searchInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSearch(); });
+            searchInput?.addEventListener('input', () => {
+                searchClearBtn?.classList.toggle('visible', !!(searchInput.value));
+            });
+            searchClearBtn?.addEventListener('click', () => {
+                if (searchInput) searchInput.value = '';
+                currentSearchQuery = '';
+                searchClearBtn.classList.remove('visible');
+                const label = document.getElementById('searchResultsLabel');
+                if (label) label.style.display = 'none';
+                loadProducts(1);
             });
 
             loadProducts(1);
