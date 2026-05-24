@@ -60,6 +60,15 @@ class Booking(models.Model):
         blank=True,
         null=True
     )
+    # Отдельные компоненты суммы (заполняются при создании)
+    rent_amount = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True,
+        verbose_name='Сумма аренды (без залога и комиссии)'
+    )
+    platform_fee = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True,
+        verbose_name='Сервисный сбор платформы (5%)'
+    )
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
@@ -108,6 +117,60 @@ class Booking(models.Model):
         default='',
         verbose_name='Место самовывоза'
     )
+
+    # --- Подтверждение получения товара арендатором ---
+    renter_pickup_confirmed = models.BooleanField(
+        default=False, verbose_name='Арендатор подтвердил получение'
+    )
+    renter_pickup_confirmed_at = models.DateTimeField(
+        null=True, blank=True, verbose_name='Дата подтверждения получения арендатором'
+    )
+    renter_pickup_photo = models.ImageField(
+        upload_to='handover_photos/', null=True, blank=True,
+        verbose_name='Фото при получении (арендатор)'
+    )
+
+    # --- Подтверждение возврата товара арендодателем ---
+    owner_return_confirmed = models.BooleanField(
+        default=False, verbose_name='Арендодатель подтвердил возврат'
+    )
+    owner_return_confirmed_at = models.DateTimeField(
+        null=True, blank=True, verbose_name='Дата подтверждения возврата арендодателем'
+    )
+    owner_return_photo = models.ImageField(
+        upload_to='handover_photos/', null=True, blank=True,
+        verbose_name='Фото при возврате (арендодатель)'
+    )
+
+    # --- Возврат средств арендатору ---
+    RETURN_STATUS_CHOICES = (
+        ('none', 'Нет'),
+        ('requested', 'Запрошен'),
+        ('approved', 'Одобрен'),
+        ('rejected', 'Отклонён'),
+        ('completed', 'Выполнен'),
+    )
+    return_requested = models.BooleanField(
+        default=False, verbose_name='Арендатор запросил возврат средств'
+    )
+    return_requested_at = models.DateTimeField(
+        null=True, blank=True, verbose_name='Дата запроса возврата'
+    )
+    return_reason = models.TextField(
+        blank=True, default='', verbose_name='Причина возврата'
+    )
+    return_status = models.CharField(
+        max_length=20,
+        choices=RETURN_STATUS_CHOICES,
+        default='none',
+        verbose_name='Статус СБП-возврата',
+    )
+
+    # --- Причина отказа арендатора ---
+    renter_cancel_reason = models.TextField(
+        blank=True, default='', verbose_name='Причина отказа арендатора'
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def clean(self):
@@ -137,14 +200,22 @@ class Booking(models.Model):
         # do not affect already created bookings or payment flows.
         if is_new or self.total_price is None:
             from decimal import Decimal, ROUND_HALF_UP
-            MARKUP_RATE = Decimal('0.20')
+            MARKUP_RATE = Decimal('0.20')     # 20% наценка платформы (уже в цене объявления)
+            BOOKING_FEE_RATE = Decimal('0.05') # 5% сервисный сбор при бронировании
+
             days = (self.end_date - self.start_date).days
             price_with_markup = (self.item.price_per_day * (1 + MARKUP_RATE)).quantize(
                 Decimal('0.01'), rounding=ROUND_HALF_UP
             )
-            rent_amount = days * price_with_markup
+            rent_amount = (days * price_with_markup).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            booking_fee = (rent_amount * BOOKING_FEE_RATE).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
             self.deposit_amount = self.item.deposit  # фиксируем залог из объявления
-            self.total_price = rent_amount + self.deposit_amount
+            # total_price = аренда с наценкой + 5% сервисный сбор + залог
+            self.total_price = rent_amount + booking_fee + self.deposit_amount
+            # Сохраняем отдельные компоненты для прозрачности
+            self.rent_amount = rent_amount
+            self.platform_fee = booking_fee
 
         super().save(*args, **kwargs)
         if is_new:
@@ -346,6 +417,89 @@ class Booking(models.Model):
                 f'amount={self.total_price}|currency=RUB'
             ),
         }
+
+
+    # ------------------------------------------------------------------
+    # Подтверждение получения товара арендатором (начало аренды)
+    # ------------------------------------------------------------------
+    def confirm_renter_pickup(self, photo=None):
+        """Арендатор подтверждает получение товара в начале аренды."""
+        if self.status != 'confirmed':
+            raise ValidationError("Подтверждение получения доступно только для подтверждённых бронирований")
+        if self.payment_status != 'paid':
+            raise ValidationError("Необходимо сначала оплатить аренду")
+        if self.renter_pickup_confirmed:
+            raise ValidationError("Вы уже подтвердили получение товара")
+        self.renter_pickup_confirmed = True
+        self.renter_pickup_confirmed_at = timezone.now()
+        if photo:
+            self.renter_pickup_photo = photo
+        fields = ['renter_pickup_confirmed', 'renter_pickup_confirmed_at']
+        if photo:
+            fields.append('renter_pickup_photo')
+        self.save(update_fields=fields)
+
+    # ------------------------------------------------------------------
+    # Подтверждение возврата товара арендодателем (конец аренды)
+    # ------------------------------------------------------------------
+    def confirm_owner_return(self, photo=None):
+        """Арендодатель подтверждает возврат товара в конце аренды."""
+        if self.status != 'confirmed':
+            raise ValidationError("Подтверждение возврата доступно только для подтверждённых бронирований")
+        if not self.renter_pickup_confirmed:
+            raise ValidationError("Арендатор ещё не подтвердил получение товара")
+        if self.owner_return_confirmed:
+            raise ValidationError("Возврат уже подтверждён")
+        self.owner_return_confirmed = True
+        self.owner_return_confirmed_at = timezone.now()
+        if photo:
+            self.owner_return_photo = photo
+        fields = ['owner_return_confirmed', 'owner_return_confirmed_at']
+        if photo:
+            fields.append('owner_return_photo')
+        self.save(update_fields=fields)
+        self.change_status('completed')
+
+    # ------------------------------------------------------------------
+    # Запрос возврата средств арендатором (СБП-возврат)
+    # ------------------------------------------------------------------
+    def request_refund(self, reason=''):
+        if self.payment_status != 'paid':
+            raise ValidationError("Возврат возможен только для оплаченных бронирований")
+        if self.return_requested:
+            raise ValidationError("Запрос на возврат уже отправлен")
+        if self.status == 'cancelled':
+            raise ValidationError("Нельзя запросить возврат для отменённого бронирования")
+        self.return_requested = True
+        self.return_requested_at = timezone.now()
+        self.return_reason = (reason or '').strip()
+        self.return_status = 'requested'
+        self.save(update_fields=['return_requested', 'return_requested_at', 'return_reason', 'return_status'])
+
+    def process_refund(self, approved: bool):
+        if self.return_status != 'requested':
+            raise ValidationError("Запрос на возврат не найден или уже обработан")
+        if approved:
+            self.return_status = 'completed'
+            if self.deposit_status == 'paid':
+                self.deposit_status = 'returned'
+                self.save(update_fields=['return_status', 'deposit_status'])
+            else:
+                self.save(update_fields=['return_status'])
+        else:
+            self.return_status = 'rejected'
+            self.save(update_fields=['return_status'])
+
+    # ------------------------------------------------------------------
+    # Отказ от аренды арендатором
+    # ------------------------------------------------------------------
+    def renter_cancel(self, reason=''):
+        if self.status not in ('pending', 'confirmed'):
+            raise ValidationError("Отказаться можно только от активного бронирования")
+        self.renter_cancel_reason = (reason or '').strip()
+        self.save(update_fields=['renter_cancel_reason'])
+        self._status_changed_by = self
+        self.change_status('cancelled')
 
     def __str__(self):
         return f"{self.item.title} - {self.renter.username}"

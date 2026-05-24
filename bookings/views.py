@@ -146,6 +146,72 @@ class BookingViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(booking)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+    @action(detail=True, methods=['post'])
+    def confirm_renter_pickup(self, request, pk=None):
+        """POST /api/bookings/{id}/confirm_renter_pickup/ — арендатор подтверждает получение товара."""
+        booking = self.get_object()
+        if booking.renter != request.user:
+            return Response({'error': 'Только арендатор может подтвердить получение'}, status=status.HTTP_403_FORBIDDEN)
+        photo = request.FILES.get('photo')
+        try:
+            booking.confirm_renter_pickup(photo=photo)
+        except DjangoValidationError as error:
+            raise ValidationError(self._validation_error_payload(error)) from error
+        return Response(self.get_serializer(booking).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def confirm_owner_return(self, request, pk=None):
+        """POST /api/bookings/{id}/confirm_owner_return/ — арендодатель подтверждает возврат товара."""
+        booking = self.get_object()
+        if booking.item.owner != request.user:
+            return Response({'error': 'Только арендодатель может подтвердить возврат'}, status=status.HTTP_403_FORBIDDEN)
+        photo = request.FILES.get('photo')
+        try:
+            booking.confirm_owner_return(photo=photo)
+        except DjangoValidationError as error:
+            raise ValidationError(self._validation_error_payload(error)) from error
+        return Response(self.get_serializer(booking).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def request_refund(self, request, pk=None):
+        """POST /api/bookings/{id}/request_refund/ — арендатор запрашивает СБП-возврат."""
+        booking = self.get_object()
+        if booking.renter != request.user:
+            return Response({'error': 'Только арендатор может запросить возврат'}, status=status.HTTP_403_FORBIDDEN)
+        reason = request.data.get('reason', '')
+        try:
+            booking.request_refund(reason=reason)
+        except DjangoValidationError as error:
+            raise ValidationError(self._validation_error_payload(error)) from error
+        return Response(self.get_serializer(booking).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def process_refund(self, request, pk=None):
+        """POST /api/bookings/{id}/process_refund/ — арендодатель одобряет/отклоняет возврат."""
+        booking = self.get_object()
+        if booking.item.owner != request.user:
+            return Response({'error': 'Только арендодатель может обработать возврат'}, status=status.HTTP_403_FORBIDDEN)
+        approved = request.data.get('approved', False)
+        try:
+            booking.process_refund(approved=bool(approved))
+        except DjangoValidationError as error:
+            raise ValidationError(self._validation_error_payload(error)) from error
+        return Response(self.get_serializer(booking).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def renter_cancel(self, request, pk=None):
+        """POST /api/bookings/{id}/renter_cancel/ — арендатор отказывается от аренды."""
+        booking = self.get_object()
+        if booking.renter != request.user:
+            return Response({'error': 'Только арендатор может отказаться от аренды'}, status=status.HTTP_403_FORBIDDEN)
+        reason = request.data.get('reason', '')
+        try:
+            booking.renter_cancel(reason=reason)
+        except DjangoValidationError as error:
+            raise ValidationError(self._validation_error_payload(error)) from error
+        return Response(self.get_serializer(booking).data, status=status.HTTP_200_OK)
+
     @action(detail=True, methods=['post'])
     def review(self, request, pk=None):
 

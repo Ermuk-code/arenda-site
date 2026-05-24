@@ -39,6 +39,19 @@ class BookingSerializer(serializers.ModelSerializer):
             'payment_reference',
             'payment_expires_at',
             'paid_at',
+            'rent_amount',
+            'platform_fee',
+            'renter_pickup_confirmed',
+            'renter_pickup_confirmed_at',
+            'renter_pickup_photo',
+            'owner_return_confirmed',
+            'owner_return_confirmed_at',
+            'owner_return_photo',
+            'return_requested',
+            'return_requested_at',
+            'return_reason',
+            'return_status',
+            'renter_cancel_reason',
         ]
 
     def get_has_review(self, obj):
