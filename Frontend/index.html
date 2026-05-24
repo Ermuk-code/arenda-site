@@ -1480,6 +1480,67 @@
                 max-height: 132px;
             }
         }
+
+        /* ── Кнопка «Заполнить по ИНН» и статусные сообщения ── */
+        .inn-autofill-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .btn-fill-inn {
+            white-space: nowrap;
+            flex-shrink: 0;
+            background: transparent;
+            color: #2b6a7c;
+            border: 1.5px solid #2b6a7c;
+            border-radius: 40px;
+            padding: 10px 18px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, transform 0.2s;
+            align-self: flex-end;
+            height: 48px;
+            line-height: 1;
+        }
+        .btn-fill-inn:hover {
+            background: #2b6a7c;
+            color: #fff;
+            transform: translateY(-1px);
+        }
+        .btn-fill-inn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        /* в форме регистрации инпуты имеют border-radius: 60px, подгоняем высоту */
+        .input-group .btn-fill-inn { height: 50px; }
+
+        .inn-status-msg {
+            border-radius: 14px;
+            padding: 11px 16px;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            font-weight: 500;
+            line-height: 1.45;
+        }
+        .inn-status-msg.inn-ok {
+            background: #d4edda;
+            color: #155724;
+        }
+        .inn-status-msg.inn-err {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .validation-error-highlight {
+            animation: shakeError 0.35s ease;
+        }
+        @keyframes shakeError {
+            0%,100% { transform: translateX(0); }
+            25%      { transform: translateX(-5px); }
+            75%      { transform: translateX(5px); }
+        }
     </style>
 </head>
 <body>
@@ -1664,6 +1725,153 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         const API_BASE = '/api';
+
+        /* ══════════════════════════════════════════════════════
+           Клиентская валидация реквизитов (ИНН, ОГРНИП, КПП)
+           Зеркалит логику serializers.py — ошибки видны до запроса к API
+        ══════════════════════════════════════════════════════ */
+
+        function innCheckDigit10(inn) {
+            const k = [2,4,10,3,5,9,4,6,8];
+            const s = k.reduce((acc, w, i) => acc + w * +inn[i], 0);
+            return (s % 11 % 10) === +inn[9];
+        }
+        function innCheckDigit12(inn) {
+            const k1 = [7,2,4,10,3,5,9,4,6,8];
+            const k2 = [3,7,2,4,10,3,5,9,4,6,8];
+            const n11 = k1.reduce((a,w,i)=>a+w*+inn[i],0) % 11 % 10;
+            const n12 = k2.reduce((a,w,i)=>a+w*+inn[i],0) % 11 % 10;
+            return n11 === +inn[10] && n12 === +inn[11];
+        }
+
+        /**
+         * Проверяет ИНН.
+         * @param {string} val
+         * @param {'legal'|'entrepreneur'|'individual'|'any'} type
+         * @returns {string|null} — строка ошибки или null если всё ок
+         */
+        function validateInnClient(val, type = 'any') {
+            if (!val) return null;
+            if (!/^\d+$/.test(val)) return 'ИНН должен содержать только цифры.';
+            if (type === 'legal') {
+                if (val.length !== 10) return 'ИНН юридического лица должен содержать ровно 10 цифр.';
+                if (!innCheckDigit10(val)) return 'ИНН юридического лица не прошёл проверку контрольной цифры. Проверьте правильность ввода.';
+            } else if (type === 'entrepreneur') {
+                if (val.length !== 12) return 'ИНН ИП должен содержать ровно 12 цифр.';
+                if (!innCheckDigit12(val)) return 'ИНН ИП не прошёл проверку контрольных цифр. Проверьте правильность ввода.';
+            } else {
+                if (val.length === 10) { if (!innCheckDigit10(val)) return 'ИНН (10 цифр) не прошёл проверку контрольной цифры.'; }
+                else if (val.length === 12) { if (!innCheckDigit12(val)) return 'ИНН (12 цифр) не прошёл проверку контрольных цифр.'; }
+                else return 'ИНН должен содержать 10 или 12 цифр.';
+            }
+            return null;
+        }
+
+        /**
+         * Проверяет ОГРНИП (15 цифр, контрольная цифра = base % 13 % 10).
+         * @returns {string|null}
+         */
+        function validateOgrnipClient(val) {
+            if (!val) return null;
+            if (!/^\d{15}$/.test(val)) return 'ОГРНИП должен содержать ровно 15 цифр.';
+            const base = BigInt(val.slice(0, 14));
+            const check = Number(base % 13n % 10n);
+            if (check !== +val[14]) return 'ОГРНИП не прошёл проверку контрольной цифры. Проверьте правильность ввода.';
+            return null;
+        }
+
+        /**
+         * Проверяет КПП (9 символов: 4 цифры + 2 знака + 3 цифры).
+         * @returns {string|null}
+         */
+        function validateKppClient(val) {
+            if (!val) return null;
+            if (!/^\d{4}[\dA-Za-z]{2}\d{3}$/.test(val)) {
+                return 'КПП должен содержать 9 символов формата NNNNPPXXX (4 цифры кода ФНС + 2 знака причины + 3 цифры).';
+            }
+            return null;
+        }
+
+        /* ══════════════════════════════════════════════════════
+           fillByInn — универсальная функция для кнопки «Заполнить по ИНН»
+           ctx: 'reg' (форма регистрации) | 'profile' (форма профиля)
+           type: 'entrepreneur' | 'legal'
+        ══════════════════════════════════════════════════════ */
+
+        async function fillByInn(ctx, type) {
+            const innInput = document.getElementById(ctx === 'reg' ? 'regInn' : 'inn');
+            const statusEl = document.getElementById(ctx === 'reg' ? 'regInnStatus' : 'profileInnStatus');
+            const btn = document.getElementById(ctx === 'reg' ? 'regFillByInnBtn' : 'profileFillByInnBtn');
+
+            if (!innInput || !statusEl || !btn) return;
+
+            const inn = innInput.value.trim();
+            if (!inn) {
+                showInnStatus(statusEl, 'Введите ИНН в поле выше, затем нажмите кнопку.', 'err');
+                return;
+            }
+
+            // Предварительная клиентская проверка
+            const preErr = validateInnClient(inn, type);
+            if (preErr) {
+                showInnStatus(statusEl, '⚠️ По результатам проверки вы ввели некорректные данные: ' + preErr, 'err');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Поиск...';
+            showInnStatus(statusEl, 'Запрашиваю данные из реестра...', 'ok');
+
+            try {
+                const res = await fetch(`${API_BASE}/users/fill-by-inn/?inn=${encodeURIComponent(inn)}`);
+                const data = await res.json();
+
+                if (!res.ok) {
+                    showInnStatus(statusEl, '❌ ' + (data.error || 'Организация не найдена. Проверьте ИНН.'), 'err');
+                    return;
+                }
+
+                if (data.type !== type) {
+                    const foundType = data.type === 'legal' ? 'юридическое лицо' : 'ИП';
+                    const expectedType = type === 'legal' ? 'Юридическое лицо' : 'ИП';
+                    showInnStatus(statusEl, `❌ По результатам проверки введённый ИНН принадлежит ${foundType}, а не ${expectedType}. Проверьте ИНН или смените тип пользователя.`, 'err');
+                    return;
+                }
+
+                // Заполняем поля
+                if (type === 'entrepreneur') {
+                    const nameId = ctx === 'reg' ? 'regEntrepreneurName' : 'entrepreneurName';
+                    const ogrnipId = ctx === 'reg' ? 'regOgrnip' : 'ogrnip';
+                    if (data.data.entrepreneur_name) setFieldValue(nameId, data.data.entrepreneur_name);
+                    if (data.data.inn) setFieldValue(ctx === 'reg' ? 'regInn' : 'inn', data.data.inn);
+                    if (data.data.ogrnip) setFieldValue(ogrnipId, data.data.ogrnip);
+                    showInnStatus(statusEl, '✅ Данные ИП найдены и заполнены автоматически. Проверьте и при необходимости скорректируйте.', 'ok');
+                } else {
+                    const nameId = ctx === 'reg' ? 'regCompanyName' : 'companyName';
+                    const kppId  = ctx === 'reg' ? 'regKpp' : 'kpp';
+                    if (data.data.company_name) setFieldValue(nameId, data.data.company_name);
+                    if (data.data.inn) setFieldValue(ctx === 'reg' ? 'regInn' : 'inn', data.data.inn);
+                    if (data.data.kpp) setFieldValue(kppId, data.data.kpp);
+                    showInnStatus(statusEl, '✅ Данные организации найдены и заполнены автоматически. Проверьте и при необходимости скорректируйте.', 'ok');
+                }
+            } catch (err) {
+                showInnStatus(statusEl, '❌ Ошибка подключения к серверу. Попробуйте позже.', 'err');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔍 Заполнить по ИНН';
+            }
+        }
+
+        function showInnStatus(el, msg, kind) {
+            el.textContent = msg;
+            el.className = 'inn-status-msg ' + (kind === 'ok' ? 'inn-ok' : 'inn-err');
+            el.style.display = '';
+        }
+
+        function setFieldValue(id, value) {
+            const el = document.getElementById(id);
+            if (el) el.value = value;
+        }
         const WS_BASE = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws`;
 
         const CATEGORIES = [
@@ -5570,8 +5778,15 @@
                 additionalFields = `
                     <div class="user-type-info">
                         <h4>🏢 Данные ИП</h4>
+                        <div class="inn-autofill-row">
+                            <div class="form-group" style="flex:1;margin-bottom:0">
+                                <label>ИНН <span style="font-weight:normal;font-size:12px;color:#6b7280">(12 цифр)</span></label>
+                                <input type="text" id="inn" maxlength="12" value="${profile.inn || ''}" placeholder="ИНН ИП">
+                            </div>
+                            <button type="button" class="btn-fill-inn" id="profileFillByInnBtn">🔍 Заполнить по ИНН</button>
+                        </div>
+                        <div id="profileInnStatus" class="inn-status-msg" style="display:none"></div>
                         <div class="form-group"><label>Наименование ИП</label><input type="text" id="entrepreneurName" value="${profile.entrepreneur_name || ''}" placeholder="ИП Иванов Иван Иванович"></div>
-                        <div class="form-group"><label>ИНН</label><input type="text" id="inn" value="${profile.inn || ''}" placeholder="ИНН"></div>
                         <div class="form-group"><label>ОГРНИП</label><input type="text" id="ogrnip" value="${profile.ogrnip || ''}" placeholder="ОГРНИП"></div>
                     </div>
                 `;
@@ -5579,8 +5794,15 @@
                 additionalFields = `
                     <div class="user-type-info">
                         <h4>🏛️ Данные юридического лица</h4>
+                        <div class="inn-autofill-row">
+                            <div class="form-group" style="flex:1;margin-bottom:0">
+                                <label>ИНН <span style="font-weight:normal;font-size:12px;color:#6b7280">(10 цифр)</span></label>
+                                <input type="text" id="inn" maxlength="10" value="${profile.inn || ''}" placeholder="ИНН организации">
+                            </div>
+                            <button type="button" class="btn-fill-inn" id="profileFillByInnBtn">🔍 Заполнить по ИНН</button>
+                        </div>
+                        <div id="profileInnStatus" class="inn-status-msg" style="display:none"></div>
                         <div class="form-group"><label>Наименование ООО</label><input type="text" id="companyName" value="${profile.company_name || ''}" placeholder="ООО Ромашка"></div>
-                        <div class="form-group"><label>ИНН</label><input type="text" id="inn" value="${profile.inn || ''}" placeholder="ИНН"></div>
                         <div class="form-group"><label>КПП</label><input type="text" id="kpp" value="${profile.kpp || ''}" placeholder="КПП"></div>
                     </div>
                 `;
@@ -5635,10 +5857,36 @@
                     updateData.entrepreneur_name = document.getElementById('entrepreneurName')?.value || '';
                     updateData.inn = document.getElementById('inn')?.value || '';
                     updateData.ogrnip = document.getElementById('ogrnip')?.value || '';
+
+                    // Клиентская валидация ИП
+                    if (updateData.inn) {
+                        const innErr = validateInnClient(updateData.inn, 'entrepreneur');
+                        if (innErr) { showProfileValidationError(innErr); return; }
+                    }
+                    if (updateData.ogrnip) {
+                        const ogrnipErr = validateOgrnipClient(updateData.ogrnip);
+                        if (ogrnipErr) { showProfileValidationError(ogrnipErr); return; }
+                    }
                 } else if (userType === 'legal') {
                     updateData.company_name = document.getElementById('companyName')?.value || '';
                     updateData.inn = document.getElementById('inn')?.value || '';
                     updateData.kpp = document.getElementById('kpp')?.value || '';
+
+                    // Клиентская валидация юрлица
+                    if (updateData.inn) {
+                        const innErr = validateInnClient(updateData.inn, 'legal');
+                        if (innErr) { showProfileValidationError(innErr); return; }
+                    }
+                    if (updateData.kpp) {
+                        const kppErr = validateKppClient(updateData.kpp);
+                        if (kppErr) { showProfileValidationError(kppErr); return; }
+                    }
+                }
+
+                function showProfileValidationError(msg) {
+                    const msgDiv = document.getElementById('profileMessage');
+                    msgDiv.innerHTML = `<div class="error-message-box validation-error-highlight">❌ По результатам проверки вы ввели некорректные данные:<br><strong>${escapeHtml(msg)}</strong></div>`;
+                    msgDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
 
                 const result = await updateProfile(updateData);
@@ -5685,6 +5933,13 @@
             });
 
             document.getElementById('backToMainFromProfile')?.addEventListener('click', () => showMainPage());
+
+            // Кнопка «Заполнить по ИНН» в профиле
+            if (userType === 'entrepreneur') {
+                document.getElementById('profileFillByInnBtn')?.addEventListener('click', () => fillByInn('profile', 'entrepreneur'));
+            } else if (userType === 'legal') {
+                document.getElementById('profileFillByInnBtn')?.addEventListener('click', () => fillByInn('profile', 'legal'));
+            }
         }
 
         async function showCreatePage() {
@@ -5990,20 +6245,36 @@
                     box.innerHTML = `
                         <div class="user-type-info">
                             <h4>🏢 Профиль ИП</h4>
+                            <div class="inn-autofill-row">
+                                <div class="input-group" style="flex:1;margin-bottom:0">
+                                    <label>ИНН <span style="font-weight:normal;font-size:12px;color:#6b7280">(12 цифр)</span></label>
+                                    <input type="text" id="regInn" maxlength="12" placeholder="Введите ИНН для автозаполнения">
+                                </div>
+                                <button type="button" class="btn-fill-inn" id="regFillByInnBtn">🔍 Заполнить по ИНН</button>
+                            </div>
+                            <div id="regInnStatus" class="inn-status-msg" style="display:none"></div>
                             <div class="input-group"><label>Наименование ИП</label><input type="text" id="regEntrepreneurName" maxlength="255" placeholder="ИП Иванов Иван Иванович"></div>
-                            <div class="input-group"><label>ИНН</label><input type="text" id="regInn" placeholder="Необязательно на этом шаге"></div>
                             <div class="input-group"><label>ОГРНИП</label><input type="text" id="regOgrnip" placeholder="Необязательно на этом шаге"></div>
                         </div>
                     `;
+                    document.getElementById('regFillByInnBtn').addEventListener('click', () => fillByInn('reg', 'entrepreneur'));
                 } else {
                     box.innerHTML = `
                         <div class="user-type-info">
                             <h4>🏛️ Профиль юридического лица</h4>
+                            <div class="inn-autofill-row">
+                                <div class="input-group" style="flex:1;margin-bottom:0">
+                                    <label>ИНН <span style="font-weight:normal;font-size:12px;color:#6b7280">(10 цифр)</span></label>
+                                    <input type="text" id="regInn" maxlength="10" placeholder="Введите ИНН для автозаполнения">
+                                </div>
+                                <button type="button" class="btn-fill-inn" id="regFillByInnBtn">🔍 Заполнить по ИНН</button>
+                            </div>
+                            <div id="regInnStatus" class="inn-status-msg" style="display:none"></div>
                             <div class="input-group"><label>Наименование организации</label><input type="text" id="regCompanyName" maxlength="255" placeholder="ООО Ромашка"></div>
-                            <div class="input-group"><label>ИНН</label><input type="text" id="regInn" placeholder="Необязательно на этом шаге"></div>
                             <div class="input-group"><label>КПП</label><input type="text" id="regKpp" placeholder="Необязательно на этом шаге"></div>
                         </div>
                     `;
+                    document.getElementById('regFillByInnBtn').addEventListener('click', () => fillByInn('reg', 'legal'));
                 }
             }
 
@@ -6107,13 +6378,53 @@
                 }
 
                 if (extraProfileData.entrepreneur_name.length > 255) {
-                    alert('❌ Наименование ИП слишком длинное. Максимум 255 символов.');
+                    showRegValidationError('❌ Наименование ИП слишком длинное. Максимум 255 символов.');
                     return;
                 }
 
                 if (extraProfileData.company_name.length > 255) {
-                    alert('❌ Наименование организации слишком длинное. Максимум 255 символов.');
+                    showRegValidationError('❌ Наименование организации слишком длинное. Максимум 255 символов.');
                     return;
+                }
+
+                // Клиентская проверка реквизитов по типу пользователя
+                if (userType === 'entrepreneur') {
+                    const innVal = extraProfileData.inn;
+                    const ogrnipVal = extraProfileData.ogrnip;
+                    if (innVal) {
+                        const innErr = validateInnClient(innVal, 'entrepreneur');
+                        if (innErr) { showRegValidationError('❌ ' + innErr); return; }
+                    }
+                    if (ogrnipVal) {
+                        const ogrnipErr = validateOgrnipClient(ogrnipVal);
+                        if (ogrnipErr) { showRegValidationError('❌ ' + ogrnipErr); return; }
+                    }
+                } else if (userType === 'legal') {
+                    const innVal = extraProfileData.inn;
+                    const kppVal = extraProfileData.kpp;
+                    if (innVal) {
+                        const innErr = validateInnClient(innVal, 'legal');
+                        if (innErr) { showRegValidationError('❌ ' + innErr); return; }
+                    }
+                    if (kppVal) {
+                        const kppErr = validateKppClient(kppVal);
+                        if (kppErr) { showRegValidationError('❌ ' + kppErr); return; }
+                    }
+                }
+
+                function showRegValidationError(msg) {
+                    let errEl = document.getElementById('regValidationError');
+                    if (!errEl) {
+                        errEl = document.createElement('div');
+                        errEl.id = 'regValidationError';
+                        errEl.className = 'error-message-box';
+                        errEl.style.marginBottom = '12px';
+                        document.querySelector('#registerForm .auth-btn[type=submit]').before(errEl);
+                    }
+                    errEl.textContent = msg;
+                    errEl.style.display = '';
+                    errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(() => { if (errEl) errEl.style.display = 'none'; }, 6000);
                 }
 
                 const success = await register(
