@@ -103,6 +103,18 @@ class BookingViewSet(viewsets.ModelViewSet):
         return self._change_status(booking, 'completed')
 
     @action(detail=True, methods=['post'])
+    def return_deposit(self, request, pk=None):
+        """POST /api/bookings/{id}/return_deposit/ — вернуть залог (только владелец после завершения)."""
+        booking = self.get_object()
+        if booking.item.owner != request.user:
+            return Response({'error': 'Только владелец может вернуть залог'}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            booking.return_deposit()
+        except DjangoValidationError as error:
+            raise ValidationError(self._validation_error_payload(error)) from error
+        return Response(self.get_serializer(booking).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
     def start_payment(self, request, pk=None):
         booking = self.get_object()
 

@@ -1606,12 +1606,24 @@
                     <span id="rentSummaryDays">0</span>
                 </div>
                 <div class="rent-summary-row">
-                    <span>Предварительная сумма</span>
+                    <span>Сумма аренды</span>
                     <span id="rentSummaryTotal">0 ₽</span>
                 </div>
+                <div class="rent-summary-row">
+                    <span>Залог</span>
+                    <span id="rentSummaryDeposit">—</span>
+                </div>
                 <div class="rent-summary-row total">
+                    <span>Итого к оплате</span>
+                    <span id="rentSummaryGrandTotal">0 ₽</span>
+                </div>
+                <div class="rent-summary-row">
                     <span>Статус брони</span>
                     <span id="rentSummaryStatus">Не создана</span>
+                </div>
+                <div class="rent-summary-row">
+                    <span>Статус залога</span>
+                    <span id="rentSummaryDepositStatus">—</span>
                 </div>
             </div>
 
@@ -2488,6 +2500,7 @@
                     </div>
                     <div class="item-preview-panel">
                         <div class="item-preview-price">${formatPrice(getDisplayPrice(item))} / день</div>
+                        ${Number(item.deposit) > 0 ? `<div style="font-size:0.85rem;color:#5a8090;margin-top:4px;">Залог: ${formatPrice(Number(item.deposit))}</div>` : ''}
                         ${actionButtons}
                         <div class="item-preview-meta">
                             <div><strong>Владелец:</strong> ${escapeHtml(item.owner_username || 'Не указан')}</div>
@@ -2647,6 +2660,18 @@
                 unpaid: 'Не оплачено',
                 pending: 'Ожидает оплаты',
                 paid: 'Оплачено',
+                failed: 'Ошибка оплаты'
+            };
+            return map[status] || '—';
+        }
+
+        function formatDepositStatus(status) {
+            const map = {
+                not_required: 'Не требуется',
+                unpaid: 'Не оплачен',
+                pending: 'Ожидает оплаты',
+                paid: '✅ Оплачен',
+                returned: '↩ Возвращён',
                 failed: 'Ошибка оплаты'
             };
             return map[status] || '—';
@@ -3643,13 +3668,18 @@
             const endDate = document.getElementById('rentEndDate')?.value;
             const days = calculateRentalDays(startDate, endDate);
             const pricePerDay = getDisplayPrice(currentRentalItem);
-            const total = days * pricePerDay;
+            const rentAmount = days * pricePerDay;
+            const deposit = Number(currentRentalItem?.deposit || 0);
+            const total = rentAmount + deposit;
 
             document.getElementById('rentSummaryItem').textContent = currentRentalItem?.title || currentRentalItem?.name || '—';
             document.getElementById('rentSummaryPrice').textContent = `${formatPrice(pricePerDay)} / день`;
             document.getElementById('rentSummaryDays').textContent = String(days);
-            document.getElementById('rentSummaryTotal').textContent = formatPrice(total);
+            document.getElementById('rentSummaryTotal').textContent = formatPrice(rentAmount);
+            document.getElementById('rentSummaryDeposit').textContent = deposit > 0 ? formatPrice(deposit) : 'Не указан';
+            document.getElementById('rentSummaryGrandTotal').textContent = formatPrice(total);
             document.getElementById('rentSummaryStatus').textContent = formatBookingStatus(currentBooking?.status || '');
+            document.getElementById('rentSummaryDepositStatus').textContent = formatDepositStatus(currentBooking?.deposit_status || '');
         }
 
         function hasSignedCurrentBookingContract() {
@@ -3686,11 +3716,16 @@
         }
 
         function applyCurrentBookingRentalMessage() {
-            if (currentBooking?.status === 'confirmed' && currentBooking?.payment_status === 'pending') {
+            const b = currentBooking;
+            if (!b) { setRentModalMessage('', ''); return; }
+
+            if (b.status === 'confirmed' && b.payment_status === 'paid') {
+                setRentModalMessage('success', '✅ Оплата подтверждена. Ожидайте передачи товара.');
+            } else if (b.status === 'confirmed' && b.payment_status === 'pending') {
                 setRentModalMessage('info', 'Бронь подтверждена. Можно перейти к оплате через СБП.');
-            } else if (currentBooking?.status === 'confirmed' && !isCurrentBookingContractFullySigned()) {
+            } else if (b.status === 'confirmed' && !isCurrentBookingContractFullySigned()) {
                 setRentModalMessage('info', 'Бронь подтверждена. Сначала обе стороны должны подписать договор с помощью ЭЦП, затем станет доступна оплата по СБП.');
-            } else if (currentBooking?.status === 'pending') {
+            } else if (b.status === 'pending') {
                 setRentModalMessage('info', 'У вас уже есть заявка по этому товару на выбранные даты. Оплата станет доступна после подтверждения владельцем.');
             } else {
                 setRentModalMessage('', '');
@@ -3739,11 +3774,9 @@
             if (createBookingBtn) {
                 createBookingBtn.disabled = !!booking && ['pending', 'confirmed'].includes(booking.status);
             }
-
             if (openContractBtn) {
                 openContractBtn.disabled = !canOpenContract;
             }
-
             if (startPaymentBtn) {
                 startPaymentBtn.classList.toggle('is-hidden', !canProceedToPayment);
                 startPaymentBtn.disabled = !canProceedToPayment || booking?.payment_status === 'paid';
@@ -4101,11 +4134,53 @@
                 }
 
                 const data = await response.json().catch(() => ({}));
+                currentPaymentType = 'rent';
                 fillPaymentBox(data);
                 setRentModalMessage('success', 'Открылось демо-окно СБП. Нажмите "Оплатить", чтобы завершить оплату.');
                 openSbpDemoModal();
             } catch (error) {
                 setRentModalMessage('error', 'Ошибка подключения при запуске оплаты.');
+            }
+        }
+
+        // 'rent' | 'deposit' — отслеживает какой платёж сейчас в SBP-демо модале
+        let currentPaymentType = 'rent';
+
+        async function startDepositPayment() {
+            const booking = await refreshCurrentBookingState();
+
+            if (!booking) {
+                setRentModalMessage('error', 'Бронь не найдена.');
+                return;
+            }
+            if (booking.payment_status !== 'paid') {
+                setRentModalMessage('info', 'Сначала оплатите аренду.');
+                return;
+            }
+            if (booking.deposit_status === 'paid') {
+                setRentModalMessage('success', 'Залог уже оплачен.');
+                return;
+            }
+
+            try {
+                const response = await apiRequest(`/bookings/${booking.id}/start_deposit/`, {
+                    method: 'POST',
+                    body: JSON.stringify({})
+                });
+
+                if (!response.ok) {
+                    const message = await readApiError(response, 'Не удалось начать оплату залога.');
+                    setRentModalMessage('error', message);
+                    return;
+                }
+
+                const data = await response.json().catch(() => ({}));
+                currentPaymentType = 'deposit';
+                fillPaymentBox(data);
+                setRentModalMessage('success', 'Откройте демо-окно СБП и подтвердите оплату залога.');
+                openSbpDemoModal();
+            } catch {
+                setRentModalMessage('error', 'Ошибка подключения при запуске оплаты залога.');
             }
         }
 
@@ -4164,6 +4239,45 @@
                     demoPayButton.disabled = false;
                     demoPayButton.textContent = 'Оплатить';
                 }
+            }
+        }
+
+        async function confirmDepositPayment() {
+            const booking = await refreshCurrentBookingState();
+            const demoMessageBox = document.getElementById('sbpDemoMessage');
+            const demoPayButton = document.getElementById('sbpDemoPayBtn');
+
+            if (!booking) {
+                setRentModalMessage('error', 'Бронь не найдена.');
+                if (demoPayButton) { demoPayButton.disabled = false; demoPayButton.textContent = 'Оплатить'; }
+                return;
+            }
+
+            try {
+                const response = await apiRequest(`/bookings/${booking.id}/confirm_deposit/`, {
+                    method: 'POST',
+                    body: JSON.stringify({})
+                });
+
+                if (!response.ok) {
+                    const message = await readApiError(response, 'Не удалось подтвердить оплату залога.');
+                    setRentModalMessage('error', message);
+                    if (demoMessageBox) demoMessageBox.innerHTML = `<div class="rent-error">${escapeHtml(message)}</div>`;
+                    if (demoPayButton) { demoPayButton.disabled = false; demoPayButton.textContent = 'Оплатить'; }
+                    return;
+                }
+
+                const data = await response.json().catch(() => ({}));
+                currentBooking = data;
+                currentPaymentType = 'rent';
+                updateRentalSummary();
+                updateRentalActionButtons();
+                resetPaymentBox();
+                closeSbpDemoModal();
+                applyCurrentBookingRentalMessage();
+            } catch {
+                setRentModalMessage('error', 'Ошибка подключения при подтверждении залога.');
+                if (demoPayButton) { demoPayButton.disabled = false; demoPayButton.textContent = 'Оплатить'; }
             }
         }
 
@@ -4242,6 +4356,7 @@
                         <div class="card-title">${escapeHtml(product.title || product.name || 'Без названия')}</div>
                         ${product.description ? `<div class="card-description">${escapeHtml(product.description.substring(0, 80))}${product.description.length > 80 ? '...' : ''}</div>` : ''}
                         <div class="card-price">${getDisplayPrice(product).toLocaleString('ru-RU')} ₽/<small>день</small></div>
+                        ${Number(product.deposit) > 0 ? `<div style="font-size:0.82rem;color:#5a8090;margin:-10px 0 10px;">Залог: ${formatPrice(Number(product.deposit))} ₽</div>` : ''}
                         <button class="card-btn" data-id="${product.id}" data-action="open">Открыть</button>
                         ${!isOwner ? `<button class="card-btn card-chat-btn" data-id="${product.id}" data-owner="${product.owner}" data-action="chat">💬 Написать продавцу</button>` : ''}
                         ${!isOwner ? `<button class="card-btn" data-id="${product.id}" data-owner="${product.owner}" data-title="${escapeHtml(product.title || product.name || 'Товар')}" data-price="${getDisplayPrice(product)}" data-action="rent">Арендовать</button>` : ''}
@@ -5960,6 +6075,7 @@
                         <div class="form-group"><label>Название товара *</label><input type="text" id="itemName" placeholder="Например: Дрель Makita" required></div>
                         <div class="form-group"><label>Описание</label><textarea id="itemDesc" rows="4" placeholder="Опишите состояние, характеристики..."></textarea></div>
                         <div class="form-group"><label>Цена за день (₽) *</label><input type="number" id="itemPrice" placeholder="500" required><small style="display:block;margin-top:6px;color:#b45309;font-size:12px">⚠️ Внимание. Уведомляем Вас о том, что будут добавлены 20% от вашей цены, которые покроют комиссию.</small></div>
+                        <div class="form-group"><label>Залог (₽)</label><input type="number" id="itemDeposit" placeholder="0" min="0"><small style="display:block;margin-top:6px;color:#5a8090;font-size:12px">💡 Сумма залога, которую арендатор оплачивает вместе с арендой и получает обратно после возврата вещи.</small></div>
                         <div class="form-group"><label>Категория</label>
                             <select id="itemCategory">${categoryOptions}</select>
                         </div>
@@ -5988,6 +6104,7 @@
                     name: document.getElementById('itemName').value,
                     description: document.getElementById('itemDesc').value,
                     price_per_day: parseInt(document.getElementById('itemPrice').value, 10),
+                    deposit: parseInt(document.getElementById('itemDeposit').value || '0', 10),
                     category: document.getElementById('itemCategory').value
                 };
                 if (!formData.name || !formData.price_per_day) {
@@ -6028,6 +6145,7 @@
                         <div class="form-group"><label>Название товара *</label><input type="text" id="editItemName" value="${escapeHtml(editItem.title || '')}" placeholder="Например: Дрель Makita" required></div>
                         <div class="form-group"><label>Описание</label><textarea id="editItemDesc" rows="4" placeholder="Опишите состояние, характеристики...">${escapeHtml(editItem.description || '')}</textarea></div>
                         <div class="form-group"><label>Цена за день (₽) *</label><input type="number" id="editItemPrice" value="${Number(editItem.price_per_day || 0)}" placeholder="500" required><small style="display:block;margin-top:6px;color:#b45309;font-size:12px">⚠️ Внимание. Уведомляем Вас о том, что будут добавлены 20% от вашей цены, которые покроют комиссию.</small></div>
+                        <div class="form-group"><label>Залог (₽)</label><input type="number" id="editItemDeposit" value="${Number(editItem.deposit || 0)}" placeholder="0" min="0"><small style="display:block;margin-top:6px;color:#5a8090;font-size:12px">💡 Сумма залога, которую арендатор оплачивает вместе с арендой и получает обратно после возврата вещи.</small></div>
                         <div class="form-group"><label>Категория</label>
                             <select id="editItemCategory">${categoryOptions}</select>
                         </div>
@@ -6083,6 +6201,7 @@
                     title: document.getElementById('editItemName').value,
                     description: document.getElementById('editItemDesc').value,
                     price_per_day: parseInt(document.getElementById('editItemPrice').value, 10),
+                    deposit: parseInt(document.getElementById('editItemDeposit').value || '0', 10),
                     category: document.getElementById('editItemCategory').value || null
                 };
                 if (!formData.title || !formData.price_per_day) {
@@ -6874,7 +6993,11 @@
                 messageBox.innerHTML = '<div class="rent-info">Имитируем подтверждение оплаты через СБП...</div>';
             }
 
-            await confirmBookingPayment();
+            if (currentPaymentType === 'deposit') {
+                await confirmDepositPayment();
+            } else {
+                await confirmBookingPayment();
+            }
         });
         document.getElementById('sbpDemoOverlay')?.addEventListener('click', (e) => {
             if (e.target.id === 'sbpDemoOverlay') closeSbpDemoModal();
