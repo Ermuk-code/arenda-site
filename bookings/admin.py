@@ -11,11 +11,14 @@ class BookingAdmin(admin.ModelAdmin):
         'renter',
         'status',
         'payment_status',
+        'renter_pickup_confirmed',
+        'owner_return_confirmed',
+        'return_status',
         'start_date',
         'end_date',
         'created_at',
     )
-    list_filter = ('status', 'payment_status', 'created_at', 'start_date', 'end_date')
+    list_filter = ('status', 'payment_status', 'renter_pickup_confirmed', 'owner_return_confirmed', 'return_status', 'created_at', 'start_date', 'end_date')
     search_fields = ('item__title', 'renter__username', 'item__owner__username')
     ordering = ('-created_at',)
 

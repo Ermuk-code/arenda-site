@@ -103,6 +103,18 @@
             background: #d35454;
             box-shadow: 0 10px 16px rgba(211,84,84,0.18);
         }
+        .search-bar-section { background: white; border-bottom: 1px solid #eef2f6; padding: 16px 0; }
+        .search-bar-inner { display: flex; align-items: center; gap: 0; max-width: 640px; margin: 0 auto; background: #f0f5f8; border-radius: 999px; border: 1.5px solid #d9e5ec; transition: border-color 0.2s, box-shadow 0.2s; }
+        .search-bar-inner:focus-within { border-color: #2b6a7c; box-shadow: 0 0 0 3px rgba(43,106,124,0.12); }
+        .search-bar-icon { display: flex; align-items: center; justify-content: center; padding: 0 14px 0 18px; color: #7da3b0; flex-shrink: 0; }
+        .search-bar-input { flex: 1; border: none; background: transparent; font-size: 1rem; padding: 12px 0; color: #1a2c3e; outline: none; }
+        .search-bar-input::placeholder { color: #9ab5bf; }
+        .search-bar-clear { background: none; border: none; cursor: pointer; padding: 0 10px; color: #9ab5bf; font-size: 1.2rem; line-height: 1; display: none; align-items: center; justify-content: center; }
+        .search-bar-clear.visible { display: flex; }
+        .search-bar-clear:hover { color: #2b6a7c; }
+        .search-bar-btn { background: #2b6a7c; border: none; color: white; padding: 10px 22px; border-radius: 999px; font-weight: 600; cursor: pointer; font-size: 0.95rem; margin: 3px; transition: background 0.2s; flex-shrink: 0; }
+        .search-bar-btn:hover { background: #1e5668; }
+        .search-results-label { text-align: center; padding: 12px 0 0; color: #5a8090; font-size: 0.92rem; }
         .categories { background: white; border-bottom: 1px solid #eef2f6; padding: 14px 0; }
         .cats-list { display: flex; gap: 28px; flex-wrap: wrap; justify-content: center; list-style: none; }
         .cats-list li { font-weight: 500; color: #2f4f5f; cursor: pointer; transition: 0.2s; padding: 5px 0; }
@@ -183,6 +195,57 @@
         .btn-danger { background: #c0392b; border: none; padding: 8px 24px; border-radius: 40px; font-weight: 600; color: white; cursor: pointer; text-decoration: none; display: inline-block; transition: 0.2s; }
         .btn-danger:hover { background: #a93226; transform: translateY(-1px); }
         .danger-note { margin-top: 10px; color: #8a5a5a; font-size: 0.92rem; line-height: 1.45; }
+
+        /* ===== Модальное окно подтверждения передачи/возврата/возврата средств ===== */
+        .handover-overlay {
+            position: fixed; inset: 0; background: rgba(14,27,34,0.58);
+            display: none; align-items: center; justify-content: center;
+            padding: 24px; z-index: 1300;
+        }
+        .handover-overlay.active { display: flex; }
+        .handover-modal {
+            width: min(100%, 480px); background: #fff; border-radius: 28px;
+            box-shadow: 0 28px 60px rgba(18,42,50,0.28);
+            border: 1px solid #dde8ef; padding: 28px 28px 24px;
+        }
+        .handover-modal-title { font-size: 1.25rem; font-weight: 800; color: #163a45; margin-bottom: 6px; }
+        .handover-modal-sub { color: #5f7a88; font-size: 0.95rem; line-height: 1.5; margin-bottom: 18px; }
+        .handover-photo-label {
+            display: flex; align-items: center; gap: 10px;
+            border: 2px dashed #b0ccd7; border-radius: 16px;
+            padding: 14px 16px; cursor: pointer; color: #2b6a7c;
+            font-weight: 500; font-size: 0.93rem; transition: border-color 0.2s, background 0.2s;
+            margin-bottom: 12px;
+        }
+        .handover-photo-label:hover { border-color: #2b6a7c; background: #f0f8fb; }
+        .handover-photo-label svg { flex-shrink: 0; }
+        .handover-photo-preview {
+            width: 100%; max-height: 180px; object-fit: cover;
+            border-radius: 14px; border: 1.5px solid #dde8ef;
+            display: none; margin-bottom: 12px;
+        }
+        .handover-photo-preview.visible { display: block; }
+        .handover-photo-name { font-size: 0.85rem; color: #4a7a8a; margin-bottom: 14px; }
+        .handover-reason-input {
+            width: 100%; border: 1.5px solid #dde8ef; border-radius: 14px;
+            padding: 11px 14px; font-size: 0.95rem; resize: vertical;
+            min-height: 80px; color: #1c3d48; font-family: inherit;
+            transition: border-color 0.2s; box-sizing: border-box; margin-bottom: 14px;
+        }
+        .handover-reason-input:focus { outline: none; border-color: #2b6a7c; }
+        .handover-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-warning { background: #e67e22; border: none; padding: 8px 24px; border-radius: 40px;
+            font-weight: 600; color: white; cursor: pointer; transition: 0.2s; }
+        .btn-warning:hover { background: #ca6f1e; transform: translateY(-1px); }
+        .handover-status-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 0.8rem; font-weight: 600; padding: 3px 10px;
+            border-radius: 20px; margin-top: 6px;
+        }
+        .handover-status-badge.confirmed { background: #d1f5e8; color: #1a7a55; }
+        .handover-status-badge.pending { background: #fef9e7; color: #a0720a; }
+        .handover-status-badge.refund-requested { background: #fde8e8; color: #b03020; }
+        .handover-status-badge.refund-done { background: #d1f5e8; color: #1a7a55; }
         .confirm-delete-overlay {
             position: fixed;
             inset: 0;
@@ -243,6 +306,116 @@
         .auth-btn { width: 100%; background: #2b6a7c; color: white; border: none; padding: 14px; border-radius: 60px; font-weight: 700; font-size: 1.1rem; cursor: pointer; }
         .auth-footer { margin-top: 28px; text-align: center; }
         .auth-footer a { color: #2b6a7c; text-decoration: none; font-weight: 600; }
+        .reg-consent-block {
+            margin: 0 0 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: #f4f8fb;
+            border: 1.5px solid #dde8ef;
+            border-radius: 18px;
+            padding: 14px 16px;
+        }
+        .reg-consent-block input[type="checkbox"] {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            margin-top: 2px;
+            accent-color: #2b6a7c;
+            cursor: pointer;
+        }
+        .reg-consent-text {
+            font-size: 0.9rem;
+            color: #35515d;
+            line-height: 1.55;
+        }
+        .reg-consent-text a {
+            color: #2b6a7c;
+            font-weight: 600;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            cursor: pointer;
+        }
+        .reg-consent-text a:hover { color: #1e5668; }
+        /* Модальные окна с текстами документов */
+        .legal-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(14, 27, 34, 0.55);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            z-index: 1500;
+        }
+        .legal-modal-overlay.active { display: flex; }
+        .legal-modal {
+            width: min(100%, 640px);
+            max-height: 80vh;
+            background: #fff;
+            border-radius: 28px;
+            box-shadow: 0 28px 60px rgba(18,42,50,0.28);
+            border: 1px solid #dde8ef;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .legal-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 22px 28px 16px;
+            border-bottom: 1px solid #edf2f6;
+            flex-shrink: 0;
+        }
+        .legal-modal-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #163a45;
+        }
+        .legal-modal-body {
+            overflow-y: auto;
+            padding: 20px 28px 28px;
+            font-size: 0.92rem;
+            color: #35515d;
+            line-height: 1.7;
+        }
+        .legal-modal-body h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #163a45;
+            margin: 20px 0 8px;
+        }
+        .legal-modal-body h3:first-child { margin-top: 0; }
+        .legal-modal-body p { margin: 0 0 10px; }
+        .legal-modal-body ol, .legal-modal-body ul {
+            margin: 0 0 10px;
+            padding-left: 20px;
+        }
+        .legal-modal-body li { margin-bottom: 6px; }
+        .legal-modal-close {
+            background: #f0f4f9;
+            border: none;
+            border-radius: 50%;
+            width: 34px;
+            height: 34px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: #4a7a8a;
+            transition: background 0.15s;
+        }
+        .legal-modal-close:hover { background: #e2e9ef; }
+        .legal-modal-footer {
+            padding: 14px 28px 20px;
+            border-top: 1px solid #edf2f6;
+            display: flex;
+            justify-content: flex-end;
+            flex-shrink: 0;
+        }
         .auth-extra-card {
             margin-top: 16px;
             border: 1.5px solid #e2e9ef;
@@ -532,13 +705,27 @@
             font-size: 20px;
             font-weight: 700;
         }
-        .rent-summary {
-            background: #f6f9fd;
-            border: 1px solid #e6edf3;
-            border-radius: 18px;
-            padding: 16px;
-            margin-bottom: 20px;
-        }
+        .pickup-section { margin-bottom: 20px; }
+        .pickup-section label { display: block; font-weight: 500; margin-bottom: 8px; color: #2c6072; font-size: 0.97rem; }
+        .pickup-search-wrap { position: relative; margin-bottom: 10px; }
+        .pickup-search-wrap svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #7da3b0; pointer-events: none; }
+        .pickup-search { width: 100%; padding: 11px 14px 11px 40px; border-radius: 14px; border: 1.5px solid #e2e9ef; font-size: 0.95rem; transition: border-color 0.2s; background: #fff; }
+        .pickup-search:focus { outline: none; border-color: #2b6a7c; }
+        .pickup-list { max-height: 230px; overflow-y: auto; border: 1.5px solid #e2e9ef; border-radius: 14px; background: #fff; }
+        .pickup-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; cursor: pointer; border-bottom: 1px solid #f0f4f8; transition: background 0.15s; }
+        .pickup-item:last-child { border-bottom: none; }
+        .pickup-item:hover { background: #f4f9fc; }
+        .pickup-item.selected { background: #e8f5f2; border-left: 3px solid #1f8a6b; }
+        .pickup-item-radio { width: 18px; height: 18px; border: 2px solid #b0c8d4; border-radius: 50%; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s; }
+        .pickup-item.selected .pickup-item-radio { border-color: #1f8a6b; background: #1f8a6b; }
+        .pickup-item.selected .pickup-item-radio::after { content: ''; width: 7px; height: 7px; border-radius: 50%; background: white; display: block; }
+        .pickup-item-info { flex: 1; min-width: 0; }
+        .pickup-item-index { font-size: 0.75rem; font-weight: 700; color: #2b6a7c; background: #e8f0f4; border-radius: 6px; padding: 2px 7px; display: inline-block; margin-bottom: 3px; }
+        .pickup-item-addr { font-size: 0.9rem; color: #1c3d48; font-weight: 500; }
+        .pickup-selected-info { background: #e8f5f2; border: 1px solid #b6ddd4; border-radius: 12px; padding: 10px 14px; font-size: 0.88rem; color: #1a5c47; display: none; }
+        .pickup-selected-info.visible { display: block; }
+        .pickup-empty { text-align: center; padding: 24px; color: #9ab5bf; font-size: 0.9rem; }
+        .rent-summary { background: #f6f9fd; border: 1px solid #e6edf3; border-radius: 18px; padding: 16px; margin-bottom: 20px; }
         .rent-summary-row {
             display: flex;
             justify-content: space-between;
@@ -784,7 +971,12 @@
             white-space: pre-wrap;
             color: #35515d;
             line-height: 1.62;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .contract-document-body b,
+        .contract-document-body strong {
+            color: #163a45;
         }
         .contract-side-panel {
             border: 1px solid #e3ecf2;
@@ -1454,6 +1646,67 @@
                 max-height: 132px;
             }
         }
+
+        /* ── Кнопка «Заполнить по ИНН» и статусные сообщения ── */
+        .inn-autofill-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .btn-fill-inn {
+            white-space: nowrap;
+            flex-shrink: 0;
+            background: transparent;
+            color: #2b6a7c;
+            border: 1.5px solid #2b6a7c;
+            border-radius: 40px;
+            padding: 10px 18px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, transform 0.2s;
+            align-self: flex-end;
+            height: 48px;
+            line-height: 1;
+        }
+        .btn-fill-inn:hover {
+            background: #2b6a7c;
+            color: #fff;
+            transform: translateY(-1px);
+        }
+        .btn-fill-inn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        /* в форме регистрации инпуты имеют border-radius: 60px, подгоняем высоту */
+        .input-group .btn-fill-inn { height: 50px; }
+
+        .inn-status-msg {
+            border-radius: 14px;
+            padding: 11px 16px;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            font-weight: 500;
+            line-height: 1.45;
+        }
+        .inn-status-msg.inn-ok {
+            background: #d4edda;
+            color: #155724;
+        }
+        .inn-status-msg.inn-err {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .validation-error-highlight {
+            animation: shakeError 0.35s ease;
+        }
+        @keyframes shakeError {
+            0%,100% { transform: translateX(0); }
+            25%      { transform: translateX(-5px); }
+            75%      { transform: translateX(5px); }
+        }
     </style>
 </head>
 <body>
@@ -1495,6 +1748,16 @@
                 <input type="text" id="rentEndDate" placeholder="Выберите дату окончания">
             </div>
 
+            <div class="pickup-section">
+                <label>📦 Место самовывоза — Почта России (г. Курск)</label>
+                <div class="pickup-search-wrap">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="pickupSearchInput" class="pickup-search" placeholder="Поиск по адресу или индексу..." autocomplete="off">
+                </div>
+                <div class="pickup-list" id="pickupList"></div>
+                <div class="pickup-selected-info" id="pickupSelectedInfo"></div>
+            </div>
+
             <div class="rent-summary">
                 <div class="rent-summary-row">
                     <span>Товар</span>
@@ -1508,13 +1771,33 @@
                     <span>Количество дней</span>
                     <span id="rentSummaryDays">0</span>
                 </div>
+                <div class="rent-summary-row" style="color:#6b8b9c;font-size:0.88rem;">
+                    <span>Комиссия платформы (20%)</span>
+                    <span id="rentSummaryMarkup">—</span>
+                </div>
                 <div class="rent-summary-row">
-                    <span>Предварительная сумма</span>
+                    <span>Сумма аренды</span>
                     <span id="rentSummaryTotal">0 ₽</span>
                 </div>
+                <div class="rent-summary-row" style="color:#6b8b9c;font-size:0.88rem;">
+                    <span>Сервисный сбор (5%)</span>
+                    <span id="rentSummaryFee">—</span>
+                </div>
+                <div class="rent-summary-row">
+                    <span>Залог (возвращается)</span>
+                    <span id="rentSummaryDeposit">—</span>
+                </div>
                 <div class="rent-summary-row total">
+                    <span>Итого к оплате</span>
+                    <span id="rentSummaryGrandTotal">0 ₽</span>
+                </div>
+                <div class="rent-summary-row">
                     <span>Статус брони</span>
                     <span id="rentSummaryStatus">Не создана</span>
+                </div>
+                <div class="rent-summary-row">
+                    <span>Статус залога</span>
+                    <span id="rentSummaryDepositStatus">—</span>
                 </div>
             </div>
 
@@ -1597,6 +1880,109 @@
         </div>
     </div>
 
+
+    <!-- ===== Модальные окна правовых документов ===== -->
+    <div class="legal-modal-overlay" id="termsModalOverlay">
+        <div class="legal-modal">
+            <div class="legal-modal-header">
+                <div class="legal-modal-title">Условия использования площадки</div>
+                <button class="legal-modal-close" id="termsModalClose" type="button">×</button>
+            </div>
+            <div class="legal-modal-body">
+                <h3>1. Общие положения</h3>
+                <p>Настоящие Условия использования (далее — Условия) регулируют отношения между онлайн-площадкой Arenda (далее — Платформа) и пользователями, осуществляющими аренду движимого имущества через Платформу.</p>
+                <p>Использование Платформы означает полное и безоговорочное принятие настоящих Условий.</p>
+                <h3>2. Предмет услуги</h3>
+                <p>Платформа предоставляет возможность физическим лицам, индивидуальным предпринимателям и юридическим лицам размещать объявления об аренде движимого имущества и заключать договоры проката.</p>
+                <h3>3. Комиссия и расчёты</h3>
+                <ol>
+                    <li>Платформа взимает комиссию 20% от цены аренды за день, устанавливаемой арендодателем. Комиссия включается в цену, отображаемую арендатору.</li>
+                    <li>При оформлении бронирования взимается дополнительный сервисный сбор 5% от итоговой суммы аренды.</li>
+                    <li>Залог устанавливается арендодателем и возвращается арендатору после подтверждения возврата имущества в надлежащем состоянии.</li>
+                </ol>
+                <h3>4. Права и обязанности пользователей</h3>
+                <ol>
+                    <li>Арендодатель обязуется предоставлять достоверную информацию об имуществе и обеспечивать его передачу в исправном состоянии.</li>
+                    <li>Арендатор обязуется использовать имущество по назначению и возвращать его в состоянии не хуже исходного.</li>
+                    <li>Обе стороны обязуются подписывать договор аренды с использованием демонстрационной ЭЦП до начала оплаты.</li>
+                </ol>
+                <h3>5. Ответственность</h3>
+                <p>Платформа выступает посредником и не несёт ответственности за ненадлежащее исполнение договора аренды его сторонами. Споры между сторонами разрешаются в соответствии с действующим законодательством РФ.</p>
+                <h3>6. Заключительные положения</h3>
+                <p>Платформа оставляет за собой право изменять настоящие Условия с уведомлением пользователей. Продолжение использования Платформы после изменений означает согласие с обновлёнными Условиями.</p>
+            </div>
+            <div class="legal-modal-footer">
+                <button class="btn-primary" id="termsModalAccept" type="button">Понятно</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="legal-modal-overlay" id="privacyModalOverlay">
+        <div class="legal-modal">
+            <div class="legal-modal-header">
+                <div class="legal-modal-title">Соглашение на обработку персональных данных</div>
+                <button class="legal-modal-close" id="privacyModalClose" type="button">×</button>
+            </div>
+            <div class="legal-modal-body">
+                <h3>1. Оператор персональных данных</h3>
+                <p>Оператором персональных данных является онлайн-площадка Arenda, действующая в соответствии с Федеральным законом № 152-ФЗ «О персональных данных».</p>
+                <h3>2. Состав персональных данных</h3>
+                <p>В ходе регистрации и использования Платформы могут обрабатываться следующие персональные данные:</p>
+                <ul>
+                    <li>Фамилия, имя, отчество</li>
+                    <li>Адрес электронной почты и номер телефона</li>
+                    <li>Серия и номер паспорта (для физических лиц)</li>
+                    <li>ИНН, КПП, ОГРН/ОГРНИП (для ИП и юридических лиц)</li>
+                    <li>Сведения о заключённых договорах аренды</li>
+                </ul>
+                <h3>3. Цели обработки</h3>
+                <ol>
+                    <li>Идентификация пользователей и обеспечение работы Платформы.</li>
+                    <li>Заключение и исполнение договоров аренды между пользователями.</li>
+                    <li>Формирование договоров с использованием демонстрационной ЭЦП.</li>
+                    <li>Направление уведомлений, связанных с бронированиями и платежами.</li>
+                </ol>
+                <h3>4. Передача данных третьим лицам</h3>
+                <p>Персональные данные не передаются третьим лицам без согласия субъекта, за исключением случаев, предусмотренных законодательством РФ.</p>
+                <h3>5. Хранение и защита</h3>
+                <p>Данные хранятся на защищённых серверах. Платформа принимает технические и организационные меры для защиты персональных данных от несанкционированного доступа.</p>
+                <h3>6. Права субъекта данных</h3>
+                <p>Вы вправе запросить доступ к своим данным, их исправление или удаление, направив запрос через форму обратной связи на Платформе.</p>
+                <h3>7. Срок действия согласия</h3>
+                <p>Настоящее согласие действует с момента регистрации до удаления аккаунта пользователем или истечения 5 лет с последней активности.</p>
+            </div>
+            <div class="legal-modal-footer">
+                <button class="btn-primary" id="privacyModalAccept" type="button">Понятно</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Модальное окно передачи / возврата / СБП-возврата / отказа ===== -->
+    <div class="handover-overlay" id="handoverOverlay">
+        <div class="handover-modal">
+            <div class="handover-modal-title" id="handoverModalTitle">Подтверждение</div>
+            <div class="handover-modal-sub" id="handoverModalSub"></div>
+            <!-- Поле загрузки фото (показывается если нужно) -->
+            <div id="handoverPhotoSection">
+                <label class="handover-photo-label" for="handoverPhotoInput">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                    <span id="handoverPhotoLabelText">Прикрепить фото товара (обязательно)</span>
+                </label>
+                <input type="file" id="handoverPhotoInput" accept="image/*" style="display:none">
+                <img class="handover-photo-preview" id="handoverPhotoPreview" alt="Предпросмотр фото">
+                <div class="handover-photo-name" id="handoverPhotoName"></div>
+            </div>
+            <!-- Текстовое поле (для возврата/отказа) -->
+            <div id="handoverReasonSection" style="display:none">
+                <textarea class="handover-reason-input" id="handoverReasonInput" placeholder="Опишите причину..."></textarea>
+            </div>
+            <div class="handover-actions">
+                <button class="btn-primary" id="handoverConfirmBtn" type="button">Подтвердить</button>
+                <button class="btn-outline" id="handoverCancelBtn" type="button">Отмена</button>
+            </div>
+        </div>
+    </div>
+
     <div class="contract-modal-overlay" id="contractModalOverlay">
         <div class="contract-modal">
             <div id="contractModalContent"></div>
@@ -1628,6 +2014,153 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         const API_BASE = '/api';
+
+        /* ══════════════════════════════════════════════════════
+           Клиентская валидация реквизитов (ИНН, ОГРНИП, КПП)
+           Зеркалит логику serializers.py — ошибки видны до запроса к API
+        ══════════════════════════════════════════════════════ */
+
+        function innCheckDigit10(inn) {
+            const k = [2,4,10,3,5,9,4,6,8];
+            const s = k.reduce((acc, w, i) => acc + w * +inn[i], 0);
+            return (s % 11 % 10) === +inn[9];
+        }
+        function innCheckDigit12(inn) {
+            const k1 = [7,2,4,10,3,5,9,4,6,8];
+            const k2 = [3,7,2,4,10,3,5,9,4,6,8];
+            const n11 = k1.reduce((a,w,i)=>a+w*+inn[i],0) % 11 % 10;
+            const n12 = k2.reduce((a,w,i)=>a+w*+inn[i],0) % 11 % 10;
+            return n11 === +inn[10] && n12 === +inn[11];
+        }
+
+        /**
+         * Проверяет ИНН.
+         * @param {string} val
+         * @param {'legal'|'entrepreneur'|'individual'|'any'} type
+         * @returns {string|null} — строка ошибки или null если всё ок
+         */
+        function validateInnClient(val, type = 'any') {
+            if (!val) return null;
+            if (!/^\d+$/.test(val)) return 'ИНН должен содержать только цифры.';
+            if (type === 'legal') {
+                if (val.length !== 10) return 'ИНН юридического лица должен содержать ровно 10 цифр.';
+                if (!innCheckDigit10(val)) return 'ИНН юридического лица не прошёл проверку контрольной цифры. Проверьте правильность ввода.';
+            } else if (type === 'entrepreneur') {
+                if (val.length !== 12) return 'ИНН ИП должен содержать ровно 12 цифр.';
+                if (!innCheckDigit12(val)) return 'ИНН ИП не прошёл проверку контрольных цифр. Проверьте правильность ввода.';
+            } else {
+                if (val.length === 10) { if (!innCheckDigit10(val)) return 'ИНН (10 цифр) не прошёл проверку контрольной цифры.'; }
+                else if (val.length === 12) { if (!innCheckDigit12(val)) return 'ИНН (12 цифр) не прошёл проверку контрольных цифр.'; }
+                else return 'ИНН должен содержать 10 или 12 цифр.';
+            }
+            return null;
+        }
+
+        /**
+         * Проверяет ОГРНИП (15 цифр, контрольная цифра = base % 13 % 10).
+         * @returns {string|null}
+         */
+        function validateOgrnipClient(val) {
+            if (!val) return null;
+            if (!/^\d{15}$/.test(val)) return 'ОГРНИП должен содержать ровно 15 цифр.';
+            const base = BigInt(val.slice(0, 14));
+            const check = Number(base % 13n % 10n);
+            if (check !== +val[14]) return 'ОГРНИП не прошёл проверку контрольной цифры. Проверьте правильность ввода.';
+            return null;
+        }
+
+        /**
+         * Проверяет КПП (9 символов: 4 цифры + 2 знака + 3 цифры).
+         * @returns {string|null}
+         */
+        function validateKppClient(val) {
+            if (!val) return null;
+            if (!/^\d{4}[\dA-Za-z]{2}\d{3}$/.test(val)) {
+                return 'КПП должен содержать 9 символов формата NNNNPPXXX (4 цифры кода ФНС + 2 знака причины + 3 цифры).';
+            }
+            return null;
+        }
+
+        /* ══════════════════════════════════════════════════════
+           fillByInn — универсальная функция для кнопки «Заполнить по ИНН»
+           ctx: 'reg' (форма регистрации) | 'profile' (форма профиля)
+           type: 'entrepreneur' | 'legal'
+        ══════════════════════════════════════════════════════ */
+
+        async function fillByInn(ctx, type) {
+            const innInput = document.getElementById(ctx === 'reg' ? 'regInn' : 'inn');
+            const statusEl = document.getElementById(ctx === 'reg' ? 'regInnStatus' : 'profileInnStatus');
+            const btn = document.getElementById(ctx === 'reg' ? 'regFillByInnBtn' : 'profileFillByInnBtn');
+
+            if (!innInput || !statusEl || !btn) return;
+
+            const inn = innInput.value.trim();
+            if (!inn) {
+                showInnStatus(statusEl, 'Введите ИНН в поле выше, затем нажмите кнопку.', 'err');
+                return;
+            }
+
+            // Предварительная клиентская проверка
+            const preErr = validateInnClient(inn, type);
+            if (preErr) {
+                showInnStatus(statusEl, '⚠️ По результатам проверки вы ввели некорректные данные: ' + preErr, 'err');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Поиск...';
+            showInnStatus(statusEl, 'Запрашиваю данные из реестра...', 'ok');
+
+            try {
+                const res = await fetch(`${API_BASE}/users/fill-by-inn/?inn=${encodeURIComponent(inn)}`);
+                const data = await res.json();
+
+                if (!res.ok) {
+                    showInnStatus(statusEl, '❌ ' + (data.error || 'Организация не найдена. Проверьте ИНН.'), 'err');
+                    return;
+                }
+
+                if (data.type !== type) {
+                    const foundType = data.type === 'legal' ? 'юридическое лицо' : 'ИП';
+                    const expectedType = type === 'legal' ? 'Юридическое лицо' : 'ИП';
+                    showInnStatus(statusEl, `❌ По результатам проверки введённый ИНН принадлежит ${foundType}, а не ${expectedType}. Проверьте ИНН или смените тип пользователя.`, 'err');
+                    return;
+                }
+
+                // Заполняем поля
+                if (type === 'entrepreneur') {
+                    const nameId = ctx === 'reg' ? 'regEntrepreneurName' : 'entrepreneurName';
+                    const ogrnipId = ctx === 'reg' ? 'regOgrnip' : 'ogrnip';
+                    if (data.data.entrepreneur_name) setFieldValue(nameId, data.data.entrepreneur_name);
+                    if (data.data.inn) setFieldValue(ctx === 'reg' ? 'regInn' : 'inn', data.data.inn);
+                    if (data.data.ogrnip) setFieldValue(ogrnipId, data.data.ogrnip);
+                    showInnStatus(statusEl, '✅ Данные ИП найдены и заполнены автоматически. Проверьте и при необходимости скорректируйте.', 'ok');
+                } else {
+                    const nameId = ctx === 'reg' ? 'regCompanyName' : 'companyName';
+                    const kppId  = ctx === 'reg' ? 'regKpp' : 'kpp';
+                    if (data.data.company_name) setFieldValue(nameId, data.data.company_name);
+                    if (data.data.inn) setFieldValue(ctx === 'reg' ? 'regInn' : 'inn', data.data.inn);
+                    if (data.data.kpp) setFieldValue(kppId, data.data.kpp);
+                    showInnStatus(statusEl, '✅ Данные организации найдены и заполнены автоматически. Проверьте и при необходимости скорректируйте.', 'ok');
+                }
+            } catch (err) {
+                showInnStatus(statusEl, '❌ Ошибка подключения к серверу. Попробуйте позже.', 'err');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔍 Заполнить по ИНН';
+            }
+        }
+
+        function showInnStatus(el, msg, kind) {
+            el.textContent = msg;
+            el.className = 'inn-status-msg ' + (kind === 'ok' ? 'inn-ok' : 'inn-err');
+            el.style.display = '';
+        }
+
+        function setFieldValue(id, value) {
+            const el = document.getElementById(id);
+            if (el) el.value = value;
+        }
         const WS_BASE = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws`;
 
         const CATEGORIES = [
@@ -1659,6 +2192,7 @@
         let currentPage = 1;
         let totalPages = 1;
         let currentCategory = 'all';
+        let currentSearchQuery = '';
         let availabilityFilterMode = 'all';
         let availabilityFilterStart = '';
         let availabilityFilterEnd = '';
@@ -2243,6 +2777,7 @@
                     </div>
                     <div class="item-preview-panel">
                         <div class="item-preview-price">${formatPrice(getDisplayPrice(item))} / день</div>
+                        <div style="font-size:0.85rem;color:#5a8090;margin-top:4px;">${Number(item.deposit) > 0 ? `Залог: ${formatPrice(Number(item.deposit))}` : 'Без залога'}</div>
                         ${actionButtons}
                         <div class="item-preview-meta">
                             <div><strong>Владелец:</strong> ${escapeHtml(item.owner_username || 'Не указан')}</div>
@@ -2402,6 +2937,18 @@
                 unpaid: 'Не оплачено',
                 pending: 'Ожидает оплаты',
                 paid: 'Оплачено',
+                failed: 'Ошибка оплаты'
+            };
+            return map[status] || '—';
+        }
+
+        function formatDepositStatus(status) {
+            const map = {
+                not_required: 'Не требуется',
+                unpaid: 'Не оплачен',
+                pending: 'Ожидает оплаты',
+                paid: '✅ Оплачен',
+                returned: '↩ Возвращён',
                 failed: 'Ошибка оплаты'
             };
             return map[status] || '—';
@@ -3397,14 +3944,39 @@
             const startDate = document.getElementById('rentStartDate')?.value;
             const endDate = document.getElementById('rentEndDate')?.value;
             const days = calculateRentalDays(startDate, endDate);
-            const pricePerDay = getDisplayPrice(currentRentalItem);
-            const total = days * pricePerDay;
+
+            // Базовая цена арендодателя (без наценки)
+            const basePricePerDay = Number(currentRentalItem?.price_per_day || 0);
+            // Наценка платформы 20% при создании объявления (уже учтена в price_with_markup)
+            const platformMarkupRate = 0.20;
+            const pricePerDayWithMarkup = Math.round(basePricePerDay * (1 + platformMarkupRate) * 100) / 100;
+            const markupAmount = Math.round(basePricePerDay * platformMarkupRate * days * 100) / 100;
+            const rentAmountBase = basePricePerDay * days;                // чистая аренда
+            const rentAmountWithMarkup = pricePerDayWithMarkup * days;    // с наценкой платформы
+
+            // Комиссия 5% при бронировании (берётся от суммы аренды с наценкой)
+            const bookingFeeRate = 0.05;
+            const bookingFee = Math.round(rentAmountWithMarkup * bookingFeeRate * 100) / 100;
+
+            // Залог — берём из объявления, НЕ добавляем наценку
+            const deposit = Number(currentRentalItem?.deposit ?? 0);
+
+            // Итого к оплате = аренда с наценкой + комиссия бронирования + залог
+            const total = rentAmountWithMarkup + bookingFee + deposit;
+
+            // Если бронирование уже создано — используем total_price с сервера
+            const serverTotal = currentBooking?.total_price ? Number(currentBooking.total_price) : null;
 
             document.getElementById('rentSummaryItem').textContent = currentRentalItem?.title || currentRentalItem?.name || '—';
-            document.getElementById('rentSummaryPrice').textContent = `${formatPrice(pricePerDay)} / день`;
+            document.getElementById('rentSummaryPrice').textContent = `${formatPrice(pricePerDayWithMarkup)} / день`;
             document.getElementById('rentSummaryDays').textContent = String(days);
-            document.getElementById('rentSummaryTotal').textContent = formatPrice(total);
+            document.getElementById('rentSummaryMarkup').textContent = `включает ${formatPrice(Math.round(basePricePerDay * platformMarkupRate * 100) / 100)} (20% платформы)`;
+            document.getElementById('rentSummaryTotal').textContent = formatPrice(rentAmountWithMarkup);
+            document.getElementById('rentSummaryFee').textContent = `+${formatPrice(bookingFee)} (5% за бронирование)`;
+            document.getElementById('rentSummaryDeposit').textContent = deposit > 0 ? formatPrice(deposit) : '0 ₽ (без залога)';
+            document.getElementById('rentSummaryGrandTotal').textContent = formatPrice(serverTotal !== null ? serverTotal : total);
             document.getElementById('rentSummaryStatus').textContent = formatBookingStatus(currentBooking?.status || '');
+            document.getElementById('rentSummaryDepositStatus').textContent = formatDepositStatus(currentBooking?.deposit_status || '');
         }
 
         function hasSignedCurrentBookingContract() {
@@ -3441,11 +4013,16 @@
         }
 
         function applyCurrentBookingRentalMessage() {
-            if (currentBooking?.status === 'confirmed' && currentBooking?.payment_status === 'pending') {
+            const b = currentBooking;
+            if (!b) { setRentModalMessage('', ''); return; }
+
+            if (b.status === 'confirmed' && b.payment_status === 'paid') {
+                setRentModalMessage('success', '✅ Оплата подтверждена. Ожидайте передачи товара.');
+            } else if (b.status === 'confirmed' && b.payment_status === 'pending') {
                 setRentModalMessage('info', 'Бронь подтверждена. Можно перейти к оплате через СБП.');
-            } else if (currentBooking?.status === 'confirmed' && !isCurrentBookingContractFullySigned()) {
+            } else if (b.status === 'confirmed' && !isCurrentBookingContractFullySigned()) {
                 setRentModalMessage('info', 'Бронь подтверждена. Сначала обе стороны должны подписать договор с помощью ЭЦП, затем станет доступна оплата по СБП.');
-            } else if (currentBooking?.status === 'pending') {
+            } else if (b.status === 'pending') {
                 setRentModalMessage('info', 'У вас уже есть заявка по этому товару на выбранные даты. Оплата станет доступна после подтверждения владельцем.');
             } else {
                 setRentModalMessage('', '');
@@ -3494,11 +4071,9 @@
             if (createBookingBtn) {
                 createBookingBtn.disabled = !!booking && ['pending', 'confirmed'].includes(booking.status);
             }
-
             if (openContractBtn) {
                 openContractBtn.disabled = !canOpenContract;
             }
-
             if (startPaymentBtn) {
                 startPaymentBtn.classList.toggle('is-hidden', !canProceedToPayment);
                 startPaymentBtn.disabled = !canProceedToPayment || booking?.payment_status === 'paid';
@@ -3652,7 +4227,94 @@
 
             document.getElementById('rentModalOverlay')?.classList.add('active');
 
+            initPickupWidget();
             applyCurrentBookingRentalMessage();
+        }
+
+
+        // --- Виджет самовывоза (поиск через API → DaData → PostgreSQL) ---
+        let selectedPickupOffice = null;
+        let pickupSearchTimer = null;
+
+        function renderPickupList(offices, loading = false, error = false) {
+            const list = document.getElementById('pickupList');
+            if (!list) return;
+
+            if (loading) {
+                list.innerHTML = '<div class="pickup-empty">🔍 Поиск отделений...</div>';
+                return;
+            }
+            if (error) {
+                list.innerHTML = '<div class="pickup-empty">❌ Ошибка загрузки. Попробуйте ещё раз.</div>';
+                return;
+            }
+            if (!offices || !offices.length) {
+                list.innerHTML = '<div class="pickup-empty">Введите город или адрес для поиска</div>';
+                return;
+            }
+
+            list.innerHTML = offices.map(o => `
+                <div class="pickup-item ${selectedPickupOffice?.postal_code === o.postal_code ? 'selected' : ''}"
+                     data-code="${o.postal_code}">
+                    <div class="pickup-item-radio"></div>
+                    <div class="pickup-item-info">
+                        <span class="pickup-item-index">${o.postal_code}</span>
+                        <div class="pickup-item-addr">${o.address_str}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            list.querySelectorAll('.pickup-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    const code = el.dataset.code;
+                    selectedPickupOffice = (window._pickupOfficesCache || []).find(o => o.postal_code === code) || null;
+                    renderPickupList(window._pickupOfficesCache || []);
+                    updatePickupSelectedInfo();
+                });
+            });
+        }
+
+        function updatePickupSelectedInfo() {
+            const info = document.getElementById('pickupSelectedInfo');
+            if (!info) return;
+            if (selectedPickupOffice) {
+                info.textContent = `✅ Выбрано: ${selectedPickupOffice.postal_code} — ${selectedPickupOffice.address_str}`;
+                info.classList.add('visible');
+            } else {
+                info.classList.remove('visible');
+            }
+        }
+
+        async function searchPickupOffices(query) {
+            if (!query || query.length < 2) {
+                renderPickupList([]);
+                return;
+            }
+            renderPickupList([], true);
+            try {
+                const resp = await apiRequest(`/post-offices/search/?query=${encodeURIComponent(query)}`);
+                if (!resp.ok) throw new Error();
+                const data = await resp.json();
+                window._pickupOfficesCache = data;
+                renderPickupList(data);
+            } catch {
+                renderPickupList([], false, true);
+            }
+        }
+
+        function initPickupWidget() {
+            selectedPickupOffice = null;
+            window._pickupOfficesCache = [];
+            renderPickupList([]);
+            updatePickupSelectedInfo();
+            const searchInput = document.getElementById('pickupSearchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.addEventListener('input', () => {
+                    clearTimeout(pickupSearchTimer);
+                    pickupSearchTimer = setTimeout(() => searchPickupOffices(searchInput.value.trim()), 400);
+                });
+            }
         }
 
         async function createBookingRequest() {
@@ -3672,6 +4334,11 @@
                 return;
             }
 
+            if (!selectedPickupOffice) {
+                setRentModalMessage('error', 'Выберите место самовывоза (отделение Почты России).');
+                return;
+            }
+
             if (currentBooking && ['pending', 'confirmed'].includes(currentBooking.status)) {
                 setRentModalMessage('info', 'Заявка по этому товару уже существует.');
                 return;
@@ -3683,7 +4350,10 @@
                     body: JSON.stringify({
                         item: currentRentalItem.id,
                         start_date: startDate,
-                        end_date: endDate
+                        end_date: endDate,
+                        pickup_point: selectedPickupOffice
+                            ? `${selectedPickupOffice.postal_code} — ${selectedPickupOffice.address_str}`
+                            : ''
                     })
                 });
 
@@ -3761,11 +4431,53 @@
                 }
 
                 const data = await response.json().catch(() => ({}));
+                currentPaymentType = 'rent';
                 fillPaymentBox(data);
                 setRentModalMessage('success', 'Открылось демо-окно СБП. Нажмите "Оплатить", чтобы завершить оплату.');
                 openSbpDemoModal();
             } catch (error) {
                 setRentModalMessage('error', 'Ошибка подключения при запуске оплаты.');
+            }
+        }
+
+        // 'rent' | 'deposit' — отслеживает какой платёж сейчас в SBP-демо модале
+        let currentPaymentType = 'rent';
+
+        async function startDepositPayment() {
+            const booking = await refreshCurrentBookingState();
+
+            if (!booking) {
+                setRentModalMessage('error', 'Бронь не найдена.');
+                return;
+            }
+            if (booking.payment_status !== 'paid') {
+                setRentModalMessage('info', 'Сначала оплатите аренду.');
+                return;
+            }
+            if (booking.deposit_status === 'paid') {
+                setRentModalMessage('success', 'Залог уже оплачен.');
+                return;
+            }
+
+            try {
+                const response = await apiRequest(`/bookings/${booking.id}/start_deposit/`, {
+                    method: 'POST',
+                    body: JSON.stringify({})
+                });
+
+                if (!response.ok) {
+                    const message = await readApiError(response, 'Не удалось начать оплату залога.');
+                    setRentModalMessage('error', message);
+                    return;
+                }
+
+                const data = await response.json().catch(() => ({}));
+                currentPaymentType = 'deposit';
+                fillPaymentBox(data);
+                setRentModalMessage('success', 'Откройте демо-окно СБП и подтвердите оплату залога.');
+                openSbpDemoModal();
+            } catch {
+                setRentModalMessage('error', 'Ошибка подключения при запуске оплаты залога.');
             }
         }
 
@@ -3827,6 +4539,45 @@
             }
         }
 
+        async function confirmDepositPayment() {
+            const booking = await refreshCurrentBookingState();
+            const demoMessageBox = document.getElementById('sbpDemoMessage');
+            const demoPayButton = document.getElementById('sbpDemoPayBtn');
+
+            if (!booking) {
+                setRentModalMessage('error', 'Бронь не найдена.');
+                if (demoPayButton) { demoPayButton.disabled = false; demoPayButton.textContent = 'Оплатить'; }
+                return;
+            }
+
+            try {
+                const response = await apiRequest(`/bookings/${booking.id}/confirm_deposit/`, {
+                    method: 'POST',
+                    body: JSON.stringify({})
+                });
+
+                if (!response.ok) {
+                    const message = await readApiError(response, 'Не удалось подтвердить оплату залога.');
+                    setRentModalMessage('error', message);
+                    if (demoMessageBox) demoMessageBox.innerHTML = `<div class="rent-error">${escapeHtml(message)}</div>`;
+                    if (demoPayButton) { demoPayButton.disabled = false; demoPayButton.textContent = 'Оплатить'; }
+                    return;
+                }
+
+                const data = await response.json().catch(() => ({}));
+                currentBooking = data;
+                currentPaymentType = 'rent';
+                updateRentalSummary();
+                updateRentalActionButtons();
+                resetPaymentBox();
+                closeSbpDemoModal();
+                applyCurrentBookingRentalMessage();
+            } catch {
+                setRentModalMessage('error', 'Ошибка подключения при подтверждении залога.');
+                if (demoPayButton) { demoPayButton.disabled = false; demoPayButton.textContent = 'Оплатить'; }
+            }
+        }
+
         async function loadProducts(page = 1) {
             const container = document.getElementById('productsContainer');
             if (!container) return;
@@ -3837,6 +4588,9 @@
                 const params = new URLSearchParams({ page: String(page) });
                 if (currentCategory !== 'all') {
                     params.set('category', String(currentCategory));
+                }
+                if (currentSearchQuery) {
+                    params.set('search', currentSearchQuery);
                 }
 
                 const response = await apiRequest(`/items/?${params.toString()}`);
@@ -3899,6 +4653,7 @@
                         <div class="card-title">${escapeHtml(product.title || product.name || 'Без названия')}</div>
                         ${product.description ? `<div class="card-description">${escapeHtml(product.description.substring(0, 80))}${product.description.length > 80 ? '...' : ''}</div>` : ''}
                         <div class="card-price">${getDisplayPrice(product).toLocaleString('ru-RU')} ₽/<small>день</small></div>
+                        <div style="font-size:0.82rem;color:#5a8090;margin:-10px 0 10px;">${Number(product.deposit) > 0 ? `Залог: ${formatPrice(Number(product.deposit))}` : 'Без залога'}</div>
                         <button class="card-btn" data-id="${product.id}" data-action="open">Открыть</button>
                         ${!isOwner ? `<button class="card-btn card-chat-btn" data-id="${product.id}" data-owner="${product.owner}" data-action="chat">💬 Написать продавцу</button>` : ''}
                         ${!isOwner ? `<button class="card-btn" data-id="${product.id}" data-owner="${product.owner}" data-title="${escapeHtml(product.title || product.name || 'Товар')}" data-price="${getDisplayPrice(product)}" data-action="rent">Арендовать</button>` : ''}
@@ -3958,17 +4713,15 @@
                             return;
                         }
 
+                        // Берём полный объект с сервера — в нём есть deposit, price_per_day (базовая), и все поля
                         const sourceItem = allProducts.find(item => String(item.id) === String(productId));
-
-                        const rentalItem = {
-                            id: productId,
-                            owner: ownerId,
-                            title: btn.dataset.title,
-                            price_per_day: Number(btn.dataset.price || 0),  // уже содержит наценку
-                            booked_ranges: sourceItem?.booked_ranges || []
-                        };
-
-                        await openRentalModal(rentalItem);
+                        if (sourceItem) {
+                            await openRentalModal(sourceItem);
+                        } else {
+                            // Фоллбэк: загрузить с сервера
+                            const freshItem = await getItemById(productId, { preferFresh: true });
+                            if (freshItem) await openRentalModal(freshItem);
+                        }
                     }
                 };
             });
@@ -4032,9 +4785,10 @@
                 }
 
                 const apiData = {
-                    title: formData.name,
+                    title: formData.name || formData.title,
                     description: formData.description,
-                    price_per_day: formData.price_per_day
+                    price_per_day: formData.price_per_day,
+                    deposit: Number(formData.deposit ?? 0),
                 };
 
                 if (formData.category && formData.category !== '') {
@@ -4485,17 +5239,7 @@
                                         </div>
                                         <div class="booking-request-status">${formatBookingStatus(booking.status)}</div>
                                     </div>
-                                    ${booking.status === 'pending' ? `
-                                        <div class="booking-request-actions">
-                                            <button class="btn-primary" data-action="confirm-booking" data-id="${booking.id}">Подтвердить</button>
-                                            <button class="btn-outline" data-action="cancel-booking" data-id="${booking.id}">Отклонить</button>
-                                        </div>
-                                    ` : ''}
-                                    ${canUseContractForBooking(booking) ? `
-                                        <div class="booking-request-actions">
-                                            <button class="btn-outline" data-action="open-contract" data-id="${booking.id}" data-scope="incoming">Договор / ЭЦП</button>
-                                        </div>
-                                    ` : ''}
+                                    ${renderOwnerBookingActions(booking)}
                                 </div>
                             `).join('')}
                         </div>
@@ -4518,12 +5262,7 @@
                                         </div>
                                         <div class="booking-request-status">${formatBookingStatus(booking.status)}</div>
                                     </div>
-                                    <div class="booking-request-actions">
-                                        <button class="btn-outline" data-action="open-rental-item" data-id="${booking.id}">Открыть объявление</button>
-                                        ${canUseContractForBooking(booking) ? `<button class="btn-outline" data-action="open-contract" data-id="${booking.id}" data-scope="outgoing">Договор / ЭЦП</button>` : ''}
-                                        ${canUseContractForBooking(booking) ? `<button class="btn-outline" data-action="download-contract-pdf" data-id="${booking.id}">Скачать PDF договора</button>` : ''}
-                                        ${canLeaveReviewForBooking(booking) ? `<button class="btn-primary" data-action="leave-review" data-id="${booking.id}">Оставить отзыв</button>` : ''}
-                                    </div>
+                                    ${renderRenterBookingActions(booking)}
                                 </div>
                             `).join('')}
                         </div>
@@ -4532,68 +5271,7 @@
             `;
 
             document.getElementById('backToMainFromBookings')?.addEventListener('click', () => showMainPage());
-
-            document.querySelectorAll('[data-action="confirm-booking"]').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    const result = await confirmIncomingBooking(btn.dataset.id);
-                    if (result.success) {
-                        await showIncomingBookingsPage('<div class="success-message">✅ Заявка подтверждена. Теперь арендатор сможет подписать договор и перейти к оплате.</div>');
-                    } else {
-                        const msg = document.getElementById('bookingsMessage');
-                        const errorMessage = extractApiErrorMessage(result.data, 'Не удалось подтвердить заявку.');
-                        msg.innerHTML = `<div class="error-message-box">❌ ${escapeHtml(errorMessage)}</div>`;
-                    }
-                });
-            });
-
-            document.querySelectorAll('[data-action="cancel-booking"]').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    const result = await cancelIncomingBooking(btn.dataset.id);
-                    if (result.success) {
-                        await showIncomingBookingsPage('<div class="success-message">✅ Заявка отклонена.</div>');
-                    } else {
-                        const msg = document.getElementById('bookingsMessage');
-                        const errorMessage = extractApiErrorMessage(result.data, 'Не удалось отклонить заявку.');
-                        msg.innerHTML = `<div class="error-message-box">❌ ${escapeHtml(errorMessage)}</div>`;
-                    }
-                });
-            });
-
-            document.querySelectorAll('[data-action="open-rental-item"]').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    const booking = outgoingBookings.find(entry => String(entry.id) === String(btn.dataset.id));
-                    if (booking) {
-                        await openReviewFlowForBooking(booking);
-                    }
-                });
-            });
-
-            document.querySelectorAll('[data-action="leave-review"]').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    const booking = outgoingBookings.find(entry => String(entry.id) === String(btn.dataset.id));
-                    if (booking) {
-                        await openReviewFlowForBooking(booking);
-                    }
-                });
-            });
-
-            document.querySelectorAll('[data-action="open-contract"]').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    const bookingId = String(btn.dataset.id);
-                    const scope = btn.dataset.scope;
-                    const sourceList = scope === 'incoming' ? incomingBookings : outgoingBookings;
-                    const booking = sourceList.find(entry => String(entry.id) === bookingId);
-                    if (booking) {
-                        await openContractFlowForBooking(booking);
-                    }
-                });
-            });
-
-            document.querySelectorAll('[data-action="download-contract-pdf"]').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    await downloadContractPdfByBookingId(btn.dataset.id);
-                });
-            });
+            attachHandoverListeners(incomingBookings, outgoingBookings);
         }
 
         function getBookingSortDate(booking) {
@@ -4638,6 +5316,397 @@
         function canUseContractForBooking(booking) {
             return ['confirmed', 'completed'].includes(booking?.status);
         }
+
+        // ─── Renders action buttons for the OWNER (арендодатель) ───────────
+        function renderOwnerBookingActions(booking) {
+            const parts = [];
+
+            if (booking.status === 'pending') {
+                parts.push(`
+                    <div class="booking-request-actions">
+                        <button class="btn-primary" data-action="confirm-booking" data-id="${booking.id}">Подтвердить</button>
+                        <button class="btn-outline" data-action="cancel-booking" data-id="${booking.id}">Отклонить</button>
+                    </div>`);
+            }
+
+            const actionBtns = [];
+            if (canUseContractForBooking(booking)) {
+                actionBtns.push(`<button class="btn-outline" data-action="open-contract" data-id="${booking.id}" data-scope="incoming">Договор / ЭЦП</button>`);
+                actionBtns.push(`<button class="btn-outline" data-action="download-contract-pdf" data-id="${booking.id}">Скачать PDF</button>`);
+            }
+            if (booking.status === 'confirmed' && booking.payment_status === 'paid'
+                    && booking.renter_pickup_confirmed && !booking.owner_return_confirmed) {
+                actionBtns.push(`<button class="btn-primary" data-action="owner-confirm-return" data-id="${booking.id}">📦 Подтвердить возврат товара</button>`);
+            }
+            if (booking.return_status === 'requested') {
+                actionBtns.push(`<button class="btn-primary" data-action="approve-refund" data-id="${booking.id}">💰 Одобрить СБП-возврат</button>`);
+                actionBtns.push(`<button class="btn-danger" data-action="reject-refund" data-id="${booking.id}">Отклонить возврат</button>`);
+            }
+
+            const badges = getHandoverBadges(booking);
+            const actionsHtml = actionBtns.length
+                ? `<div class="booking-request-actions">${actionBtns.join('')}</div>`
+                : '';
+
+            return badges + parts.join('') + actionsHtml;
+        }
+
+        // ─── Renders action buttons for the RENTER (арендатор) ─────────────
+        function renderRenterBookingActions(booking) {
+            const btns = [];
+
+            btns.push(`<button class="btn-outline" data-action="open-rental-item" data-id="${booking.id}">Открыть объявление</button>`);
+
+            if (canUseContractForBooking(booking)) {
+                btns.push(`<button class="btn-outline" data-action="open-contract" data-id="${booking.id}" data-scope="outgoing">Договор / ЭЦП</button>`);
+                btns.push(`<button class="btn-outline" data-action="download-contract-pdf" data-id="${booking.id}">Скачать PDF</button>`);
+            }
+            if (booking.status === 'confirmed' && booking.payment_status === 'paid'
+                    && !booking.renter_pickup_confirmed) {
+                btns.push(`<button class="btn-primary" data-action="renter-confirm-pickup" data-id="${booking.id}">📸 Подтвердить получение товара</button>`);
+            }
+            if (booking.status === 'confirmed' && booking.payment_status === 'paid'
+                    && !booking.return_requested) {
+                btns.push(`<button class="btn-warning" data-action="renter-request-refund" data-id="${booking.id}">↩ Запросить возврат средств</button>`);
+            }
+            if (['pending', 'confirmed'].includes(booking.status) && !booking.return_requested) {
+                btns.push(`<button class="btn-danger" data-action="renter-cancel-booking" data-id="${booking.id}">Отказаться от аренды</button>`);
+            }
+            if (canLeaveReviewForBooking(booking)) {
+                btns.push(`<button class="btn-primary" data-action="leave-review" data-id="${booking.id}">Оставить отзыв</button>`);
+            }
+
+            const badges = getHandoverBadges(booking);
+            return badges + `<div class="booking-request-actions">${btns.join('')}</div>`;
+        }
+
+        // ─── Attach all handover/refund/cancel event listeners ──────────────
+        //     Call after any page render that shows booking cards.
+        function attachHandoverListeners(incomingBookings, outgoingBookings) {
+            const allBookings = [...(incomingBookings || []), ...(outgoingBookings || [])];
+
+            const findBooking = (id) => allBookings.find(b => String(b.id) === String(id));
+            const reload = (msg) => {
+                const page = document.querySelector('.bookings-page, .my-items-page');
+                if (page && page.classList.contains('my-items-page')) {
+                    showMyItemsPage().then(() => {
+                        if (msg) {
+                            const msgEl = document.getElementById('myItemsMessage');
+                            if (msgEl) msgEl.innerHTML = `<div class="success-message">${msg}</div>`;
+                        }
+                    });
+                } else {
+                    showIncomingBookingsPage(msg ? `<div class="success-message">${msg}</div>` : '');
+                }
+            };
+
+            // confirm-booking
+            document.querySelectorAll('[data-action="confirm-booking"]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const result = await confirmIncomingBooking(btn.dataset.id);
+                    if (result.success) {
+                        reload('✅ Заявка подтверждена.');
+                    } else {
+                        alert('❌ ' + extractApiErrorMessage(result.data, 'Не удалось подтвердить заявку.'));
+                    }
+                });
+            });
+
+            // cancel-booking (owner rejects)
+            document.querySelectorAll('[data-action="cancel-booking"]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const result = await cancelIncomingBooking(btn.dataset.id);
+                    if (result.success) {
+                        reload('✅ Заявка отклонена.');
+                    } else {
+                        alert('❌ ' + extractApiErrorMessage(result.data, 'Не удалось отклонить заявку.'));
+                    }
+                });
+            });
+
+            // open-contract (incoming or outgoing scope)
+            document.querySelectorAll('[data-action="open-contract"]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const booking = findBooking(btn.dataset.id);
+                    if (booking) await openContractFlowForBooking(booking);
+                });
+            });
+
+            // download-contract-pdf
+            document.querySelectorAll('[data-action="download-contract-pdf"]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    await downloadContractPdfByBookingId(btn.dataset.id);
+                });
+            });
+
+            // open-rental-item / leave-review
+            document.querySelectorAll('[data-action="open-rental-item"], [data-action="leave-review"]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const booking = findBooking(btn.dataset.id);
+                    if (booking) await openReviewFlowForBooking(booking);
+                });
+            });
+
+            // 📸 Арендатор подтверждает получение
+            document.querySelectorAll('[data-action="renter-confirm-pickup"]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const bookingId = btn.dataset.id;
+                    openHandoverModal({
+                        title: '📸 Подтверждение получения товара',
+                        sub: 'Прикрепите фото товара в момент получения. Это зафиксирует состояние вещи в начале аренды.',
+                        needPhoto: true,
+                        confirmLabel: '✅ Подтвердить получение',
+                        onConfirm: async ({ photo }) => {
+                            if (!photo) { alert('Пожалуйста, прикрепите фото товара'); return; }
+                            const resp = await confirmRenterPickup(bookingId, photo);
+                            closeHandoverModal();
+                            if (resp.ok) {
+                                reload('✅ Получение товара подтверждено!');
+                            } else {
+                                const e = await resp.json().catch(() => ({}));
+                                alert('❌ ' + extractApiErrorMessage(e, 'Не удалось подтвердить получение.'));
+                            }
+                        }
+                    });
+                });
+            });
+
+            // 📦 Арендодатель подтверждает возврат
+            document.querySelectorAll('[data-action="owner-confirm-return"]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const bookingId = btn.dataset.id;
+                    openHandoverModal({
+                        title: '📦 Подтверждение возврата товара',
+                        sub: 'Прикрепите фото товара при возврате. После подтверждения бронирование будет завершено.',
+                        needPhoto: true,
+                        confirmLabel: '✅ Подтвердить возврат',
+                        onConfirm: async ({ photo }) => {
+                            if (!photo) { alert('Пожалуйста, прикрепите фото товара'); return; }
+                            const resp = await confirmOwnerReturn(bookingId, photo);
+                            closeHandoverModal();
+                            if (resp.ok) {
+                                reload('✅ Возврат подтверждён. Бронирование завершено.');
+                            } else {
+                                const e = await resp.json().catch(() => ({}));
+                                alert('❌ ' + extractApiErrorMessage(e, 'Не удалось подтвердить возврат.'));
+                            }
+                        }
+                    });
+                });
+            });
+
+            // ↩ Арендатор запрашивает СБП-возврат
+            document.querySelectorAll('[data-action="renter-request-refund"]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const bookingId = btn.dataset.id;
+                    openHandoverModal({
+                        title: '↩ Запрос СБП-возврата',
+                        sub: 'Опишите причину возврата. Арендодатель получит уведомление и сможет одобрить или отклонить. Средства будут возвращены через СБП.',
+                        needPhoto: false,
+                        needReason: true,
+                        reasonPlaceholder: 'Причина возврата (обязательно)...',
+                        confirmLabel: '↩ Запросить возврат',
+                        confirmClass: 'btn-warning',
+                        onConfirm: async ({ reason }) => {
+                            if (!reason) { alert('Укажите причину возврата'); return; }
+                            const resp = await requestRefund(bookingId, reason);
+                            closeHandoverModal();
+                            if (resp.ok) {
+                                reload('✅ Запрос на возврат отправлен арендодателю.');
+                            } else {
+                                const e = await resp.json().catch(() => ({}));
+                                alert('❌ ' + extractApiErrorMessage(e, 'Не удалось отправить запрос.'));
+                            }
+                        }
+                    });
+                });
+            });
+
+            // 💰 Арендодатель одобряет СБП-возврат
+            document.querySelectorAll('[data-action="approve-refund"]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    if (!confirm('Одобрить СБП-возврат средств арендатору?')) return;
+                    const resp = await processRefund(btn.dataset.id, true);
+                    if (resp.ok) {
+                        reload('✅ СБП-возврат выполнен.');
+                    } else {
+                        const e = await resp.json().catch(() => ({}));
+                        alert('❌ ' + extractApiErrorMessage(e, 'Не удалось выполнить возврат.'));
+                    }
+                });
+            });
+
+            // ❌ Арендодатель отклоняет возврат
+            document.querySelectorAll('[data-action="reject-refund"]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    if (!confirm('Отклонить запрос на возврат средств?')) return;
+                    const resp = await processRefund(btn.dataset.id, false);
+                    if (resp.ok) {
+                        reload('Запрос на возврат отклонён.');
+                    } else {
+                        const e = await resp.json().catch(() => ({}));
+                        alert('❌ ' + extractApiErrorMessage(e, 'Ошибка.'));
+                    }
+                });
+            });
+
+            // ❌ Арендатор отказывается от аренды
+            document.querySelectorAll('[data-action="renter-cancel-booking"]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const bookingId = btn.dataset.id;
+                    openHandoverModal({
+                        title: '❌ Отказ от аренды',
+                        sub: 'Вы собираетесь отменить аренду. Укажите причину — это поможет арендодателю.',
+                        needPhoto: false,
+                        needReason: true,
+                        reasonPlaceholder: 'Причина отказа...',
+                        confirmLabel: 'Отказаться от аренды',
+                        confirmClass: 'btn-danger',
+                        onConfirm: async ({ reason }) => {
+                            const resp = await renterCancel(bookingId, reason);
+                            closeHandoverModal();
+                            if (resp.ok) {
+                                reload('Аренда отменена.');
+                            } else {
+                                const e = await resp.json().catch(() => ({}));
+                                alert('❌ ' + extractApiErrorMessage(e, 'Не удалось отменить аренду.'));
+                            }
+                        }
+                    });
+                });
+            });
+        }
+
+        // ===== HANDOVER / RETURN / REFUND / CANCEL HELPERS =====
+
+        function formatReturnStatus(status) {
+            const map = {
+                none: '—', requested: 'Запрошен', approved: 'Одобрен',
+                rejected: 'Отклонён', completed: 'Выполнен',
+            };
+            return map[status] || '—';
+        }
+
+        function getHandoverBadges(booking) {
+            let html = '';
+            if (booking.renter_pickup_confirmed) {
+                html += '<span class="handover-status-badge confirmed">✅ Получение подтверждено</span> ';
+            }
+            if (booking.owner_return_confirmed) {
+                html += '<span class="handover-status-badge confirmed">✅ Возврат подтверждён</span> ';
+            }
+            if (booking.return_requested && booking.return_status === 'requested') {
+                html += '<span class="handover-status-badge refund-requested">⏳ СБП-возврат запрошен</span> ';
+            }
+            if (booking.return_status === 'completed') {
+                html += '<span class="handover-status-badge refund-done">💰 СБП-возврат выполнен</span> ';
+            }
+            if (booking.return_status === 'rejected') {
+                html += '<span class="handover-status-badge" style="background:#fde8e8;color:#b03020">❌ Возврат отклонён</span> ';
+            }
+            return html ? `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">${html}</div>` : '';
+        }
+
+        // --- Handover modal controller ---
+        let handoverActiveCallback = null;
+
+        function openHandoverModal({ title, sub, needPhoto = false, needReason = false, reasonPlaceholder = 'Опишите причину...', confirmLabel = 'Подтвердить', confirmClass = 'btn-primary', onConfirm }) {
+            document.getElementById('handoverModalTitle').textContent = title;
+            document.getElementById('handoverModalSub').textContent = sub;
+            document.getElementById('handoverPhotoSection').style.display = needPhoto ? '' : 'none';
+            document.getElementById('handoverReasonSection').style.display = needReason ? '' : 'none';
+            document.getElementById('handoverReasonInput').placeholder = reasonPlaceholder;
+            document.getElementById('handoverReasonInput').value = '';
+            document.getElementById('handoverPhotoPreview').classList.remove('visible');
+            document.getElementById('handoverPhotoName').textContent = '';
+            document.getElementById('handoverPhotoInput').value = '';
+            const confirmBtn = document.getElementById('handoverConfirmBtn');
+            confirmBtn.textContent = confirmLabel;
+            confirmBtn.className = confirmClass;
+            handoverActiveCallback = onConfirm;
+            document.getElementById('handoverOverlay').classList.add('active');
+        }
+
+        function closeHandoverModal() {
+            document.getElementById('handoverOverlay').classList.remove('active');
+            handoverActiveCallback = null;
+        }
+
+        document.getElementById('handoverPhotoInput').addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+            document.getElementById('handoverPhotoName').textContent = file.name;
+            const reader = new FileReader();
+            reader.onload = e => {
+                const preview = document.getElementById('handoverPhotoPreview');
+                preview.src = e.target.result;
+                preview.classList.add('visible');
+            };
+            reader.readAsDataURL(file);
+        });
+
+
+        document.getElementById('handoverCancelBtn').addEventListener('click', closeHandoverModal);
+
+        // ── Legal modals close handlers ─────────────────────────────────
+        function closeLegalModal(overlayId) {
+            document.getElementById(overlayId)?.classList.remove('active');
+        }
+        ['termsModalClose', 'termsModalAccept'].forEach(id => {
+            document.getElementById(id)?.addEventListener('click', () => closeLegalModal('termsModalOverlay'));
+        });
+        ['privacyModalClose', 'privacyModalAccept'].forEach(id => {
+            document.getElementById(id)?.addEventListener('click', () => closeLegalModal('privacyModalOverlay'));
+        });
+        document.getElementById('termsModalOverlay')?.addEventListener('click', function(e) {
+            if (e.target === this) closeLegalModal('termsModalOverlay');
+        });
+        document.getElementById('privacyModalOverlay')?.addEventListener('click', function(e) {
+            if (e.target === this) closeLegalModal('privacyModalOverlay');
+        });
+        document.getElementById('handoverOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeHandoverModal();
+        });
+
+        document.getElementById('handoverConfirmBtn').addEventListener('click', async function() {
+            if (!handoverActiveCallback) return;
+            const photoInput = document.getElementById('handoverPhotoInput');
+            const reason = document.getElementById('handoverReasonInput').value.trim();
+            const photo = photoInput.files[0] || null;
+            this.disabled = true;
+            this.textContent = 'Загрузка...';
+            try {
+                await handoverActiveCallback({ photo, reason });
+            } finally {
+                this.disabled = false;
+            }
+        });
+
+        // --- API helpers ---
+        async function confirmRenterPickup(bookingId, photo) {
+            const formData = new FormData();
+            if (photo) formData.append('photo', photo);
+            return await apiRequest(`/bookings/${bookingId}/confirm_renter_pickup/`, { method: 'POST', body: formData });
+        }
+
+        async function confirmOwnerReturn(bookingId, photo) {
+            const formData = new FormData();
+            if (photo) formData.append('photo', photo);
+            return await apiRequest(`/bookings/${bookingId}/confirm_owner_return/`, { method: 'POST', body: formData });
+        }
+
+        async function requestRefund(bookingId, reason) {
+            return await apiRequest(`/bookings/${bookingId}/request_refund/`, { method: 'POST', body: JSON.stringify({ reason }) });
+        }
+
+        async function processRefund(bookingId, approved) {
+            return await apiRequest(`/bookings/${bookingId}/process_refund/`, { method: 'POST', body: JSON.stringify({ approved }) });
+        }
+
+        async function renterCancel(bookingId, reason) {
+            return await apiRequest(`/bookings/${bookingId}/renter_cancel/`, { method: 'POST', body: JSON.stringify({ reason }) });
+        }
+
 
         function formatContractStatus(status) {
             const map = {
@@ -4782,8 +5851,9 @@
                 </div>
                 <div class="contract-layout">
                     <div class="contract-document">
-                        <div class="contract-document-title">Текст договора</div>
+                        <div class="contract-document-title">📄 Договор № ${escapeHtml(contract.document_number || "—")}</div>
                         <div class="contract-document-body">${escapeHtml(contract.preview_text || '')}</div>
+                        ${contract.file_url ? `<div style="margin-top:14px;"><a class="btn-primary" style="width:100%;display:block;text-align:center;" href="${contract.file_url}" target="_blank" rel="noopener" download="dogovor-${escapeHtml(contract.document_number || 'arenda')}.pdf">📥 Скачать PDF договора</a></div>` : ''}
                     </div>
                     <div class="contract-side-panel">
                         <div class="contract-side-title">Сводка</div>
@@ -4805,7 +5875,7 @@
                             contract.my_role === 'owner' ? contract.renter_signed_at : contract.owner_signed_at,
                             contract.my_role === 'owner' ? contract.renter_signature_code : contract.owner_signature_code
                         )}
-                        ${contract.file_url ? `<a class="btn-outline contract-download-link" href="${contract.file_url}" target="_blank" rel="noopener" download>Скачать PDF договора</a>` : ''}
+                        ${contract.file_url ? `<a class="btn-outline contract-download-link" href="${contract.file_url}" target="_blank" rel="noopener" download="dogovor-${escapeHtml(contract.document_number||'arenda')}.pdf">📥 Скачать PDF</a>` : ''}
                         ${signatureForm}
                     </div>
                 </div>
@@ -4907,7 +5977,26 @@
                 booking.status === 'cancelled' ||
                 booking.end_date < today
             );
-            const totalRevenue = paidBookings.reduce((sum, booking) => sum + Number(booking.total_price || 0), 0);
+
+            // Чистая прибыль арендодателя:
+            // rent_amount — сумма аренды с 20% наценкой платформы, НО арендодатель получает
+            // только базовую цену (без 20% и без 5% сервисного сбора, без залога).
+            // Если rent_amount есть — берём его и вычитаем 20% наценку.
+            // Иначе пересчитываем из total_price: убираем deposit_amount, platform_fee.
+            const totalRevenue = paidBookings.reduce((sum, booking) => {
+                if (booking.rent_amount != null) {
+                    // rent_amount = base_price * days * 1.20 → чистая = rent_amount / 1.20
+                    const ownerNet = Number(booking.rent_amount) / 1.20;
+                    return sum + Math.round(ownerNet * 100) / 100;
+                }
+                // Fallback: total_price минус залог и 5% сбор
+                const total = Number(booking.total_price || 0);
+                const deposit = Number(booking.deposit_amount || 0);
+                const fee = Number(booking.platform_fee || 0);
+                const rentWithMarkup = total - deposit - fee;
+                const ownerNet = rentWithMarkup / 1.20;
+                return sum + Math.round(ownerNet * 100) / 100;
+            }, 0);
 
             return {
                 itemsCount: items.length,
@@ -4947,6 +6036,7 @@
                     <div class="back-button" id="backToMainFromMyItems">← Назад</div>
                     <div class="my-items-title">📦 Мои объявления</div>
                     <div class="my-items-sub">Здесь собраны ваши объявления, аренды у вас и объявления, которые арендуете вы.</div>
+                    <div id="myItemsMessage"></div>
 
                     <div class="stats-grid">
                         <div class="stat-card">
@@ -4962,8 +6052,9 @@
                             <div class="stat-card-value">${renterBookings.current.length}</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-card-label">Общая прибыль</div>
+                            <div class="stat-card-label">Чистая прибыль</div>
                             <div class="stat-card-value">${formatPrice(stats.totalRevenue)}</div>
+                            <div style="font-size:0.75rem;color:#8aacb8;margin-top:4px;">без комиссий и залога</div>
                         </div>
                     </div>
 
@@ -4989,7 +6080,8 @@
                                         </div>
                                         <div class="owner-item-title">${escapeHtml(item.title || 'Без названия')}</div>
                                         <div class="owner-item-meta">
-                                            <div>Цена: ${formatPrice(item.price_per_day || 0)} / день</div>
+                                            <div>Ваша цена: ${formatPrice(item.price_per_day || 0)} / день</div>
+                                            <div style="color:#6b8b9c;font-size:0.88rem;">Цена для арендатора: ${formatPrice(getDisplayPrice(item))} / день <span style="color:#9ab5bf;">(+20% платформа)</span></div>
                                             <div>Статус: ${formatItemStatus(item.status || 'available')}</div>
                                             <div>Броней в ожидании: ${(incomingBookings.filter(booking => String(booking.item) === String(item.id) && booking.status === 'pending')).length}</div>
                                         </div>
@@ -5019,12 +6111,7 @@
                                         </div>
                                         <div class="booking-request-status">${formatBookingStatus(booking.status)}</div>
                                     </div>
-                                    ${canUseContractForBooking(booking) ? `
-                                        <div class="booking-request-actions">
-                                            <button class="btn-outline" type="button" data-action="open-owner-contract" data-id="${booking.id}">Договор / ЭЦП</button>
-                                            <button class="btn-outline" type="button" data-action="download-owner-contract-pdf" data-id="${booking.id}">Скачать PDF договора</button>
-                                        </div>
-                                    ` : ''}
+                                    ${renderOwnerBookingActions(booking)}
                                 </div>
                             `).join('')}
                         </div>
@@ -5047,12 +6134,7 @@
                                         </div>
                                         <div class="booking-request-status">${formatBookingStatus(booking.status)}</div>
                                     </div>
-                                    ${canUseContractForBooking(booking) ? `
-                                        <div class="booking-request-actions">
-                                            <button class="btn-outline" type="button" data-action="open-owner-contract" data-id="${booking.id}">Договор / ЭЦП</button>
-                                            <button class="btn-outline" type="button" data-action="download-owner-contract-pdf" data-id="${booking.id}">Скачать PDF договора</button>
-                                        </div>
-                                    ` : ''}
+                                    ${renderOwnerBookingActions(booking)}
                                 </div>
                             `).join('')}
                         </div>
@@ -5076,11 +6158,7 @@
                                         </div>
                                         <div class="booking-request-status">${formatBookingStatus(booking.status)}</div>
                                     </div>
-                                    <div class="booking-request-actions">
-                                        <button class="btn-outline" data-action="open-rental-item" data-id="${booking.id}">Открыть объявление</button>
-                                        ${canUseContractForBooking(booking) ? `<button class="btn-outline" data-action="open-contract" data-id="${booking.id}" data-scope="outgoing">Договор / ЭЦП</button>` : ''}
-                                        ${canLeaveReviewForBooking(booking) ? `<button class="btn-primary" data-action="leave-review" data-id="${booking.id}">Оставить отзыв</button>` : ''}
-                                    </div>
+                                    ${renderRenterBookingActions(booking)}
                                 </div>
                             `).join('')}
                         </div>
@@ -5104,11 +6182,7 @@
                                         </div>
                                         <div class="booking-request-status">${formatBookingStatus(booking.status)}</div>
                                     </div>
-                                    <div class="booking-request-actions">
-                                        <button class="btn-outline" data-action="open-rental-item" data-id="${booking.id}">Открыть объявление</button>
-                                        ${canUseContractForBooking(booking) ? `<button class="btn-outline" data-action="open-contract" data-id="${booking.id}" data-scope="outgoing">Договор / ЭЦП</button>` : ''}
-                                        ${canLeaveReviewForBooking(booking) ? `<button class="btn-primary" data-action="leave-review" data-id="${booking.id}">Оставить отзыв</button>` : ''}
-                                    </div>
+                                    ${renderRenterBookingActions(booking)}
                                 </div>
                             `).join('')}
                         </div>
@@ -5137,51 +6211,7 @@
                 });
             });
 
-            document.querySelectorAll('[data-action="open-owner-contract"]').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    const bookingId = String(btn.dataset.id);
-                    const booking = incomingBookings.find(entry => String(entry.id) === bookingId);
-                    if (booking) {
-                        await openContractFlowForBooking(booking);
-                    }
-                });
-            });
-
-            document.querySelectorAll('[data-action="open-rental-item"]').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    const booking = outgoingBookings.find(entry => String(entry.id) === String(btn.dataset.id));
-                    if (booking) {
-                        await openReviewFlowForBooking(booking);
-                    }
-                });
-            });
-
-            document.querySelectorAll('[data-action="leave-review"]').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    const booking = outgoingBookings.find(entry => String(entry.id) === String(btn.dataset.id));
-                    if (booking) {
-                        await openReviewFlowForBooking(booking);
-                    }
-                });
-            });
-
-            document.querySelectorAll('[data-action="open-contract"]').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    const bookingId = String(btn.dataset.id);
-                    const scope = btn.dataset.scope;
-                    const sourceList = scope === 'incoming' ? incomingBookings : outgoingBookings;
-                    const booking = sourceList.find(entry => String(entry.id) === bookingId);
-                    if (booking) {
-                        await openContractFlowForBooking(booking);
-                    }
-                });
-            });
-
-            document.querySelectorAll('[data-action="download-owner-contract-pdf"]').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    await downloadContractPdfByBookingId(btn.dataset.id);
-                });
-            });
+            attachHandoverListeners(incomingBookings, outgoingBookings);
         }
 
         async function showChatPage(conversationId) {
@@ -5435,8 +6465,15 @@
                 additionalFields = `
                     <div class="user-type-info">
                         <h4>🏢 Данные ИП</h4>
+                        <div class="inn-autofill-row">
+                            <div class="form-group" style="flex:1;margin-bottom:0">
+                                <label>ИНН <span style="font-weight:normal;font-size:12px;color:#6b7280">(12 цифр)</span></label>
+                                <input type="text" id="inn" maxlength="12" value="${profile.inn || ''}" placeholder="ИНН ИП">
+                            </div>
+                            <button type="button" class="btn-fill-inn" id="profileFillByInnBtn">🔍 Заполнить по ИНН</button>
+                        </div>
+                        <div id="profileInnStatus" class="inn-status-msg" style="display:none"></div>
                         <div class="form-group"><label>Наименование ИП</label><input type="text" id="entrepreneurName" value="${profile.entrepreneur_name || ''}" placeholder="ИП Иванов Иван Иванович"></div>
-                        <div class="form-group"><label>ИНН</label><input type="text" id="inn" value="${profile.inn || ''}" placeholder="ИНН"></div>
                         <div class="form-group"><label>ОГРНИП</label><input type="text" id="ogrnip" value="${profile.ogrnip || ''}" placeholder="ОГРНИП"></div>
                     </div>
                 `;
@@ -5444,8 +6481,15 @@
                 additionalFields = `
                     <div class="user-type-info">
                         <h4>🏛️ Данные юридического лица</h4>
+                        <div class="inn-autofill-row">
+                            <div class="form-group" style="flex:1;margin-bottom:0">
+                                <label>ИНН <span style="font-weight:normal;font-size:12px;color:#6b7280">(10 цифр)</span></label>
+                                <input type="text" id="inn" maxlength="10" value="${profile.inn || ''}" placeholder="ИНН организации">
+                            </div>
+                            <button type="button" class="btn-fill-inn" id="profileFillByInnBtn">🔍 Заполнить по ИНН</button>
+                        </div>
+                        <div id="profileInnStatus" class="inn-status-msg" style="display:none"></div>
                         <div class="form-group"><label>Наименование ООО</label><input type="text" id="companyName" value="${profile.company_name || ''}" placeholder="ООО Ромашка"></div>
-                        <div class="form-group"><label>ИНН</label><input type="text" id="inn" value="${profile.inn || ''}" placeholder="ИНН"></div>
                         <div class="form-group"><label>КПП</label><input type="text" id="kpp" value="${profile.kpp || ''}" placeholder="КПП"></div>
                     </div>
                 `;
@@ -5500,10 +6544,36 @@
                     updateData.entrepreneur_name = document.getElementById('entrepreneurName')?.value || '';
                     updateData.inn = document.getElementById('inn')?.value || '';
                     updateData.ogrnip = document.getElementById('ogrnip')?.value || '';
+
+                    // Клиентская валидация ИП
+                    if (updateData.inn) {
+                        const innErr = validateInnClient(updateData.inn, 'entrepreneur');
+                        if (innErr) { showProfileValidationError(innErr); return; }
+                    }
+                    if (updateData.ogrnip) {
+                        const ogrnipErr = validateOgrnipClient(updateData.ogrnip);
+                        if (ogrnipErr) { showProfileValidationError(ogrnipErr); return; }
+                    }
                 } else if (userType === 'legal') {
                     updateData.company_name = document.getElementById('companyName')?.value || '';
                     updateData.inn = document.getElementById('inn')?.value || '';
                     updateData.kpp = document.getElementById('kpp')?.value || '';
+
+                    // Клиентская валидация юрлица
+                    if (updateData.inn) {
+                        const innErr = validateInnClient(updateData.inn, 'legal');
+                        if (innErr) { showProfileValidationError(innErr); return; }
+                    }
+                    if (updateData.kpp) {
+                        const kppErr = validateKppClient(updateData.kpp);
+                        if (kppErr) { showProfileValidationError(kppErr); return; }
+                    }
+                }
+
+                function showProfileValidationError(msg) {
+                    const msgDiv = document.getElementById('profileMessage');
+                    msgDiv.innerHTML = `<div class="error-message-box validation-error-highlight">❌ По результатам проверки вы ввели некорректные данные:<br><strong>${escapeHtml(msg)}</strong></div>`;
+                    msgDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
 
                 const result = await updateProfile(updateData);
@@ -5550,6 +6620,13 @@
             });
 
             document.getElementById('backToMainFromProfile')?.addEventListener('click', () => showMainPage());
+
+            // Кнопка «Заполнить по ИНН» в профиле
+            if (userType === 'entrepreneur') {
+                document.getElementById('profileFillByInnBtn')?.addEventListener('click', () => fillByInn('profile', 'entrepreneur'));
+            } else if (userType === 'legal') {
+                document.getElementById('profileFillByInnBtn')?.addEventListener('click', () => fillByInn('profile', 'legal'));
+            }
         }
 
         async function showCreatePage() {
@@ -5570,6 +6647,7 @@
                         <div class="form-group"><label>Название товара *</label><input type="text" id="itemName" placeholder="Например: Дрель Makita" required></div>
                         <div class="form-group"><label>Описание</label><textarea id="itemDesc" rows="4" placeholder="Опишите состояние, характеристики..."></textarea></div>
                         <div class="form-group"><label>Цена за день (₽) *</label><input type="number" id="itemPrice" placeholder="500" required><small style="display:block;margin-top:6px;color:#b45309;font-size:12px">⚠️ Внимание. Уведомляем Вас о том, что будут добавлены 20% от вашей цены, которые покроют комиссию.</small></div>
+                        <div class="form-group"><label>Залог (₽)</label><input type="number" id="itemDeposit" placeholder="0" min="0"><small style="display:block;margin-top:6px;color:#5a8090;font-size:12px">💡 Сумма залога, которую арендатор оплачивает вместе с арендой и получает обратно после возврата вещи.</small></div>
                         <div class="form-group"><label>Категория</label>
                             <select id="itemCategory">${categoryOptions}</select>
                         </div>
@@ -5598,6 +6676,7 @@
                     name: document.getElementById('itemName').value,
                     description: document.getElementById('itemDesc').value,
                     price_per_day: parseInt(document.getElementById('itemPrice').value, 10),
+                    deposit: parseInt(document.getElementById('itemDeposit').value || '0', 10),
                     category: document.getElementById('itemCategory').value
                 };
                 if (!formData.name || !formData.price_per_day) {
@@ -5638,6 +6717,7 @@
                         <div class="form-group"><label>Название товара *</label><input type="text" id="editItemName" value="${escapeHtml(editItem.title || '')}" placeholder="Например: Дрель Makita" required></div>
                         <div class="form-group"><label>Описание</label><textarea id="editItemDesc" rows="4" placeholder="Опишите состояние, характеристики...">${escapeHtml(editItem.description || '')}</textarea></div>
                         <div class="form-group"><label>Цена за день (₽) *</label><input type="number" id="editItemPrice" value="${Number(editItem.price_per_day || 0)}" placeholder="500" required><small style="display:block;margin-top:6px;color:#b45309;font-size:12px">⚠️ Внимание. Уведомляем Вас о том, что будут добавлены 20% от вашей цены, которые покроют комиссию.</small></div>
+                        <div class="form-group"><label>Залог (₽)</label><input type="number" id="editItemDeposit" value="${Number(editItem.deposit || 0)}" placeholder="0" min="0"><small style="display:block;margin-top:6px;color:#5a8090;font-size:12px">💡 Сумма залога, которую арендатор оплачивает вместе с арендой и получает обратно после возврата вещи.</small></div>
                         <div class="form-group"><label>Категория</label>
                             <select id="editItemCategory">${categoryOptions}</select>
                         </div>
@@ -5693,6 +6773,7 @@
                     title: document.getElementById('editItemName').value,
                     description: document.getElementById('editItemDesc').value,
                     price_per_day: parseInt(document.getElementById('editItemPrice').value, 10),
+                    deposit: parseInt(document.getElementById('editItemDeposit').value || '0', 10),
                     category: document.getElementById('editItemCategory').value || null
                 };
                 if (!formData.title || !formData.price_per_day) {
@@ -5830,7 +6911,16 @@
                             </select>
                         </div>
                         <div id="registerExtraFields"></div>
-                        <button type="submit" class="auth-btn">Зарегистрироваться</button>
+                        <div class="reg-consent-block">
+                            <input type="checkbox" id="regConsentCheckbox">
+                            <div class="reg-consent-text">
+                                Регистрируясь, я принимаю
+                                <a id="openTermsLink" tabindex="0">условия использования площадки</a>
+                                и даю согласие на
+                                <a id="openPrivacyLink" tabindex="0">обработку персональных данных</a>
+                            </div>
+                        </div>
+                        <button type="submit" class="auth-btn" id="regSubmitBtn" disabled>Зарегистрироваться</button>
                         <div class="auth-footer">Уже есть аккаунт? <a href="#" id="switchToLogin">Войти</a></div>
                     </form>
                 </div></div>
@@ -5855,20 +6945,38 @@
                     box.innerHTML = `
                         <div class="user-type-info">
                             <h4>🏢 Профиль ИП</h4>
+                            <div class="inn-autofill-row">
+                                <div class="input-group" style="flex:1;margin-bottom:0">
+                                    <label>ИНН <span style="font-weight:normal;font-size:12px;color:#6b7280">(12 цифр)</span></label>
+                                    <input type="text" id="regInn" maxlength="12" placeholder="Введите ИНН для автозаполнения">
+                                </div>
+                                <button type="button" class="btn-fill-inn" id="regFillByInnBtn">🔍 Заполнить по ИНН</button>
+                            </div>
+                            <div id="regInnStatus" class="inn-status-msg" style="display:none"></div>
                             <div class="input-group"><label>Наименование ИП</label><input type="text" id="regEntrepreneurName" maxlength="255" placeholder="ИП Иванов Иван Иванович"></div>
                             <div class="input-group"><label>ИНН</label><input type="text" id="regInn" placeholder="ИНН (12 цифр)"></div>
                             <div class="input-group"><label>ОГРНИП</label><input type="text" id="regOgrnip" placeholder="ОГРНИП (15 цифр)"></div>
                         </div>
                     `;
+                    document.getElementById('regFillByInnBtn').addEventListener('click', () => fillByInn('reg', 'entrepreneur'));
                 } else {
                     box.innerHTML = `
                         <div class="user-type-info">
                             <h4>🏛️ Профиль юридического лица</h4>
+                            <div class="inn-autofill-row">
+                                <div class="input-group" style="flex:1;margin-bottom:0">
+                                    <label>ИНН <span style="font-weight:normal;font-size:12px;color:#6b7280">(10 цифр)</span></label>
+                                    <input type="text" id="regInn" maxlength="10" placeholder="Введите ИНН для автозаполнения">
+                                </div>
+                                <button type="button" class="btn-fill-inn" id="regFillByInnBtn">🔍 Заполнить по ИНН</button>
+                            </div>
+                            <div id="regInnStatus" class="inn-status-msg" style="display:none"></div>
                             <div class="input-group"><label>Наименование организации</label><input type="text" id="regCompanyName" maxlength="255" placeholder="ООО Ромашка"></div>
                             <div class="input-group"><label>ИНН</label><input type="text" id="regInn" placeholder="ИНН (10 цифр)"></div>
                             <div class="input-group"><label>КПП</label><input type="text" id="regKpp" placeholder="КПП (9 цифр)"></div>
                         </div>
                     `;
+                    document.getElementById('regFillByInnBtn').addEventListener('click', () => fillByInn('reg', 'legal'));
                 }
             }
 
@@ -5972,13 +7080,53 @@
                 }
 
                 if (extraProfileData.entrepreneur_name.length > 255) {
-                    alert('❌ Наименование ИП слишком длинное. Максимум 255 символов.');
+                    showRegValidationError('❌ Наименование ИП слишком длинное. Максимум 255 символов.');
                     return;
                 }
 
                 if (extraProfileData.company_name.length > 255) {
-                    alert('❌ Наименование организации слишком длинное. Максимум 255 символов.');
+                    showRegValidationError('❌ Наименование организации слишком длинное. Максимум 255 символов.');
                     return;
+                }
+
+                // Клиентская проверка реквизитов по типу пользователя
+                if (userType === 'entrepreneur') {
+                    const innVal = extraProfileData.inn;
+                    const ogrnipVal = extraProfileData.ogrnip;
+                    if (innVal) {
+                        const innErr = validateInnClient(innVal, 'entrepreneur');
+                        if (innErr) { showRegValidationError('❌ ' + innErr); return; }
+                    }
+                    if (ogrnipVal) {
+                        const ogrnipErr = validateOgrnipClient(ogrnipVal);
+                        if (ogrnipErr) { showRegValidationError('❌ ' + ogrnipErr); return; }
+                    }
+                } else if (userType === 'legal') {
+                    const innVal = extraProfileData.inn;
+                    const kppVal = extraProfileData.kpp;
+                    if (innVal) {
+                        const innErr = validateInnClient(innVal, 'legal');
+                        if (innErr) { showRegValidationError('❌ ' + innErr); return; }
+                    }
+                    if (kppVal) {
+                        const kppErr = validateKppClient(kppVal);
+                        if (kppErr) { showRegValidationError('❌ ' + kppErr); return; }
+                    }
+                }
+
+                function showRegValidationError(msg) {
+                    let errEl = document.getElementById('regValidationError');
+                    if (!errEl) {
+                        errEl = document.createElement('div');
+                        errEl.id = 'regValidationError';
+                        errEl.className = 'error-message-box';
+                        errEl.style.marginBottom = '12px';
+                        document.querySelector('#registerForm .auth-btn[type=submit]').before(errEl);
+                    }
+                    errEl.textContent = msg;
+                    errEl.style.display = '';
+                    errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(() => { if (errEl) errEl.style.display = 'none'; }, 6000);
                 }
 
                 const success = await register(
@@ -5993,6 +7141,31 @@
             });
 
             document.getElementById('switchToLogin')?.addEventListener('click', (e) => { e.preventDefault(); showLoginPage(); });
+
+            // ── Consent checkbox: enable/disable submit button ──────────
+            const regConsent = document.getElementById('regConsentCheckbox');
+            const regSubmitBtn = document.getElementById('regSubmitBtn');
+            if (regConsent && regSubmitBtn) {
+                regConsent.addEventListener('change', () => {
+                    regSubmitBtn.disabled = !regConsent.checked;
+                });
+            }
+
+            // ── Open terms / privacy modals ─────────────────────────────
+            document.getElementById('openTermsLink')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('termsModalOverlay')?.classList.add('active');
+            });
+            document.getElementById('openTermsLink')?.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); document.getElementById('termsModalOverlay')?.classList.add('active'); }
+            });
+            document.getElementById('openPrivacyLink')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('privacyModalOverlay')?.classList.add('active');
+            });
+            document.getElementById('openPrivacyLink')?.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); document.getElementById('privacyModalOverlay')?.classList.add('active'); }
+            });
             document.getElementById('backToMainFromRegister')?.addEventListener('click', () => showMainPage());
         }
 
@@ -6282,6 +7455,26 @@
                         <div id="authSection" class="auth-buttons"></div>
                     </div>
                 </div>
+                <div class="search-bar-section">
+                    <div class="container">
+                        <div class="search-bar-inner">
+                            <span class="search-bar-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            </span>
+                            <input
+                                type="text"
+                                id="searchInput"
+                                class="search-bar-input"
+                                placeholder="Поиск объявлений..."
+                                value="${escapeHtml(currentSearchQuery)}"
+                                autocomplete="off"
+                            />
+                            <button id="searchClearBtn" class="search-bar-clear ${currentSearchQuery ? 'visible' : ''}" type="button" title="Очистить">×</button>
+                            <button id="searchBtn" class="search-bar-btn" type="button">Найти</button>
+                        </div>
+                        ${currentSearchQuery ? `<div class="search-results-label" id="searchResultsLabel">Результаты поиска: «${escapeHtml(currentSearchQuery)}»</div>` : ''}
+                    </div>
+                </div>
                 <div class="categories">
                     <div class="container">
                         <ul class="cats-list" id="categoriesList">
@@ -6347,6 +7540,43 @@
                 showMainPage();
             });
 
+            // Search bar events
+            const searchInput = document.getElementById('searchInput');
+            const searchBtn = document.getElementById('searchBtn');
+            const searchClearBtn = document.getElementById('searchClearBtn');
+
+            function doSearch() {
+                const q = (searchInput?.value || '').trim();
+                currentSearchQuery = q;
+                searchClearBtn?.classList.toggle('visible', !!q);
+                const label = document.getElementById('searchResultsLabel');
+                if (label) {
+                    label.textContent = q ? `Результаты поиска: «${q}»` : '';
+                    label.style.display = q ? '' : 'none';
+                } else if (q) {
+                    const lbl = document.createElement('div');
+                    lbl.id = 'searchResultsLabel';
+                    lbl.className = 'search-results-label';
+                    lbl.textContent = `Результаты поиска: «${q}»`;
+                    searchInput?.closest('.container')?.appendChild(lbl);
+                }
+                loadProducts(1);
+            }
+
+            searchBtn?.addEventListener('click', doSearch);
+            searchInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSearch(); });
+            searchInput?.addEventListener('input', () => {
+                searchClearBtn?.classList.toggle('visible', !!(searchInput.value));
+            });
+            searchClearBtn?.addEventListener('click', () => {
+                if (searchInput) searchInput.value = '';
+                currentSearchQuery = '';
+                searchClearBtn.classList.remove('visible');
+                const label = document.getElementById('searchResultsLabel');
+                if (label) label.style.display = 'none';
+                loadProducts(1);
+            });
+
             loadProducts(1);
         }
 
@@ -6371,7 +7601,11 @@
                 messageBox.innerHTML = '<div class="rent-info">Имитируем подтверждение оплаты через СБП...</div>';
             }
 
-            await confirmBookingPayment();
+            if (currentPaymentType === 'deposit') {
+                await confirmDepositPayment();
+            } else {
+                await confirmBookingPayment();
+            }
         });
         document.getElementById('sbpDemoOverlay')?.addEventListener('click', (e) => {
             if (e.target.id === 'sbpDemoOverlay') closeSbpDemoModal();

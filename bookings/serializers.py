@@ -29,11 +29,29 @@ class BookingSerializer(serializers.ModelSerializer):
             'renter',
             'status',
             'total_price',
+            'deposit_amount',
+            'deposit_status',
+            'deposit_reference',
+            'deposit_expires_at',
+            'deposit_paid_at',
             'payment_method',
             'payment_status',
             'payment_reference',
             'payment_expires_at',
             'paid_at',
+            'rent_amount',
+            'platform_fee',
+            'renter_pickup_confirmed',
+            'renter_pickup_confirmed_at',
+            'renter_pickup_photo',
+            'owner_return_confirmed',
+            'owner_return_confirmed_at',
+            'owner_return_photo',
+            'return_requested',
+            'return_requested_at',
+            'return_reason',
+            'return_status',
+            'renter_cancel_reason',
         ]
 
     def get_has_review(self, obj):
@@ -52,6 +70,22 @@ class BookingSerializer(serializers.ModelSerializer):
         if not hasattr(obj, 'review'):
             return None
         return ReviewSerializer(obj.review).data
+
+
+class BookingDepositSerializer(serializers.Serializer):
+    provider = serializers.CharField()
+    booking_id = serializers.IntegerField()
+    payment_type = serializers.CharField()
+    payment_status = serializers.CharField()
+    payment_reference = serializers.CharField()
+    amount = serializers.CharField()
+    currency = serializers.CharField()
+    expires_at = serializers.CharField(allow_null=True)
+    bank_name = serializers.CharField()
+    recipient = serializers.CharField()
+    phone_number = serializers.CharField()
+    deeplink = serializers.CharField()
+    qr_payload = serializers.CharField()
 
 
 class BookingPaymentSerializer(serializers.Serializer):

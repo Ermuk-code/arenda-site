@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'channels',
     'chats',
     'notifications',
+    'postoffices',
     'drf_spectacular',
     'corsheaders',
     'django.contrib.admin',
@@ -166,6 +167,10 @@ SIMPLE_JWT = {
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# DaData API — отделения Почты России
+DADATA_API_KEY = os.environ.get('DADATA_API_KEY', 'fa0f804230f2d512f17d8d141ece4f1372b8d800')
+DADATA_SECRET_KEY = os.environ.get('DADATA_SECRET_KEY', '5e1b6faa55f9738c1caaa74c474c526803a252ac')
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Diplom API',
