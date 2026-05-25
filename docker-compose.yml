@@ -14,12 +14,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-    environment:
-      - DJANGO_SETTINGS_MODULE=arenda_site.settings
-      - DEBUG=1
-      - PYTHONUNBUFFERED=1
-      - EMAIL_HOST_USER=mokitoki.notifications@gmail.com
-      - EMAIL_HOST_PASSWORD=smvc syis jbce xpwl
+    env_file:
+      - .env
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/admin/')\""]
       interval: 10s
@@ -32,7 +28,7 @@ services:
     environment:
       POSTGRES_DB: arenda
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: fojhr4
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
