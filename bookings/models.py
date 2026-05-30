@@ -16,6 +16,11 @@ class Booking(models.Model):
         ('completed', 'Completed'),
     )
 
+    RENT_TYPE_CHOICES = (
+        ('hourly', 'Почасовая'),
+        ('daily', 'Посуточная'),
+    )
+
     item = models.ForeignKey(
         Item,
         on_delete=models.CASCADE,
@@ -28,15 +33,22 @@ class Booking(models.Model):
         related_name='bookings'
     )
 
-    start_date = models.DateField()
-    end_date = models.DateField()
+    # 🔥 НОВОЕ
+    rent_type = models.CharField(
+        max_length=10,
+        choices=RENT_TYPE_CHOICES
+    )
+
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
 
     total_price = models.DecimalField(
-    max_digits=10,
-    decimal_places=2,
-    blank=True,
-    null=True
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True
     )
+
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
@@ -44,17 +56,26 @@ class Booking(models.Model):
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+    # ------------------------
+    # ✅ ВАЛИДАЦИЯ
+    # ------------------------
     def clean(self):
 
-        # Нельзя бронировать свой товар
         if self.item.owner == self.renter:
             raise ValidationError("You cannot book your own item")
 
-        # Дата окончания должна быть позже начала
         if self.start_date >= self.end_date:
             raise ValidationError("End date must be after start date")
 
-        # Проверка пересечения дат
+        # 💥 проверка доступности типа аренды
+        if self.rent_type == 'hourly' and not self.item.price_per_hour:
+            raise ValidationError("Item does not support hourly rent")
+
+        if self.rent_type == 'daily' and not self.item.price_per_day:
+            raise ValidationError("Item does not support daily rent")
+
+        # 💥 пересечение дат
         overlapping = Booking.objects.filter(
             item=self.item,
             status__in=['pending', 'confirmed']
@@ -64,27 +85,61 @@ class Booking(models.Model):
         ).exclude(id=self.id)
 
         if overlapping.exists():
-            raise ValidationError("This item is already booked for selected dates")
+            raise ValidationError("This item is already booked")
+
+    # ------------------------
+    # 💰 РАСЧЁТ ЦЕНЫ
+    # ------------------------
+    def calculate_price(self):
+
+        duration = self.end_date - self.start_date
+
+        if self.rent_type == 'hourly':
+            hours = duration.total_seconds() / 3600
+            base_price = hours * float(self.item.price_per_hour)
+
+        elif self.rent_type == 'daily':
+            days = duration.days
+            if duration.seconds > 0:
+                days += 1  # округляем вверх
+            base_price = days * float(self.item.price_per_day)
+
+        # 💥 ИТОГО
+        total = (
+            base_price +
+            float(self.item.deposit) +
+            float(self.item.delivery_price)
+        )
+
+        return total
+
+    # ------------------------
+    # 💾 SAVE
+    # ------------------------
     def save(self, *args, **kwargs):
 
         self.clean()
 
-        # Расчёт количества дней
-        days = (self.end_date - self.start_date).days
+        # 💰 считаем цену
+        self.total_price = self.calculate_price()
 
-        # Умножаем на цену товара
-        self.total_price = days * self.item.price_per_day
-        Notification.objects.create(
-            user=self.item.owner,
-            type='booking_created',
-            message=f"New booking request for {self.item.title}"
-        )
-        Notification.objects.create(
-            user=self.renter,
-            type='booking_confirmed',
-            message=f"Your booking for {self.item.title} was confirmed"
-        )
+        is_new = self.pk is None
+
         super().save(*args, **kwargs)
+
+        # 🔔 уведомления только при создании
+        if is_new:
+            from notifications.models import Notification
+
+            Notification.objects.create(
+                user=self.item.owner,
+                type='booking_created',
+                message=f"New booking for {self.item.title}"
+            )
+
+    # ------------------------
+    # 🔄 СМЕНА СТАТУСА
+    # ------------------------
     def change_status(self, new_status):
 
         allowed_transitions = {
@@ -101,6 +156,24 @@ class Booking(models.Model):
 
         self.status = new_status
         self.save()
+
+        # 🔔 уведомления
+        from notifications.models import Notification
+
+        if new_status == 'confirmed':
+            Notification.objects.create(
+                user=self.renter,
+                type='booking_confirmed',
+                message=f"Booking confirmed for {self.item.title}"
+            )
+
+        if new_status == 'cancelled':
+            Notification.objects.create(
+                user=self.renter,
+                type='booking_cancelled',
+                message=f"Booking cancelled"
+            )
+
     def __str__(self):
         return f"{self.item.title} - {self.renter.username}"
 class Review(models.Model):
