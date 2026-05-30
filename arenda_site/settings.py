@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     'channels',
     'chats',
     'notifications',
-    'postoffices',
     'drf_spectacular',
     'corsheaders',
     'django.contrib.admin',
