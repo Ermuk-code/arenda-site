@@ -1,6 +1,8 @@
 from .settings import *  # noqa: F401,F403
 
 
+SECRET_KEY = 'django-test-secret-key'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
