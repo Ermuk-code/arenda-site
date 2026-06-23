@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -220,7 +220,7 @@
         .handover-photo-label:hover { border-color: #2b6a7c; background: #f0f8fb; }
         .handover-photo-label svg { flex-shrink: 0; }
         .handover-photo-preview {
-            width: 100%; max-height: 180px; object-fit: cover;
+            width: 100%; height: 180px; object-fit: cover; object-position: center;
             border-radius: 14px; border: 1.5px solid #dde8ef;
             display: none; margin-bottom: 12px;
         }
@@ -563,9 +563,9 @@
         .message-image img {
             display: block;
             width: 100%;
-            height: auto;
-            max-height: 380px;
+            height: 260px;
             object-fit: cover;
+            object-position: center;
         }
         .message-image a {
             display: block;
@@ -2741,9 +2741,9 @@
             return `
                 <div class="item-preview-layout">
                     <div>
-                        <img class="item-gallery-main" id="itemPreviewMainImage" src="${images[0]}" alt="${escapeHtml(item.title || 'Объявление')}">
+                        <img class="item-gallery-main" id="itemPreviewMainImage" src="${images[0]}" alt="${escapeHtml(item.title || 'Объявление')}" onerror="this.src='https://placehold.co/900x700/eef2f7/2b6a7c?text=Нет+фото'">
                         <div class="item-gallery-thumbs">
-                            ${images.map(src => `<img class="item-gallery-thumb" src="${src}" data-preview-image="${src}" alt="Фото товара">`).join('')}
+                            ${images.map(src => `<img class="item-gallery-thumb" src="${src}" data-preview-image="${src}" alt="Фото товара" onerror="this.style.display='none'">`).join('')}
                         </div>
                     </div>
                     <div class="item-preview-panel">
@@ -4525,7 +4525,7 @@
                             data-open-item-preview="${product.id}"
                             aria-label="Открыть объявление ${escapeHtml(product.title || product.name || 'Без названия')}"
                         >
-                            <img src="${imageUrl}" alt="${escapeHtml(product.title || product.name || 'Без названия')}">
+                            <img src="${imageUrl}" alt="${escapeHtml(product.title || product.name || 'Без названия')}" onerror="this.src='https://placehold.co/900x700/eef2f7/2b6a7c?text=Нет+фото'">
                         </div>
                         <div class="card-title">${escapeHtml(product.title || product.name || 'Без названия')}</div>
                         ${product.description ? `<div class="card-description">${escapeHtml(product.description.substring(0, 80))}${product.description.length > 80 ? '...' : ''}</div>` : ''}
@@ -5953,7 +5953,7 @@
                                             data-id="${item.id}"
                                             aria-label="Открыть объявление ${escapeHtml(item.title || 'Без названия')}"
                                         >
-                                            <img class="owner-item-image" src="${imageUrl}" alt="${escapeHtml(item.title || 'Объявление')}">
+                                            <img class="owner-item-image" src="${imageUrl}" alt="${escapeHtml(item.title || 'Объявление')}" onerror="this.src='https://placehold.co/900x700/eef2f7/2b6a7c?text=Нет+фото'">
                                         </div>
                                         <div class="owner-item-title">${escapeHtml(item.title || 'Без названия')}</div>
                                         <div class="owner-item-meta">
@@ -6293,7 +6293,7 @@
                 parts.push(`
                     <div class="message-image">
                         <a href="${safeUrl}" target="_blank" rel="noopener">
-                            <img src="${safeUrl}" alt="image">
+                            <img src="${safeUrl}" alt="image" onerror="this.style.display='none'">
                         </a>
                     </div>
                 `);
@@ -6603,7 +6603,7 @@
                             <div class="existing-media-grid">
                                 ${existingImages.map(image => `
                                     <div class="existing-media-card">
-                                        <img src="${image.image}" alt="Фото объявления">
+                                        <img src="${image.image}" alt="Фото объявления" onerror="this.src='https://placehold.co/110x110/eef2f7/2b6a7c?text=?'">
                                         <button class="existing-media-delete" type="button" data-action="delete-existing-image" data-image-id="${image.id}" aria-label="Удалить фото">×</button>
                                     </div>
                                 `).join('')}
